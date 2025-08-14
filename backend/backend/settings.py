@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "users",
     "projects",
     "usergroups",
+    "codes",
     
     # Third-party
     "rest_framework",
