@@ -10,7 +10,6 @@ class EmailTokenObtainPairSerializer(serializers.Serializer):
     refresh = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
-        # Extract values robustly
         email = attrs.get("email")
         password = attrs.get("password")
 
