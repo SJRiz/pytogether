@@ -32,7 +32,7 @@ def create_group(request):
 def join_group(request):
     """ View to join a group via acesss code """
 
-    serializer = GroupJoinSerializer(data=request.data)
+    serializer = GroupJoinSerializer(data=request.data, context={'request': request})
 
     if serializer.is_valid():
         group = Group.objects.get(access_code=serializer.validated_data["access_code"])
@@ -55,11 +55,15 @@ def list_groups(request):
 def leave_group(request):
     """ View to leave a specified group """
 
-    serializer = GroupLeaveSerializer(data=request.data)
+    serializer = GroupLeaveSerializer(data=request.data, context={'request': request})
 
     if serializer.is_valid():
         group = Group.objects.get(id=serializer.validated_data["id"])
         group.group_members.remove(request.user)
+
+        if group.group_members.count() == 0:
+            group.delete()
+            print("deleted the group")
 
         return Response({"message": f"Left group {group.group_name}"})
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

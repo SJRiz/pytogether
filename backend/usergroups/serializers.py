@@ -33,10 +33,8 @@ class GroupJoinSerializer(serializers.Serializer):
         
         return value
     
-class GroupLeaveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = ["id"]
+class GroupLeaveSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
 
     def validate_id(self, value):
 
