@@ -16,4 +16,5 @@ urlpatterns = [
 
     # app endpoints
     path("api/", include("users.urls")),
+    path("groups/", include("groups.urls")),
 ]
