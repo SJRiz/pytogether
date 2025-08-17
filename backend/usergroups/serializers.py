@@ -33,19 +33,23 @@ class GroupJoinSerializer(serializers.Serializer):
         
         return value
     
-class GroupLeaveSerializer(serializers.Serializer):
+class GroupUpdateSerializer(serializers.Serializer):
     id = serializers.IntegerField()
+    group_name = serializers.CharField()
 
     def validate_id(self, value):
-
+        user = self.context['request'].user
         # Check if the group exists
         try:
             group = Group.objects.get(id=value)
         except Group.DoesNotExist:
             raise serializers.ValidationError("Invalid group ID.")
-
-        user = self.context['request'].user
+        
         if user not in group.group_members.all():
             raise serializers.ValidationError("You are not a member of this group.")
 
         return value
+
+    def get_group(self):
+        """Helper to fetch group after validation"""
+        return Group.objects.get(id=self.validated_data["id"])

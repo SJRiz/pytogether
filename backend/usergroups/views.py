@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Group
-from .serializers import GroupCreateSerializer, GroupDetailSerializer, GroupJoinSerializer, GroupLeaveSerializer
+from .serializers import GroupCreateSerializer, GroupDetailSerializer, GroupJoinSerializer, GroupUpdateSerializer
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -24,7 +24,7 @@ def create_group(request):
         group.save()
 
         # Serialize and send back
-        return Response(GroupCreateSerializer(group).data, status=status.HTTP_201_CREATED)
+        return Response(GroupDetailSerializer(group).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["PUT"])
@@ -55,10 +55,10 @@ def list_groups(request):
 def leave_group(request):
     """ View to leave a specified group """
 
-    serializer = GroupLeaveSerializer(data=request.data, context={'request': request})
+    serializer = GroupUpdateSerializer(data=request.data, context={'request': request})
 
     if serializer.is_valid():
-        group = Group.objects.get(id=serializer.validated_data["id"])
+        group = serializer.get_group()
         group.group_members.remove(request.user)
 
         if group.group_members.count() == 0:
@@ -66,4 +66,19 @@ def leave_group(request):
             print("deleted the group")
 
         return Response({"message": f"Left group {group.group_name}"})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def edit_group(request):
+    """ View to change the name of a group """
+
+    serializer = GroupUpdateSerializer(data=request.data, context={"request": request})
+
+    if serializer.is_valid():
+        group = serializer.get_group()
+        group.group_name = serializer.validated_data["group_name"]
+        group.save()
+        return Response({"message": "Group updated successfully."}, status=status.HTTP_200_OK)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
