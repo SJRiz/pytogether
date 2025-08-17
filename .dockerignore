@@ -1,0 +1,45 @@
+#  General 
+.git
+.gitignore
+*.md
+*.log
+*.out
+*.err
+.DS_Store
+Thumbs.db
+
+#  Python (backend) 
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.so
+.venv/
+venv/
+env/
+ENV/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+#  Django-specific 
+backend/media/
+backend/staticfiles/
+backend/*.sqlite3
+
+#  Environment / secrets 
+.env
+*.env
+
+#  Frontend (ignore for backend builds) 
+frontend/
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+
+#  Docker 
+docker-compose.override.yml
+Dockerfile.dev
