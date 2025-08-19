@@ -1,17 +1,11 @@
-import { useState } from 'react'
-import './App.css'
+import PyIDE from "./PyIDE";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <h1>PyTogether</h1>
-      <div>
-        <input type="text"/>
-      </div>
-    </>
-  )
+    <div className="min-h-screen bg-gray-50">
+      <PyIDE />
+    </div>
+  );
 }
 
-export default App
+export default App;
