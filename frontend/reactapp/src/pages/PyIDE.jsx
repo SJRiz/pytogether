@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -31,7 +31,7 @@ export default function PyIDE() {
   useEffect(() => {
     async function loadPyodide() {
       try {
-        addConsoleEntry("Loading Pyodide...", "system");
+        addConsoleEntry("Loading Console...", "system");
         
         const pyodideModule = await window.loadPyodide({
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
