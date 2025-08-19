@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Project
 from usergroups.models import Group
+from codes.models import Code
 from .serializers import ProjectDetailSerializer, ProjectCreateSerializer, ProjectUpdateSerializer
 
 
@@ -60,6 +61,12 @@ def create_project(request, group_id):
             project_name=serializer.validated_data["project_name"],
             group=group
         )
+
+        # give the project an initial code block
+        Code.objects.create(
+            project=project
+        )
+
         return Response(ProjectDetailSerializer(project).data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

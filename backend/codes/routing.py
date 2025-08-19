@@ -1,6 +1,7 @@
-from django.urls import path
-from . import consumers
+from django.urls import re_path
+from .consumers import YjsCodeConsumer
 
 websocket_urlpatterns = [
-    path("ws/projects/<int:project_id>/code/", consumers.CodeConsumer.as_asgi()),
+    # Route: /ws/groups/<group_id>/projects/<project_id>/code/
+    re_path(r'ws/groups/(?P<group_id>\d+)/projects/(?P<project_id>\d+)/code/$', YjsCodeConsumer.as_asgi()),
 ]
