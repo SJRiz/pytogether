@@ -1,3 +1,4 @@
+// this code is a huge big mess i will refactor this later when i have time
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
@@ -49,8 +50,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const inputRef = useRef(null);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
-
-
 
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
