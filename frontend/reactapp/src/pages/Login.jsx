@@ -1,26 +1,45 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate()
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // If redirected to login, save original URL
+  const from = location.state?.from?.pathname || "/";
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrors({}); // Clear previous errors
+
     try {
       const res = await api.post("/api/auth/token/", {
         email,
         password,
       });
+
+      // Save tokens
       localStorage.setItem("token", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
-      navigate("/") // redirect to home after login
+
+      // Redirect to original page
+      navigate(from, { replace: true });
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert("Login failed");
+      const data = err.response?.data || {};
+      console.error(data);
+
+      if (data.email) {
+        setErrors({ email: data.email[0] });
+      } else if (data.non_field_errors) {
+        setErrors({ general: "Email or Password is incorrect" });
+      } else {
+        setErrors({ general: "Login failed. Please try again." });
+      }
     }
   };
 
@@ -30,20 +49,32 @@ export default function Login() {
         <h1 className="text-2xl font-bold mb-6">Login</h1>
 
         <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full mb-3 p-2 border rounded"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full mb-3 p-2 border rounded"
-          />
+          <div className="mb-3">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+            {errors.general && (
+              <p className="text-red-500 text-sm mt-1">{errors.general}</p>
+            )}
+          </div>
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
@@ -52,6 +83,14 @@ export default function Login() {
           </button>
         </form>
 
+        {/* Register Button */}
+        <button
+          onClick={() => navigate("/register")}
+          className="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300"
+        >
+          Register
+        </button>
+
         <div className="flex items-center my-4">
           <div className="flex-grow border-t" />
           <span className="mx-2 text-gray-400">or</span>
@@ -59,7 +98,7 @@ export default function Login() {
         </div>
 
         {/* OAuth */}
-        <GoogleLoginButton/>
+        <GoogleLoginButton />
       </div>
     </div>
   );
