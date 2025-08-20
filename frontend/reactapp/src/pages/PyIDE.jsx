@@ -3,11 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { ArrowLeft, Play, Terminal, Code, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon } from "lucide-react";
+import { ArrowLeft, Play, Terminal, Code, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon, Send } from "lucide-react";
 import api from "../../axiosConfig";
 
-// Y.js imports - you'll need to install these packages:
-// npm install yjs y-codemirror.next y-websocket
+// Y.js imports
 import * as Y from 'yjs';
 import { yCollab } from 'y-codemirror.next';
 
@@ -20,7 +19,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const projectId = propProjectId || location.state?.projectId;
   const initialProjectName = propProjectName || location.state?.projectName || "Untitled Project";
   
-  const [pyodide, setPyodide] = useState(null);
   const [code, setCode] = useState('print("Hello, PyTogether!")');
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +27,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [isDragging, setIsDragging] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
+  
+  // Input handling state
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [currentInput, setCurrentInput] = useState("");
+  const [inputResolve, setInputResolve] = useState(null);
   
   // Project name editing state
   const [projectName, setProjectName] = useState(initialProjectName);
@@ -43,8 +46,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const editorViewRef = useRef(null);
   const consoleRef = useRef(null);
   const nameInputRef = useRef(null);
+  const inputRef = useRef(null);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
+
+
 
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
@@ -72,9 +78,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     // Point to Django backend with JWT token
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     
-    // Get JWT token from localStorage or wherever you store it
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const tokenParam = token ? `?token=${token}` : '';
+    // Get JWT token
+    const token = sessionStorage.getItem("access_token");
+    const tokenParam = token ? `?token=${token}` : "";
     
     const wsUrl = `${protocol}//localhost:8000/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
     
@@ -188,6 +194,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     }
   }, [isEditingName]);
 
+  // Focus on console input when waiting for input
+  useEffect(() => {
+    if (waitingForInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [waitingForInput]);
+
   // Console entry types
   const addConsoleEntry = (content, type = 'output', timestamp = new Date()) => {
     const entry = {
@@ -199,51 +212,49 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     setConsoleOutput(prev => [...prev, entry]);
   };
 
-  // Load Pyodide
+  // Load Skulpt
   useEffect(() => {
-    async function loadPyodide() {
+    const loadSkulpt = async () => {
       try {
-        addConsoleEntry("Loading Console...", "system");
-        
-        const pyodideModule = await window.loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
-          stdout: (text) => {
-            if (text.trim()) {
-              addConsoleEntry(text.trim(), "output");
-            }
-          },
-          stderr: (text) => {
-            if (text.trim()) {
-              addConsoleEntry(text.trim(), "error");
-            }
+        addConsoleEntry("Loading Python interpreter...", "system");
+
+        // Load Skulpt if not already loaded
+        if (!window.Sk) {
+          const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = src;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          };
+
+          try {
+            // Try the official Skulpt CDN first
+            await loadScript('https://skulpt.org/js/skulpt.min.js');
+            await loadScript('https://skulpt.org/js/skulpt-stdlib.js');
+          } catch (error) {
+            // Fallback to unpkg
+            addConsoleEntry("Trying fallback CDN...", "system");
+            await loadScript('https://unpkg.com/skulpt@0.11.1/dist/skulpt.min.js');
+            await loadScript('https://unpkg.com/skulpt@0.11.1/dist/skulpt-stdlib.js');
           }
-        });
 
-        pyodideModule.runPython(`
-import builtins
-
-def custom_input(prompt=""):
-    import js
-    if prompt:
-        print(prompt, end="")
-    result = js.prompt(prompt if prompt else "Enter input:")
-    if result is None:
-        raise KeyboardInterrupt("Input cancelled")
-    print(result)
-    return result
-
-builtins.input = custom_input
-        `);
-
-        setPyodide(pyodideModule);
-        addConsoleEntry("Console loaded successfully!", "system");
-        setIsLoading(false);
+          addConsoleEntry("Python interpreter loaded successfully!", "system");
+          setIsLoading(false);
+        } else {
+          addConsoleEntry("Python interpreter already loaded!", "system");
+          setIsLoading(false);
+        }
       } catch (err) {
-        addConsoleEntry(`Failed to load console: ${err.message}`, "error");
+        addConsoleEntry(`Failed to load Skulpt: ${err.message || err}`, "error");
+        addConsoleEntry("Try refreshing the page if the issue persists.", "system");
         setIsLoading(false);
       }
-    }
-    loadPyodide();
+    };
+
+    loadSkulpt();
   }, []);
 
   // Auto-scroll console
@@ -291,33 +302,99 @@ builtins.input = custom_input
     };
   }, [isDragging, consoleWidth]);
 
-  const runCode = async () => {
-    if (!pyodide || isRunning) return;
+  // Handle input submission
+  const submitInput = () => {
+    if (!waitingForInput || !inputResolve) return;
     
+    addConsoleEntry(currentInput, "input");
+    inputResolve(currentInput);
+    setCurrentInput("");
+    setWaitingForInput(false);
+    setInputResolve(null);
+    
+    // Continue execution, so keep isRunning true
+  };
+
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitInput();
+    }
+  };
+
+  const runCode = async () => {
+    if (!window.Sk || isRunning) return;
+
     setIsRunning(true);
     addConsoleEntry(`>>> Running code...`, "input");
-    
+
+    const currentCode = ytextRef.current ? ytextRef.current.toString() : code;
+
+    // Skulpt output callback
+    const outf = (text) => {
+      addConsoleEntry(text, "output");
+    };
+
+    // Skulpt input callback
+    const inputfun = (promptText) => {
+      return new Promise((resolve) => {
+        if (promptText) {
+          addConsoleEntry(promptText, "system");
+        }
+        setWaitingForInput(true);
+        setInputResolve(() => (input) => {
+          setWaitingForInput(false);
+          resolve(input);
+        });
+      });
+    };
+
     try {
-      // Use the current Y.js document content
-      const currentCode = ytextRef.current ? ytextRef.current.toString() : code;
-      const result = await pyodide.runPythonAsync(currentCode);
+      // Configure Skulpt
+      Sk.configure({
+        output: outf,
+        read: (x) => {
+          if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[x] === undefined) {
+            throw `File not found: '${x}'`;
+          }
+          return Sk.builtinFiles.files[x];
+        },
+        inputfun,
+        inputfunTakesPrompt: true,
+        execLimit: 100000,
+        yieldLimit: 100, // yield very frequently
+        __future__: Sk.python3
+      });
+
+      await Sk.misceval.asyncToPromise(() => 
+        Sk.importMainWithBody('<stdin>', false, currentCode, true)
+      );
       
-      if (result !== undefined && result !== null && result !== "") {
-        addConsoleEntry(`${result}`, "output");
+      if (!waitingForInput) {
+        addConsoleEntry(">>> Code execution completed", "system");
       }
-      
-      addConsoleEntry(`>>> Code execution completed`, "system");
     } catch (err) {
-      const errorMsg = err.toString();
-      addConsoleEntry(errorMsg, "error");
-      addConsoleEntry(`>>> Code execution failed`, "system");
+      // Clear any pending input state on error
+      setWaitingForInput(false);
+      setInputResolve(null);
+      
+      let errorMessage = err.toString();
+      
+      addConsoleEntry(errorMessage, "error");
+      addConsoleEntry(">>> Code execution failed", "system");
     } finally {
-      setIsRunning(false);
+      if (!waitingForInput) {
+        setIsRunning(false);
+      }
     }
   };
 
   const clearConsole = () => {
     setConsoleOutput([]);
+    // Also clear any pending input state
+    setWaitingForInput(false);
+    setInputResolve(null);
+    setCurrentInput("");
   };
 
   const formatTimestamp = (timestamp) => {
@@ -372,13 +449,14 @@ builtins.input = custom_input
       setIsEditingName(false);
       } catch (err) {
       console.error(err);
-      }
+      } finally {
+      setIsSavingName(false);
+    }
   };
 
   const handleNameKeyDown = (e) => {
     if (e.key === 'Enter') {
       saveProjectName();
-      setIsSavingName(false);
     } else if (e.key === 'Escape') {
       cancelEditingName();
     }
@@ -413,7 +491,7 @@ builtins.input = custom_input
               className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors duration-200"
               title="Go Back"
             >
-              <ArrowLeft className="h-5 w-10" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
 
             <Code className="h-6 w-6 text-blue-400" />
@@ -512,7 +590,7 @@ builtins.input = custom_input
             
             <button
               onClick={runCode}
-              disabled={!pyodide || isRunning || isLoading}
+              disabled={isRunning || isLoading}
               className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors duration-200"
             >
               <Play className="h-4 w-4" />
@@ -589,6 +667,9 @@ builtins.input = custom_input
               <div className="flex items-center space-x-2">
                 <Terminal className="h-4 w-4 text-gray-400" />
                 <h2 className="text-sm font-medium text-gray-300">Console</h2>
+                {waitingForInput && (
+                  <span className="text-xs text-blue-400 animate-pulse">Waiting for input...</span>
+                )}
               </div>
               
               <button
@@ -622,6 +703,33 @@ builtins.input = custom_input
                 ))
               )}
             </div>
+
+            {/* Input Area */}
+            {waitingForInput && (
+              <div className="border-t border-gray-700 bg-gray-800 p-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={currentInput}
+                    onChange={(e) => setCurrentInput(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    placeholder="Enter input..."
+                    className="flex-1 bg-gray-700 text-white px-3 py-2 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={submitInput}
+                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200"
+                    title="Send Input"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Press Enter to send input
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

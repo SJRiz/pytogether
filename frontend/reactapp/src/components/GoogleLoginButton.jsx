@@ -14,17 +14,13 @@ export default function GoogleLoginButton() {
     try {
       // Get Google credential (JWT)
       const googleToken = credentialResponse.credential;
-      const decoded = jwtDecode(googleToken);
-      console.log("Google user:", decoded);
 
       // Send token to Django backend
       const res = await api.post("/api/auth/google/", {
         access_token: googleToken,
       });
 
-      // Save access + refresh tokens
-      localStorage.setItem("token", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+      sessionStorage.setItem("access_token", res.data.access);
 
       console.log("Login successful!");
       // Redirect to original page
