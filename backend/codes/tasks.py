@@ -1,7 +1,7 @@
 import os
 import redis
 from celery import shared_task
-from y_py import YDoc
+from y_py import YDoc, apply_update
 from django.db import transaction
 
 from .models import Code
@@ -19,39 +19,40 @@ MAX_LOCK_SECONDS = 10
 @shared_task
 def snapshot_active_projects():
     project_ids = r.smembers(ACTIVE_PROJECTS_SET)
+    processed = []
     for pid_b in project_ids:
         try:
             pid = int(pid_b)
         except Exception:
             continue
-        # Use redis lock per project to avoid conflicts with consumer persist-on-disconnect
         lock = r.lock(f"lock:project_persist:{pid}", timeout=MAX_LOCK_SECONDS)
         got = lock.acquire(blocking=False)
         if not got:
             continue
         try:
             persist_single_project(pid)
+            processed.append(pid)
         finally:
             try:
                 lock.release()
             except Exception:
                 pass
+    return processed
 
 def persist_single_project(project_id: int):
     key = ydoc_key_template.format(project_id)
     bytes_val = r.get(key)
+
     if not bytes_val:
         return
-    # Deserialize ydoc and extract text
+    
     ydoc = YDoc()
-    try:
-        ydoc.deserialize(bytes_val)
-    except Exception:
-        return
+    apply_update(ydoc, bytes_val)  # apply stored Yjs update bytes
+
     # client must store code at 'codetext'
     try:
         ytext = ydoc.get_text("codetext")
-        text = ytext.to_string()
+        text = str(ytext)
     except Exception:
         text = ""
     # Persist to DB transactionally
@@ -59,10 +60,14 @@ def persist_single_project(project_id: int):
         with transaction.atomic():
             project = Project.objects.select_for_update().get(id=project_id)
             code, _ = Code.objects.get_or_create(project=project)
+            if code.content == text:
+                return  # no changes were made so....
             code.content = text
             code.save()
+
     except Project.DoesNotExist:
         # project removed; cleanup redis keys
         r.delete(key)
         r.srem(ACTIVE_PROJECTS_SET, str(project_id))
         r.delete(active_set_key(project_id))
+    

@@ -2,20 +2,29 @@ import json
 import base64
 import os
 import asyncio
+import redis
 
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
 import redis.asyncio as aioredis
+import y_py as Y
+
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
 from .models import Code
+
 from .redis_helpers import ydoc_key, active_set_key, ACTIVE_PROJECTS_SET
+
+
+User = get_user_model()
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 redis_client = aioredis.from_url(REDIS_URL, decode_responses=False)  # store bytes
 
-class YjsCodeConsumer(AsyncWebsocketConsumer):
+class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
     """
     WS path: /ws/groups/<group_id>/projects/<project_id>/code/
     Expects client to send/receive base64-encoded Yjs updates:
@@ -25,9 +34,10 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.group_id = int(self.scope["url_route"]["kwargs"]["group_id"])
         self.project_id = int(self.scope["url_route"]["kwargs"]["project_id"])
-        self.room = f"project_room:g{self.group_id}:p{self.project_id}"
-
+        self.room = f"project_room_g{self.group_id}_p{self.project_id}"
+        print("recieving connection")
         user = self.scope.get("user")
+        print(user)
         if not user or not user.is_authenticated:
             await self.close(code=4001)
             return
@@ -43,6 +53,13 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
         # Mark user active in redis set and add project to active_projects
         await redis_client.sadd(active_set_key(self.project_id), str(user.pk))
         await redis_client.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
+
+        await self.channel_layer.group_send(
+            self.room,
+            {
+                "type": "users_changed",
+            }
+        )
 
         # Send current ydoc state to the client if exists; else send content from DB
         ydoc_bytes = await redis_client.get(ydoc_key(self.project_id))
@@ -60,8 +77,17 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         user = self.scope.get("user")
+        print(user, "is leaving")
         if user and user.is_authenticated:
+
             await redis_client.srem(active_set_key(self.project_id), str(user.pk))
+            await self.channel_layer.group_send(
+                self.room,
+                {
+                    "type": "users_changed",
+                }
+            )
+
             # if set is empty now, persist immediately and remove from active_projects
             remaining = await redis_client.scard(active_set_key(self.project_id))
             if remaining == 0:
@@ -70,6 +96,23 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
                 # persist now
                 await self._persist_ydoc_to_db(self.project_id)
         await self.channel_layer.group_discard(self.room, self.channel_name)
+    
+    async def users_changed(self, event):
+        # Get all active users in this project
+        active_user_ids = await redis_client.smembers(active_set_key(self.project_id))
+
+        # Convert IDs to user info
+        active_users = []
+        for uid_bytes in active_user_ids:
+            uid = int(uid_bytes)
+            user_obj = await database_sync_to_async(lambda: User.objects.get(pk=uid))()
+            active_users.append({"id": str(user_obj.pk), "email": user_obj.email})
+
+        # Send current active users to the newly connected client
+        await self.send_json({
+            "type": "connection",
+            "users": active_users
+        })
 
     async def receive(self, text_data=None, bytes_data=None):
         """
@@ -129,6 +172,7 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
 
     async def _apply_update_to_redis_ydoc(self, project_id, update_bytes: bytes):
         """Load Y.Doc from redis (or create), apply update_bytes, store back."""
+        
         key = ydoc_key(project_id)
 
         # atomic-ish: use a small asyncio lock per project (in-process). For multi-worker safety, use redis lock.
@@ -137,16 +181,15 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
         if cur:
             # cur is serialized Y.Doc bytes
             ydoc = YDoc()
-            ydoc.deserialize(cur)
+            apply_update(ydoc, cur)  # Apply the stored state
         else:
             ydoc = YDoc()
 
-        # apply update
-        with ydoc.begin_transaction() as t:
-            apply_update(ydoc, update_bytes)
+        # apply the new update
+        apply_update(ydoc, update_bytes)
 
-        # serialize and store
-        new_bytes = ydoc.serialize()
+        # serialize and store - use encode_state_as_update instead of serialize
+        new_bytes = Y.encode_state_as_update(ydoc)
         await redis_client.set(key, new_bytes)
 
         # update a dirty marker or timestamp
@@ -158,28 +201,39 @@ class YjsCodeConsumer(AsyncWebsocketConsumer):
         Convert Y.Doc to text (assuming doc contains e.g. Y.Text at 'codetext')
         and persist to Code.content
         """
+        
         key = ydoc_key(project_id)
-        loop = asyncio.get_event_loop()
-        # use redis sync client here for simplicity in db sync context
-        sync_redis = aioredis.from_url(REDIS_URL).sync_client()
+        
+        # Use sync redis client
+        sync_redis = redis.from_url(REDIS_URL)
         bytes_val = sync_redis.get(key)
         if not bytes_val:
             # nothing buffered
             return
+        
         ydoc = YDoc()
-        ydoc.deserialize(bytes_val)
-        # how to store code in ydoc depends on client; common is ydoc.get_text("codetext")
+        apply_update(ydoc, bytes_val)
+        
+        # Extract text content
         try:
             t = ydoc.get_text("codetext")
-            text = t.to_string()
-        except Exception:
-            # fallback: try to serialize whole doc to string (depends on yjs usage)
+            text = str(t)
+        except Exception as e:
+            print(f"ERROR extracting text: {e}")
             text = ""
-        # save to DB
+        
+        # Save to DB with transaction
         try:
-            code, _ = Code.objects.select_for_update().get_or_create(project_id=project_id)
-            code.content = text
-            code.save()
-        except Exception:
-            # ignore errors for now log later
-            pass
+            with transaction.atomic():  # Wrap in transaction
+                code, created = Code.objects.get_or_create(
+                    project_id=project_id,
+                    defaults={'content': text}
+                )
+                if not created:
+                    if code.content == text:
+                        return  # no changes were made so....
+                    code.content = text
+                    code.save()
+            print(f"Successfully saved {len(text)} characters to DB")
+        except Exception as e:
+            print(f"ERROR saving to DB: {e}")

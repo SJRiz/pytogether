@@ -111,6 +111,6 @@ def delete_project(request, group_id, project_id):
         return Response({"error": "You are not in this group"}, status=status.HTTP_403_FORBIDDEN)
     if not project:
         return Response({"error": "Project does not exist in this group"}, status=status.HTTP_404_NOT_FOUND)
-
+    project.code.delete()
     project.delete()
     return Response({"message": "Project deleted"}, status=status.HTTP_200_OK)

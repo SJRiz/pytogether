@@ -23,32 +23,25 @@ class JWTAuthMiddleware:
     def __init__(self, inner):
         self.inner = inner
 
-    def __call__(self, scope):
-        return JWTAuthMiddlewareInstance(scope, self.inner)
+    async def __call__(self, scope, receive, send):
+        # Set the user in scope
+        scope['user'] = await self.get_user_from_jwt(scope)
+        
+        # Call the inner application with the modified scope
+        return await self.inner(scope, receive, send)  # <-- Fixed this line
 
-
-class JWTAuthMiddlewareInstance:
-    def __init__(self, scope, inner):
-        self.scope = scope
-        self.inner = inner
-
-    async def __call__(self, receive, send):
-        self.scope['user'] = await self.get_user_from_jwt()
-        inner = self.inner(self.scope)
-        return await inner(receive, send)
-
-    async def get_user_from_jwt(self):
+    async def get_user_from_jwt(self, scope):
         from django.contrib.auth.models import AnonymousUser
         token = None
 
         # Check query string
-        query_string = self.scope.get("query_string", b"").decode()
+        query_string = scope.get("query_string", b"").decode()
         if "token=" in query_string:
             token = query_string.split("token=")[-1].split("&")[0]
 
         # Check headers (Authorization: Bearer <token>)
         if not token:
-            headers = dict((k.decode(), v.decode()) for k, v in self.scope.get("headers", []))
+            headers = dict((k.decode(), v.decode()) for k, v in scope.get("headers", []))
             auth_header = headers.get("authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ")[1]
@@ -61,5 +54,6 @@ class JWTAuthMiddlewareInstance:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = payload.get("user_id")
             return await get_user(user_id)
-        except Exception:
+        except Exception as e:
+            print(f"JWT decode error: {e}")
             return AnonymousUser()
