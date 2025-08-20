@@ -247,7 +247,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           setIsLoading(false);
         }
       } catch (err) {
-        addConsoleEntry(`Failed to load Skulpt: ${err.message || err}`, "error");
+        addConsoleEntry(`Failed to load interpreter: ${err.message || err}`, "error");
         addConsoleEntry("Try refreshing the page if the issue persists.", "system");
         setIsLoading(false);
       }
@@ -492,8 +492,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-
-            <Code className="h-6 w-6 text-blue-400" />
+            <img
+                src="../../public/pytog.png"
+                alt="Code Icon"
+                className="h-10 w-11"
+            />
             <h1 className="text-xl font-semibold text-gray-100">PyTogether</h1>
             <span className="text-sm text-gray-400">Real-time Python Collaboration</span>
             

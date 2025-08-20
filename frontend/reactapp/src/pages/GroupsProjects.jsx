@@ -211,7 +211,11 @@ export default function GroupsAndProjectsPage() {
         <div className="border-b border-gray-700 bg-gray-800 px-6 py-4">
             <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-                <Code2 className="h-6 w-6 text-blue-400" />
+                <img
+                    src="../../public/pytog.png"
+                    alt="Code Icon"
+                    className="h-10 w-11"
+                />
                 <h1 className="text-xl font-semibold text-white">PyTogether</h1>
             </div>
             

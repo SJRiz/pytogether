@@ -58,7 +58,11 @@ export default function Login() {
         <div className="p-8 text-center border-b border-gray-700/50">
           <div className="flex justify-center mb-6">
             <div className="p-3 bg-blue-500/10 rounded-full">
-              <Code2 className="h-10 w-10 text-blue-400" />
+              <img
+                src="../../public/pytog.png"
+                alt="Code Icon"
+                className="h-15 w-15"
+              />
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
