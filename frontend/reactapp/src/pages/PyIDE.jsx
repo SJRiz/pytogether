@@ -75,13 +75,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     // Create WebSocket connection
     // Point to Django backend with JWT token
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     
     // Get JWT token
     const token = sessionStorage.getItem("access_token");
     const tokenParam = token ? `?token=${token}` : "";
     
-    const wsUrl = `${protocol}//localhost:8000/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
+    const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
+    const wsUrl = `${wsBase}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
     
     console.log('Attempting WebSocket connection');
     const ws = new WebSocket(wsUrl);
