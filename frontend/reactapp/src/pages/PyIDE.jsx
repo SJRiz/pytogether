@@ -493,7 +493,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               <ArrowLeft className="h-5 w-5" />
             </button>
             <img
-                src="../../public/pytog.png"
+                src="/pytog.png"
                 alt="Code Icon"
                 className="h-10 w-11"
             />

@@ -212,7 +212,7 @@ export default function GroupsAndProjectsPage() {
             <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
                 <img
-                    src="../../public/pytog.png"
+                    src="/pytog.png"
                     alt="Code Icon"
                     className="h-10 w-11"
                 />
