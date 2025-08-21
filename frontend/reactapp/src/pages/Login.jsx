@@ -59,7 +59,7 @@ export default function Login() {
           <div className="flex justify-center mb-6">
             <div className="p-3 bg-blue-500/10 rounded-full">
               <img
-                src="../../public/pytog.png"
+                src="/pytog.png"
                 alt="Code Icon"
                 className="h-15 w-15"
               />
