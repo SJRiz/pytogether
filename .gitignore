@@ -204,3 +204,5 @@ __marimo__/
 
 certbot/
 nginx/conf.d
+
+.vscode

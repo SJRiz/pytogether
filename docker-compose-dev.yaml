@@ -1,0 +1,50 @@
+services:
+  django:
+    image: pytogether-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.dev
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - backend
+
+  celery:
+    image: pytogether-backend:latest
+    command: celery -A backend worker -l info
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  celery-beat:
+    image: pytogether-backend:latest
+    command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+volumes:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge
