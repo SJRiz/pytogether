@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from y_py import YDoc, apply_update, encode_state_as_update
+from y_py import YDoc, apply_update
 
 from projects.models import Project
 from .models import Code
@@ -22,7 +22,7 @@ REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 redis_client = aioredis.from_url(REDIS_URL, decode_responses=False)
 
 # Max message size in bytes to prevent malicious payloads
-MAX_MESSAGE_SIZE = 2_000_000  # ~2MB
+MAX_MESSAGE_SIZE = 1_000_000  # ~1MB
 
 
 class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
@@ -165,8 +165,8 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         
         key = ydoc_key(project_id)
 
-        # atomic-ish: use a small asyncio lock per project (in-process). For multi-worker safety, use redis lock.
-        # Here: we fetch current bytes, apply update with y_py, and write back.
+        # atomic-ish: use a small asyncio lock per project (in-process).
+        # we fetch current bytes, apply update with y_py, and write back.
         cur = await redis_client.get(key)
         if cur:
             # cur is serialized Y.Doc bytes

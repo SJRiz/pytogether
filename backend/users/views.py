@@ -37,7 +37,7 @@ def google_login(request):
         key="refresh_token",
         value=str(refresh),
         httponly=True,
-        secure=False,   # True if using HTTPS in production
+        secure=True,   # True if using HTTPS in production
         samesite="Lax",
         path="/api/auth/token/refresh/"
     )

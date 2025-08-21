@@ -15,6 +15,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "snapshot-codes-every-5-minutes": {
         "task": "codes.tasks.snapshot_active_projects",
-        "schedule": 30.0,
+        "schedule": 360.0,
     },
 }
