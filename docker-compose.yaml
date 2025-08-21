@@ -48,9 +48,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/templates:/etc/nginx/templates
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    env_file:
+      - ./backend/.env
+    command: /bin/sh -c "envsubst '\$SSL_CERT_PATH \$SSL_KEY_PATH' < /etc/nginx/templates/backend.conf > /etc/nginx/conf.d/backend.conf && exec nginx -g 'daemon off;'"
     depends_on:
       - django
     networks:
