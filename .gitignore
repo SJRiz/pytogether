@@ -202,4 +202,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-certbot
+certbot/
+nginx/
