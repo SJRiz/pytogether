@@ -2,7 +2,7 @@ from .base import *
 from decouple import config
 
 DEBUG = False
-ALLOWED_HOSTS = [config("DOMAIN"), config("ORIGIN"), config("VPS_IP")]
+ALLOWED_HOSTS = [config("DOMAIN"), config("VPS_IP")]
 
 # HTTPS / security
 SECURE_SSL_REDIRECT = True

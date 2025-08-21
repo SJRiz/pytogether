@@ -203,4 +203,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 certbot/
-nginx/
+nginx/conf.d
