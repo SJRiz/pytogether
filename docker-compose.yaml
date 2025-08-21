@@ -1,48 +1,46 @@
 services:
   django:
+    image: pytogether-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
     command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
-    volumes:
-      - ./backend:/app
-    environment:
-      - DJANGO_SETTINGS_MODULE=backend.settings
     env_file:
       - ./backend/.env
     depends_on:
       - redis
+    networks:
+      - backend
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - backend
 
   celery:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: pytogether-backend:latest
     command: celery -A backend worker -l info
-    volumes:
-      - ./backend:/app
     env_file:
       - ./backend/.env
     depends_on:
       - redis
+    networks:
+      - backend
 
   celery-beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: pytogether-backend:latest
     command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    volumes:
-      - ./backend:/app
     env_file:
       - ./backend/.env
     depends_on:
       - redis
+    networks:
+      - backend
 
+  # Nginx reverse proxy
   nginx:
     image: nginx:alpine
     restart: always
@@ -55,13 +53,27 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - django
+    networks:
+      - backend
 
+  # Certbot for SSL
   certbot:
     image: certbot/certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done;'"
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+        sleep 12h & wait $${!};
+        certbot renew --webroot -w /var/www/certbot;
+      done"
+    networks:
+      - backend
 
 volumes:
   redis_data:
+
+networks:
+  backend:
+    driver: bridge
