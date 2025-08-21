@@ -2,7 +2,9 @@ from .base import *
 from decouple import config
 
 DEBUG = False
-ALLOWED_HOSTS = ['django', 'localhost', config("DOMAIN"), config("VPS_IP")]
+ALLOWED_HOSTS = ['django', 'localhost', '127.0.0.1', config("DOMAIN"), config("VPS_IP")]
+
+print("setting up......")
 
 # HTTPS / security
 SECURE_SSL_REDIRECT = False
