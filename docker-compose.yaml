@@ -6,8 +6,6 @@ services:
     command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
     volumes:
       - ./backend:/app
-    ports:
-      - "8000:8000"
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
     env_file:
@@ -16,9 +14,7 @@ services:
       - redis
 
   redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
+    image: redis:7-alpine
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -46,6 +42,26 @@ services:
       - ./backend/.env
     depends_on:
       - redis
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - django
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done;'"
 
 volumes:
   redis_data:
