@@ -8,6 +8,8 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
     env_file:
       - ./backend/.env
     depends_on:
