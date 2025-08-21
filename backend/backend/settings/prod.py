@@ -19,6 +19,20 @@ CSRF_TRUSTED_ORIGINS = [config("ORIGIN")]
 CORS_ALLOWED_ORIGINS = [config("ORIGIN")]
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "OPTIONS",
+    "DELETE",
+    "PUT"
+]
+
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "x-csrftoken",
+]
+
 # DRF permissions
 REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = ("rest_framework.permissions.IsAuthenticated",)
 
