@@ -51,6 +51,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
 
+  // latency tracking stuff
+  const [latency, setLatency] = useState(null);
+  const lastPingTimeRef = useRef(null);
+
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
     if (!groupId || !projectId) {
@@ -76,7 +80,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     // Create WebSocket connection
     // Point to Django backend with JWT token
     // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    
     // Get JWT token
     const token = sessionStorage.getItem("access_token");
     const tokenParam = token ? `?token=${token}` : "";
@@ -117,7 +120,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           if (data.users) {
             setConnectedUsers(data.users);
           }
-        }
+        } else if (data.type === 'pong') {
+            if (lastPingTimeRef.current && data.timestamp === lastPingTimeRef.current) {
+              const newLatency = Date.now() - lastPingTimeRef.current;
+              setLatency(newLatency);
+              console.log(`Network latency: ${newLatency}ms`);
+            }
+          }
         } catch (err) {
           console.error('Error handling WebSocket message:', err);
         }
@@ -164,6 +173,28 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ydoc.destroy();
     };
   }, [groupId, projectId]);
+
+  // useEffect hook for latency testing
+  useEffect(() => {
+    if (!isConnected || !wsRef.current) {
+      return;
+    }
+    
+    // Set up ping-pong latency test
+    const interval = setInterval(() => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        lastPingTimeRef.current = Date.now();
+        wsRef.current.send(JSON.stringify({
+          type: 'ping',
+          timestamp: lastPingTimeRef.current
+        }));
+      }
+    }, 5000); // Test every 5 seconds
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isConnected]);
 
   // Sync Y.js text content with local code state for display
   useEffect(() => {

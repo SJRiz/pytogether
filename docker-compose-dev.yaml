@@ -13,6 +13,8 @@ services:
       - redis
     networks:
       - backend
+    ports:
+      - "8000:8000"
 
   redis:
     image: redis:7-alpine

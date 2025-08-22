@@ -142,6 +142,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
                     text = code_obj.content if code_obj else ""
                     await self.send_json({"type": "initial", "content": text})
+            elif mtype == "ping":
+                await self.send(json.dumps({
+                    'type': 'pong',
+                    'timestamp': msg.get('timestamp')
+                }))
+            return
         except Exception as e:
             print(f"Error processing message: {e}")
 
