@@ -53,6 +53,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Allauth
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
-# Make sure Django knows it's behind a proxy
+# Make sure Django knows it's behind a proxy (don't know if i still need this or not but i really dont wanna break the code by accident)
 USE_TZ = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

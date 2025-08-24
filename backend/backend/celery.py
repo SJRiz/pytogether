@@ -1,8 +1,8 @@
 import os
 from celery import Celery
 
+# initialize
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
-
 app = Celery("backend")
 
 # read configuration from Django settings, CELERY_ prefix for keys
