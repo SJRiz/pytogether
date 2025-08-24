@@ -14,7 +14,7 @@ services:
     networks:
       - backend
     ports:
-      - "8000:8000"
+      - "8000:8000"   # so you can communicate using npm run dev on frontend
 
   redis:
     image: redis:7-alpine
@@ -26,7 +26,7 @@ services:
 
   celery:
     image: pytogether-backend:latest
-    command: celery -A backend worker -l info
+    command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every 5 minutes (and the task does not take 5 minutes)
     env_file:
       - ./backend/.env
     depends_on:

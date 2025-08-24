@@ -14,7 +14,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
 class GroupMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email"]  # include any other fields you want
+        fields = ["id", "email"]  # include any other fields
 
 class GroupDetailSerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField()

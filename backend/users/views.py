@@ -14,6 +14,7 @@ User = get_user_model()
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def google_login(request):
+    """The frontend mainly handles the oauth, we just have to make sure their google login token is actually valid"""
     token = request.data.get("access_token")
     if not token:
         return Response({"error": "Missing Google token"}, status=status.HTTP_400_BAD_REQUEST)
@@ -27,8 +28,10 @@ def google_login(request):
     if not email:
         return Response({"error": "Email not available"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # if its the user's first time, create the account for them
     user, _ = User.objects.get_or_create(email=email, defaults={"username": email})
 
+    # give em a refresh token too
     refresh = RefreshToken.for_user(user)
     response = Response({"access": str(refresh.access_token), "email": user.email})
     
@@ -79,6 +82,7 @@ def logout(request):
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+# debug endpoint
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
