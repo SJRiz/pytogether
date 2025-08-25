@@ -6,26 +6,24 @@ from django.db import transaction
 
 from .models import Code
 from projects.models import Project
-from .redis_helpers import active_set_key, ACTIVE_PROJECTS_SET
+from .redis_helpers import active_set_key, ydoc_key, ACTIVE_PROJECTS_SET
 
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-r = redis.Redis.from_url(REDIS_URL)
-
-ydoc_key_template = "project_ydoc:{}"
+redis_client = redis.Redis.from_url(REDIS_URL)
 
 MAX_LOCK_SECONDS = 10
 
 @shared_task
 def snapshot_active_projects():
-    project_ids = r.smembers(ACTIVE_PROJECTS_SET)
+    project_ids = redis_client.smembers(ACTIVE_PROJECTS_SET)
     processed = []
     for pid_b in project_ids:
         try:
             pid = int(pid_b)
         except Exception:
             continue
-        lock = r.lock(f"lock:project_persist:{pid}", timeout=MAX_LOCK_SECONDS)
+        lock = redis_client.lock(f"lock:project_persist:{pid}", timeout=MAX_LOCK_SECONDS)
         got = lock.acquire(blocking=False)
         if not got:
             continue
@@ -40,8 +38,8 @@ def snapshot_active_projects():
     return processed
 
 def persist_single_project(project_id: int):
-    key = ydoc_key_template.format(project_id)
-    bytes_val = r.get(key)
+    key = ydoc_key(project_id)
+    bytes_val = redis_client.get(key)
 
     if not bytes_val:
         return
@@ -67,7 +65,7 @@ def persist_single_project(project_id: int):
 
     except Project.DoesNotExist:
         # project removed; cleanup redis keys
-        r.delete(key)
-        r.srem(ACTIVE_PROJECTS_SET, str(project_id))
-        r.delete(active_set_key(project_id))
+        redis_client.delete(key)
+        redis_client.srem(ACTIVE_PROJECTS_SET, str(project_id))
+        redis_client.delete(active_set_key(project_id))
     
