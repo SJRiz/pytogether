@@ -1,27 +1,17 @@
 import json
 import base64
-import os
 import asyncio
-import redis
-import redis.asyncio as aioredis
 import y_py as Y
 
 from django.contrib.auth import get_user_model
-from django.db import transaction
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .models import Code
-from .redis_helpers import ydoc_key, active_set_key, ACTIVE_PROJECTS_SET
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
-
-REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
-
-async_redis = aioredis.from_url(REDIS_URL)
-sync_redis = redis.from_url(REDIS_URL)
 
 # Max message size in bytes to prevent malicious payloads
 MAX_MESSAGE_SIZE = 1_000_000  # ~1MB
@@ -54,9 +44,9 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         # Over here, we keep track of active projects on-the-fly. We do this by tracking members per group on redis
         # Mark user active in Redis with TTL (we use this along with the heartbeat interval to note active users)
-        await async_redis.sadd(active_set_key(self.project_id), str(self.user.pk))
-        await async_redis.expire(active_set_key(self.project_id), 60)  # TTL 60s, time until they are officially disconnected
-        await async_redis.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
+        await ASYNC_REDIS.sadd(active_set_key(self.project_id), str(self.user.pk))
+        await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)  # TTL 60s, time until they are officially disconnected
+        await ASYNC_REDIS.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
 
         # This is to update the member's list on the client side.
         await self.channel_layer.group_send(
@@ -66,7 +56,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         # We store all ydocs on redis, this is also used to buffer before saving
         # Send current Y.Doc state (Y.js uses bytes to store metadata)
-        ydoc_bytes = await async_redis.get(ydoc_key(self.project_id))
+        ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
         if ydoc_bytes:
             await self.send_json({
                 "type": "sync",
@@ -85,18 +75,18 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         try:
             if self.user and self.user.is_authenticated:
                 # Remove them from the active users in the redis set
-                await async_redis.srem(active_set_key(self.project_id), str(self.user.pk))
+                await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
                 await self.channel_layer.group_send(
                     self.room, {"type": "users_changed"}
                 )
 
                 # If there are no more active users in that project they left, remove that project from the active projects set
-                remaining = await async_redis.scard(active_set_key(self.project_id))
+                remaining = await ASYNC_REDIS.scard(active_set_key(self.project_id))
                 if remaining == 0:
-                    await async_redis.srem(ACTIVE_PROJECTS_SET, str(self.project_id))
+                    await ASYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(self.project_id))
 
                     # Save the code when a user leaves
-                    await self._persist_ydoc_to_db(self.project_id)
+                    await database_sync_to_async(persist_ydoc_to_db)(self.project_id)
 
         except Exception as e:
             print(f"Error during disconnect cleanup: {e}")
@@ -111,7 +101,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         """Returns all the members in an active project. Loops through the redis set"""
 
         try:
-            active_user_ids = await async_redis.smembers(active_set_key(self.project_id))
+            active_user_ids = await ASYNC_REDIS.smembers(active_set_key(self.project_id))
             active_users = []
             for id in active_user_ids:
                 uid = int(id)
@@ -162,7 +152,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             elif mtype == "request_sync":
                 # This is primarily called if the user just joined
                 # We can just send them the ydoc data we stored on redis
-                ydoc_bytes = await async_redis.get(ydoc_key(self.project_id))
+                ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
                 if ydoc_bytes:
                     await self.send_json({
                         "type": "sync",
@@ -208,7 +198,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         key = ydoc_key(project_id)
 
         # we fetch current bytes, apply update with y_py, and write back.
-        cur = await async_redis.get(key)
+        cur = await ASYNC_REDIS.get(key)
         if cur:
             # cur is serialized Y.Doc bytes
             ydoc = YDoc()
@@ -219,36 +209,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         # apply the new update
         apply_update(ydoc, update_bytes)
         new_bytes = Y.encode_state_as_update(ydoc)
-        await async_redis.set(key, new_bytes)
-
-    @database_sync_to_async
-    def _persist_ydoc_to_db(self, project_id):
-        """Saves the code to the database"""
-        try:
-            # Django ORM is sync, so we need to use redis synchronously too
-            bytes_val = sync_redis.get(ydoc_key(project_id))
-            if not bytes_val:
-                return
-            ydoc = YDoc()
-            apply_update(ydoc, bytes_val)
-            t = ydoc.get_text("codetext")
-            text = str(t)
-
-            # Make the db operation atomic just incase
-            with transaction.atomic():
-                code, created = Code.objects.get_or_create(
-                    project_id=project_id,
-                    defaults={"content": text}
-                )
-
-                # If code exists and the content is different, save it
-                if not created and code.content != text:
-                    code.content = text
-                    code.save()
-            print(f"Saved {len(text)} chars to DB")
-
-        except Exception as e:
-            print(f"Error persisting YDoc to DB: {e}")
+        await ASYNC_REDIS.set(key, new_bytes)
 
     async def _heartbeat_loop(self):
         """Periodically refresh active user TTL"""
@@ -256,6 +217,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             while True:
                 await asyncio.sleep(self.HEARTBEAT_INTERVAL)
                 if self.user and self.user.is_authenticated:
-                    await async_redis.expire(active_set_key(self.project_id), 60)
+                    await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         except asyncio.CancelledError:
             return
