@@ -41,11 +41,14 @@ While there are many online IDEs (Replit, Jupyter, Google Colab, etc.), PyTogeth
 Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collaboration for learners** rather than advanced features.
 
 ## Tech Stack
-- **Backend:** Django/DRF (REST APIs), Redis (used for channel layers, broker for celery, and caching), Celery (async tasks e.g. autosaving)
-- **Datastore:** Supabase (PostgreSQL)
-- **Frontend:** React, TailwindCSS, Skulpt (used to run python in the browser), CodeMirror (linting)
-- **Deployment:** Vercel (frontend hosting), Contabo VPS (backend services, Dockerized)
-- **Tools and Infra:** Docker, Nginx (for reverse proxy)
+- **Backend**: Django, Django REST Framework (DRF)
+- **Real-Time**: Y.js, WebSockets (Django Channels?)
+- **Async Processing**: Celery
+- **Data Store**: PostgreSQL (via Supabase)
+- **Caching & Broker**: Redis
+- **Frontend**: React, Tailwind CSS, CodeMirror
+- **Python Execution**: Skulpt
+- **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx
 
 ## How To Run Locally
 - Requirements: Docker, PostgreSQL database credentials
@@ -75,6 +78,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
