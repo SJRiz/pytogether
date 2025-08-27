@@ -2,6 +2,13 @@
 www.pytogether.org
 Google docs for Python. A simple, beginner-friendly collaborative Python IDE in the browser. No downloads required; just log in and start coding instantly, alone or real-time with friends!  
 
+## Features
+- **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
+- **Secure Authentication** - Log in manually or with Google OAuth.  
+- **Groups & Projects** - Organize your work into teams and projects.  
+- **Smart Autosave** - Code is automatically saved every minute and on exit.  
+- **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
+
 ## About
 When starting out in programming, many beginners find traditional IDEs overwhelming: full of plugins, extensions, configuration steps, paywalls, and complex UIs. PyTogether removes these barriers by offering a lightweight, distraction-free environment where you can focus on writing Python code right away.  
 
@@ -19,13 +26,6 @@ While there are many online IDEs (Replit, Jupyter, Google Colab, etc.), PyTogeth
 - **Safe Learning Space** - Limited features by design to reduce distractions and keep beginners focused.  
 
 Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collaboration for learners** rather than advanced features.
-
-## Features
-- **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
-- **Secure Authentication** - Log in manually or with Google OAuth.  
-- **Groups & Projects** - Organize your work into teams and projects.  
-- **Smart Autosave** - Code is automatically saved every minute and on exit.  
-- **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
 
 ## Tech Stack
 - **Backend:** Django/DRF (REST APIs), Redis (used for channel layers, broker for celery, and caching), Celery (async tasks e.g. autosaving)
@@ -62,4 +62,5 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
