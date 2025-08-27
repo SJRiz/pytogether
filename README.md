@@ -1,6 +1,19 @@
-﻿# PyTogether
-www.pytogether.org
-Google docs for Python. A simple, beginner-friendly collaborative Python IDE in the browser. No downloads required; just log in and start coding instantly, alone or real-time with friends!  
+﻿<p align="center">
+  <img src="https://www.pytogether.org/pytog.png" alt="Logo" width="150"><br>
+  <strong style="font-size: 24px;">PyTogether</strong><br>
+  <em>Google Docs for Python. A simple, beginner-friendly collaborative IDE in the browser</em>
+  <br>
+  <br>
+  <a href="https://www.pytogether.org">www.pytogether.org</a>
+</p>
+
+----
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Demo" width="600">
+</p>
+
+----
 
 ## Features
 - **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
