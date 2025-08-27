@@ -42,7 +42,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 
 ## Tech Stack
 - **Backend**: Django, Django REST Framework (DRF)
-- **Real-Time**: Y.js, WebSockets (Django Channels?)
+- **Real-Time**: Y.js, WebSockets (Django Channels)
 - **Async Processing**: Celery
 - **Data Store**: PostgreSQL (via Supabase)
 - **Caching & Broker**: Redis
@@ -78,6 +78,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
