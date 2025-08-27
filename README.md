@@ -48,7 +48,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Caching, Broker, & Channel layers**: Redis
 - **Frontend**: React, Tailwind CSS, CodeMirror (code linting)
 - **Python Execution**: Skulpt
-- **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx
+- **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx (reverse proxy)
 
 ## Local Development Setup
 - Requirements: Docker, PostgreSQL database credentials
@@ -78,6 +78,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
