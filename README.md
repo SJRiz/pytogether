@@ -47,7 +47,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Deployment:** Vercel (frontend hosting), Contabo VPS (backend services, Dockerized)
 - **Tools and Infra:** Docker, Nginx (for reverse proxy)
 
-## Usage
+## How To Run Locally
 - Requirements: Docker, PostgreSQL database credentials
 
 Before running a development server, you must create a .env file in the backend folder (pytogether/backend/) with the following variables:
@@ -75,5 +75,6 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
