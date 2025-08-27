@@ -4,6 +4,7 @@ import asyncio
 import y_py as Y
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
@@ -13,13 +14,8 @@ from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, ACTIVE_
 
 User = get_user_model()
 
-# Max message size in bytes to prevent malicious payloads
-MAX_MESSAGE_SIZE = 1_000_000  # ~1MB
-
 # We create a consumer object per websocket connection.
 class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
-
-    HEARTBEAT_INTERVAL = 10  # how long we wait till we check if the user is still alive
 
     async def connect(self):
         # The group id and project id come from the url route, and we can use them to generate a room name
@@ -121,7 +117,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # Prevent big messages
-        if len(text_data.encode()) > MAX_MESSAGE_SIZE:
+        if len(text_data.encode()) > settings.MAX_MESSAGE_SIZE:
             await self.send_json({"type": "error", "message": "Message too large"})
             return
         
@@ -215,7 +211,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         """Periodically refresh active user TTL"""
         try:
             while True:
-                await asyncio.sleep(self.HEARTBEAT_INTERVAL)
+                await asyncio.sleep(settings.HEARTBEAT_INTERVAL)
                 if self.user and self.user.is_authenticated:
                     await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         except asyncio.CancelledError:

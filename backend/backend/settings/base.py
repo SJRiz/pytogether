@@ -179,3 +179,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# App specific settings
+MAX_MESSAGE_SIZE = 1_000_000    # ~1MB
+HEARTBEAT_INTERVAL = 10         # how long we wait till we check if the user is still alive

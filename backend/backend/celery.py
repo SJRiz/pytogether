@@ -1,5 +1,6 @@
 import os
 from celery import Celery
+from django.conf import settings
 
 # initialize
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
@@ -13,8 +14,8 @@ app.autodiscover_tasks()
 
 # define beat schedule
 app.conf.beat_schedule = {
-    "snapshot-codes-every-5-minutes": {
+    "snapshot-codes-per-minutes": {
         "task": "codes.tasks.snapshot_active_projects",
-        "schedule": 360.0,
+        "schedule": settings.AUTOSAVE_INTERVAL,
     },
 }
