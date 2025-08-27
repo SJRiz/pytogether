@@ -13,7 +13,7 @@ The platform is designed for **learning, teaching, and pair programming**, makin
 
 While there are many online IDEs (Replit, Jupyter, Google Colab, etc.), PyTogether is built with a different goal: **simplicity first**.  
 
-- ⚡**Instant Setup** - No downloads, no pip installs, no hidden complexity. Just create a group, create a project, and bam!
+- ⚡**Instant Setup**⚡- No downloads, no pip installs, no hidden complexity. Just create a group, create a project, and bam!
 - **Beginner Focused** - No confusing menus, terminals, or configuration. Just code and run.  
 - **Real-Time Collaboration** - Work together with classmates, friends, or mentors in the same editor.  
 - **Safe Learning Space** - Limited features by design to reduce distractions and keep beginners focused.  
@@ -28,11 +28,11 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
 
 ## Tech Stack
-- Backend: Django/DRF (REST APIS), Redis (used for channel layers, broker for celery, and caching), Celery (async tasks e.g. autosaving)
-- Datastore: Supabase (PostgreSQL)
-- Frontend: React, TailwindCSS, Skulpt (used to run python in the browser), CodeMirror (linting)
-- Deployment: Vercel (frontend hosting), Contabo VPS (backend services, Dockerized)
-- Tools and Infra: Docker, Nginx (for reverse proxy)
+- **Backend:** Django/DRF (REST APIs), Redis (used for channel layers, broker for celery, and caching), Celery (async tasks e.g. autosaving)
+- **Datastore:** Supabase (PostgreSQL)
+- **Frontend:** React, TailwindCSS, Skulpt (used to run python in the browser), CodeMirror (linting)
+- **Deployment:** Vercel (frontend hosting), Contabo VPS (backend services, Dockerized)
+- **Tools and Infra:** Docker, Nginx (for reverse proxy)
 
 ## Usage
 - Requirements: Docker, PostgreSQL database credentials
@@ -62,3 +62,4 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
