@@ -45,12 +45,12 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Real-Time**: Y.js, WebSockets (Django Channels)
 - **Async Processing**: Celery
 - **Data Store**: PostgreSQL (via Supabase)
-- **Caching & Broker**: Redis
-- **Frontend**: React, Tailwind CSS, CodeMirror
+- **Caching, Broker, & Channel layers**: Redis
+- **Frontend**: React, Tailwind CSS, CodeMirror (code linting)
 - **Python Execution**: Skulpt
-- **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx
+- **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx (reverse proxy)
 
-## How To Run Locally
+## Local Development Setup
 - Requirements: Docker, PostgreSQL database credentials
 
 Before running a development server, you must create a .env file in the backend folder (pytogether/backend/) with the following variables:
@@ -78,6 +78,8 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
+
 
 
 
