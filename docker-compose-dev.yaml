@@ -26,7 +26,7 @@ services:
 
   celery:
     image: pytogether-backend:latest
-    command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every 5 minutes (and the task does not take 5 minutes)
+    command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every minute (and the task does not take longer than a minute yet)
     env_file:
       - ./backend/.env
     depends_on:
