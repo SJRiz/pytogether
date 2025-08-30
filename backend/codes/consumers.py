@@ -93,7 +93,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room, self.channel_name)
 
-    async def users_changed(self):
+    async def users_changed(self, event):
         """Returns all the members in an active project. Loops through the redis set"""
 
         try:
