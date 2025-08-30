@@ -67,7 +67,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         # Start heartbeat loop
         self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
-    async def disconnect(self):
+    async def disconnect(self, close_code):
         try:
             if self.user and self.user.is_authenticated:
                 # Remove them from the active users in the redis set
