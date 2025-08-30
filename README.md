@@ -40,7 +40,7 @@ While there are many online IDEs (Replit, Jupyter, Google Colab, etc.), PyTogeth
 
 Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collaboration for learners** rather than advanced features.
 
-## Tech Stack
+## Technologies
 - **Backend**: Django, Django REST Framework (DRF)
 - **Real-Time**: Y.js, WebSockets (Django Channels)
 - **Async Processing**: Celery
@@ -49,6 +49,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Frontend**: React, Tailwind CSS, CodeMirror (code linting)
 - **Python Execution**: Skulpt
 - **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx (reverse proxy)
+- **CI/CD**: GitHub Actions (deploy backend to VPS on push to main)
 
 ## Local Development Setup
 - Requirements: Docker, PostgreSQL database credentials
@@ -78,6 +79,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
