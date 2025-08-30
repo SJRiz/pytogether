@@ -21,6 +21,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd pytogether
+            git reset --hard
             git pull origin main
+            rm -rf frontend
             docker compose down
             docker compose up -d --build
