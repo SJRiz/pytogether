@@ -159,7 +159,7 @@ export default function Login() {
         {/* Footer */}
         <div className="p-4 text-center border-t border-gray-700/50">
           <p className="text-xs text-gray-500">
-            placeholder lol
+            For any questions or inquiries, email contact@pytogether.org
           </p>
         </div>
       </div>
