@@ -28,19 +28,19 @@ def google_login(request):
     if not email:
         return Response({"error": "Email not available"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # if its the user's first time, create the account for them
-    user, _ = User.objects.get_or_create(email=email, defaults={"username": email})
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        user = User.objects.create_user(email=email)
 
-    # give em a refresh token too
+    # issue tokens
     refresh = RefreshToken.for_user(user)
     response = Response({"access": str(refresh.access_token), "email": user.email})
-    
-    # Store refresh token in HTTP-only cookie
+
     response.set_cookie(
         key="refresh_token",
         value=str(refresh),
         httponly=True,
-        secure=True,   # True if using HTTPS in production
+        secure=True,
         samesite="Lax",
         path="/api/auth/token/refresh/"
     )
