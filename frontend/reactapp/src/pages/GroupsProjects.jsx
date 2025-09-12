@@ -1,21 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
-import { 
-LogOut, 
-Plus, 
-Users, 
-Key, 
-Edit2, 
-Trash2, 
-Code2, 
-X, 
-ChevronDown, 
-ChevronUp,
-User,
-DoorOpen,
-FolderPlus
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { MainContent } from "../components/MainContent";
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
-import { Code2, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
