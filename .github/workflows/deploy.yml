@@ -27,8 +27,7 @@ jobs:
             rm -rf frontend
 
             # Save all projects, then flush redis
-            docker compose exec django python3 -c "from backend.codes.tasks import snapshot_active_projects; snapshot_active_projects()"
-            docker compose exec django python3 -c "from backend.codes.redis_helpers import SYNC_REDIS; SYNC_REDIS.flushall()"
+            docker compose exec django python3 manage.py cleanup_codes
 
             # Restart all containers
             docker compose down
