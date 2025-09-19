@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { ArrowLeft, Play, Terminal, Code, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon, Send } from "lucide-react";
+import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon, Send } from "lucide-react";
 import api from "../../axiosConfig";
 
 // Y.js imports
@@ -50,11 +50,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const inputRef = useRef(null);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
-  
-  // New refs for better cleanup
-  const yCollabExtensionRef = useRef(null);
-  const updateHandlerRef = useRef(null);
-  const observerRef = useRef(null);
+  const editorDestroyRef = useRef(null);
 
   // latency tracking stuff
   const [latency, setLatency] = useState(null);
@@ -83,6 +79,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     ytextRef.current = ytext;
 
     // Create WebSocket connection
+    // Point to Django backend with JWT token
+    // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // Get JWT token
     const token = sessionStorage.getItem("access_token");
     const tokenParam = token ? `?token=${token}` : "";
     
@@ -114,26 +113,24 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
           Y.applyUpdate(ydoc, stateBytes);
         } else if (data.type === 'initial') {
-          // Initial content from database - use transaction to avoid conflicts
-          ydoc.transact(() => {
-            ytext.delete(0, ytext.length);
-            ytext.insert(0, data.content || '');
-          });
+          // Initial content from database
+          ytext.delete(0, ytext.length);
+          ytext.insert(0, data.content || '');
         } else if (data.type === "connection") {
           // Use the full list sent by the backend
           if (data.users) {
             setConnectedUsers(data.users);
           }
         } else if (data.type === 'pong') {
-          if (lastPingTimeRef.current && data.timestamp === lastPingTimeRef.current) {
-            const newLatency = Date.now() - lastPingTimeRef.current;
-            setLatency(newLatency);
-            console.log(`Network latency: ${newLatency}ms`);
+            if (lastPingTimeRef.current && data.timestamp === lastPingTimeRef.current) {
+              const newLatency = Date.now() - lastPingTimeRef.current;
+              setLatency(newLatency);
+              console.log(`Network latency: ${newLatency}ms`);
+            }
           }
+        } catch (err) {
+          console.error('Error handling WebSocket message:', err);
         }
-      } catch (err) {
-        console.error('Error handling WebSocket message:', err);
-      }
     };
 
     ws.onerror = (error) => {
@@ -166,52 +163,27 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       }));
     };
 
-    updateHandlerRef.current = updateHandler;
     ydoc.on('update', updateHandler);
 
     // Cleanup function
     return () => {
-      console.log('Cleaning up Y.js and WebSocket connections');
-      
-      // Clean up Y.js observer
-      if (observerRef.current && ytextRef.current) {
-        try {
-          ytextRef.current.unobserve(observerRef.current);
-        } catch (err) {
-          console.warn('Error unobserving ytext:', err);
-        }
-      }
-      
-      // Clean up Y.js update handler
-      if (updateHandlerRef.current && ydoc) {
-        try {
-          ydoc.off('update', updateHandlerRef.current);
-        } catch (err) {
-          console.warn('Error removing update handler:', err);
-        }
-      }
-      
-      // Close WebSocket
-      if (ws && ws.readyState === WebSocket.OPEN) {
+      ydoc.off('update', updateHandler);
+      if (ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
       
-      // Destroy Y.js document
-      try {
-        ydoc.destroy();
-      } catch (err) {
-        console.warn('Error destroying Y.js document:', err);
+      // Properly destroy the editor view
+      if (editorDestroyRef.current) {
+        editorDestroyRef.current();
+        editorDestroyRef.current = null;
       }
       
-      // Clear refs
-      ydocRef.current = null;
+      ydoc.destroy();
+      setIsConnected(false);
+      setYjsReady(false);
       ytextRef.current = null;
-      wsRef.current = null;
-      updateHandlerRef.current = null;
-      observerRef.current = null;
-      yCollabExtensionRef.current = null;
     };
-  }, [groupId, projectId, navigate]);
+  }, [groupId, projectId]);
 
   // useEffect hook for latency testing
   useEffect(() => {
@@ -249,17 +221,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       setCode(ytext.toString());
     };
 
-    observerRef.current = observer;
     ytext.observe(observer);
 
     return () => {
-      if (observerRef.current && ytext) {
-        try {
-          ytext.unobserve(observerRef.current);
-        } catch (err) {
-          console.warn('Error unobserving ytext in sync effect:', err);
-        }
-      }
+      ytext.unobserve(observer);
     };
   }, [ytextRef.current]);
 
@@ -520,13 +485,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     setIsSavingName(true);
     try {
-      console.log(tempProjectName);
+      console.log(tempProjectName)
       await api.put(`/groups/${groupId}/projects/${projectId}/edit/`, { project_name: tempProjectName });
       setProjectName(tempProjectName);
       setIsEditingName(false);
-    } catch (err) {
+      } catch (err) {
       console.error(err);
-    } finally {
+      } finally {
       setIsSavingName(false);
     }
   };
@@ -543,18 +508,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const getCodeMirrorExtensions = () => {
     const extensions = [python()];
     
-    // Add Y.js collaboration if available and connected
-    if (ytextRef.current && isConnected) {
-      try {
-        const collabExtension = yCollab(ytextRef.current, null, { 
+    // Add Y.js collaboration if available
+    if (ytextRef.current) {
+      extensions.push(
+        yCollab(ytextRef.current, null, { 
           // The user ID will be handled by the WebSocket consumer
           // which already has authentication context
-        });
-        yCollabExtensionRef.current = collabExtension;
-        extensions.push(collabExtension);
-      } catch (err) {
-        console.warn('Failed to create Y.js collaboration extension:', err);
-      }
+        })
+      );
     }
     
     return extensions;
@@ -700,19 +661,23 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           
           <div className="flex-1 overflow-hidden">
             <CodeMirror
-              key={`${groupId}-${projectId}-${isConnected}`} // Force remount on connection change
               value={code}
               height="100%"
               theme={oneDark}
               extensions={getCodeMirrorExtensions()}
               onChange={(value) => {
-                // Handle manual changes when Y.js isn't connected
-                if (!ytextRef.current || !isConnected) {
+                if (!ytextRef.current && !isConnected) {
                   setCode(value);
                 }
               }}
               onCreateEditor={(view) => {
                 editorViewRef.current = view;
+                // Set cleanup function
+                editorDestroyRef.current = () => {
+                  if (view) {
+                    view.destroy();
+                  }
+                };
               }}
               className="h-full text-sm"
               basicSetup={{
@@ -723,9 +688,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 indentOnInput: true,
                 bracketMatching: true,
                 closeBrackets: true,
-                autocompletion: true,
-                highlightSelectionMatches: true,
-                searchKeymap: true,
+                autocompletion: false, // Disable autocompletion to reduce errors
+                highlightSelectionMatches: false, // Disable highlight matches
+                searchKeymap: false, // Disable search keymap
               }}
             />
           </div>
