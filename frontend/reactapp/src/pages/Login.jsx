@@ -71,7 +71,7 @@ export default function Login() {
             <div className="p-3 bg-blue-500/10 rounded-full">
               <img
                 src="/pytog.png"
-                alt="Code Icon"
+                alt="PyTogether Logo"
                 className="h-15 w-15"
               />
             </div>
