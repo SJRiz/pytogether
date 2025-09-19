@@ -52,7 +52,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **CI/CD**: GitHub Actions (deploy backend to VPS on push to main)
 
 ## Local Development Setup
-- Requirements: Docker, PostgreSQL database credentials
+- Requirements: Docker, Node, PostgreSQL database credentials
 
 Before running a development server, you must create a .env file in the backend folder (pytogether/backend/) with the following variables:
 
@@ -79,6 +79,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
