@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -52,6 +53,16 @@ export default function Login() {
   };
 
   return (
+    <>
+    <Helmet>
+        <title>PyTogether</title>
+        <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
+        <meta property="og:title" content="PyTogether" />
+        <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://pytogether.org/" />
+        <meta property="og:image" content="/pytog.png" />
+    </Helmet>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-gray-800/70 backdrop-blur-md border border-gray-700/30 rounded-xl shadow-2xl overflow-hidden transition-all duration-300 hover:bg-gray-800/80">
         {/* Header Section */}
@@ -69,7 +80,7 @@ export default function Login() {
             PyTogether
           </h1>
           <p className="text-gray-400 text-sm mb-1">Easy. Quick. Real-time. Free.</p>
-          <p className="text-gray-500 text-xs">Write simple Python code with others</p>
+          <p className="text-gray-500 text-xs">Google Docs for Python. Write Python code with others.</p>
           <br/>
           <p className="text-gray-500 text-xs">Get Started</p>
         </div>
@@ -159,10 +170,11 @@ export default function Login() {
         {/* Footer */}
         <div className="p-4 text-center border-t border-gray-700/50">
           <p className="text-xs text-gray-500">
-            For any questions or inquiries, email <a href="mailto:contact@pytogether.org" class="text-blue-400 font-bold underline">contact@pytogether.org</a>
+            For any questions or inquiries, email <a href="mailto:contact@pytogether.org" className="text-blue-400 font-bold underline">contact@pytogether.org</a>
           </p>
         </div>
       </div>
     </div>
+    </>
   );
 }
