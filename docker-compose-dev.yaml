@@ -1,3 +1,5 @@
+# docker compose -f docker-compose-dev.yaml up -d
+
 services:
   django:
     image: pytogether-backend:latest
