@@ -1,5 +1,5 @@
 // this code is a huge big mess i will refactor this later when i have time
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
@@ -50,11 +50,52 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const inputRef = useRef(null);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
-  const editorDestroyRef = useRef(null);
+  const cleanupRef = useRef(null);
+  const isCleaningUpRef = useRef(false);
 
   // latency tracking stuff
   const [latency, setLatency] = useState(null);
   const lastPingTimeRef = useRef(null);
+
+  // Stable cleanup function
+  const cleanupYjs = useCallback(() => {
+    if (isCleaningUpRef.current) return;
+    isCleaningUpRef.current = true;
+
+    console.log('Cleaning up Y.js resources...');
+
+    // Close WebSocket first
+    if (wsRef.current) {
+      try {
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.close();
+        }
+      } catch (err) {
+        console.warn('Error closing WebSocket:', err);
+      }
+      wsRef.current = null;
+    }
+
+    // Clean up Y.js document
+    if (ydocRef.current) {
+      try {
+        // Remove all event listeners before destroying
+        const ydoc = ydocRef.current;
+        ydoc.off('update', cleanupRef.current);
+        ydoc.destroy();
+      } catch (err) {
+        console.warn('Error destroying Y.js document:', err);
+      }
+      ydocRef.current = null;
+    }
+
+    // Clear text reference
+    ytextRef.current = null;
+    
+    setTimeout(() => {
+      isCleaningUpRef.current = false;
+    }, 100);
+  }, []);
 
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
@@ -70,58 +111,80 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       return;
     }
 
-    console.log('Initializing WebSocket with:', { groupId, projectId });
+    // Cleanup any existing resources first
+    if (ydocRef.current || wsRef.current) {
+      cleanupYjs();
+      // Wait a bit before reinitializing
+      setTimeout(() => initializeConnection(), 100);
+      return;
+    }
 
-    // Create Y.js document
-    const ydoc = new Y.Doc();
-    const ytext = ydoc.getText('codetext');
-    ydocRef.current = ydoc;
-    ytextRef.current = ytext;
+    initializeConnection();
 
-    // Create WebSocket connection
-    // Point to Django backend with JWT token
-    // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Get JWT token
-    const token = sessionStorage.getItem("access_token");
-    const tokenParam = token ? `?token=${token}` : "";
-    
-    const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
-    const wsUrl = `${wsBase}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
-    
-    console.log('Attempting WebSocket connection');
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    function initializeConnection() {
+      if (isCleaningUpRef.current) return;
 
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      setIsConnected(true);
+      console.log('Initializing WebSocket with:', { groupId, projectId });
+
+      // Create Y.js document
+      const ydoc = new Y.Doc();
+      const ytext = ydoc.getText('codetext');
+      ydocRef.current = ydoc;
+      ytextRef.current = ytext;
+
+      // Create WebSocket connection
+      const token = sessionStorage.getItem("access_token");
+      const tokenParam = token ? `?token=${token}` : "";
       
-      // Request initial sync
-      ws.send(JSON.stringify({ type: 'request_sync' }));
-    };
+      const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
+      const wsUrl = `${wsBase}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
+      
+      console.log('Attempting WebSocket connection');
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
         
-        if (data.type === 'update') {
-          // Apply remote update to Y.js document
-          const updateBytes = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
-          Y.applyUpdate(ydoc, updateBytes);
-        } else if (data.type === 'sync') {
-          // Full document sync
-          const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
-          Y.applyUpdate(ydoc, stateBytes);
-        } else if (data.type === 'initial') {
-          // Initial content from database
-          ytext.delete(0, ytext.length);
-          ytext.insert(0, data.content || '');
-        } else if (data.type === "connection") {
-          // Use the full list sent by the backend
-          if (data.users) {
-            setConnectedUsers(data.users);
+        // Request initial sync
+        ws.send(JSON.stringify({ type: 'request_sync' }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // Check if Y.js objects still exist before applying updates
+          if (!ydocRef.current || !ytextRef.current) {
+            console.warn('Y.js objects destroyed, ignoring message');
+            return;
           }
-        } else if (data.type === 'pong') {
+
+          if (data.type === 'update') {
+            // Apply remote update to Y.js document
+            const updateBytes = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
+            Y.applyUpdate(ydoc, updateBytes);
+          } else if (data.type === 'sync') {
+            // Full document sync
+            const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
+            Y.applyUpdate(ydoc, stateBytes);
+          } else if (data.type === 'initial') {
+            // Initial content from database - be more careful here
+            const currentYtext = ytextRef.current;
+            if (currentYtext) {
+              // Use a transaction to safely update the text
+              ydoc.transact(() => {
+                currentYtext.delete(0, currentYtext.length);
+                currentYtext.insert(0, data.content || '');
+              });
+            }
+          } else if (data.type === "connection") {
+            // Use the full list sent by the backend
+            if (data.users) {
+              setConnectedUsers(data.users);
+            }
+          } else if (data.type === 'pong') {
             if (lastPingTimeRef.current && data.timestamp === lastPingTimeRef.current) {
               const newLatency = Date.now() - lastPingTimeRef.current;
               setLatency(newLatency);
@@ -131,59 +194,55 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         } catch (err) {
           console.error('Error handling WebSocket message:', err);
         }
-    };
+      };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsConnected(false);
-      alert("Failed to connect to the project. Redirecting back to groups.");
-      navigate("/");
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      if (!isConnected) { // If it never connected successfully
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+        alert("Failed to connect to the project. Redirecting back to groups.");
         navigate("/");
-      }
-      setIsConnected(false);
-    };
+      };
 
-    // Listen for Y.js updates to send to server
-    const updateHandler = (update, origin) => {
-      // Don't send updates that came from the network
-      if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN) {
-        return;
-      }
-      
-      // Send update to server as base64
-      const updateB64 = btoa(String.fromCharCode.apply(null, update));
-      ws.send(JSON.stringify({
-        type: 'update',
-        update_b64: updateB64
-      }));
-    };
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        if (!isConnected) { // If it never connected successfully
+          navigate("/");
+        }
+        setIsConnected(false);
+      };
 
-    ydoc.on('update', updateHandler);
+      // Listen for Y.js updates to send to server
+      const updateHandler = (update, origin) => {
+        // Don't send updates that came from the network
+        if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN) {
+          return;
+        }
+        
+        // Additional safety check
+        if (isCleaningUpRef.current) {
+          return;
+        }
+        
+        try {
+          // Send update to server as base64
+          const updateB64 = btoa(String.fromCharCode.apply(null, update));
+          ws.send(JSON.stringify({
+            type: 'update',
+            update_b64: updateB64
+          }));
+        } catch (err) {
+          console.warn('Error sending update:', err);
+        }
+      };
+
+      // Store the handler reference for cleanup
+      cleanupRef.current = updateHandler;
+      ydoc.on('update', updateHandler);
+    }
 
     // Cleanup function
-    return () => {
-      ydoc.off('update', updateHandler);
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-      
-      // Properly destroy the editor view
-      if (editorDestroyRef.current) {
-        editorDestroyRef.current();
-        editorDestroyRef.current = null;
-      }
-      
-      ydoc.destroy();
-      setIsConnected(false);
-      setYjsReady(false);
-      ytextRef.current = null;
-    };
-  }, [groupId, projectId]);
+    return cleanupYjs;
+  }, [groupId, projectId, cleanupYjs, navigate, isConnected]);
 
   // useEffect hook for latency testing
   useEffect(() => {
@@ -218,13 +277,22 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     // Listen for changes
     const observer = () => {
-      setCode(ytext.toString());
+      // Safety check before accessing ytext
+      if (ytextRef.current && !isCleaningUpRef.current) {
+        setCode(ytext.toString());
+      }
     };
 
     ytext.observe(observer);
 
     return () => {
-      ytext.unobserve(observer);
+      if (ytext && !isCleaningUpRef.current) {
+        try {
+          ytext.unobserve(observer);
+        } catch (err) {
+          console.warn('Error unobserving ytext:', err);
+        }
+      }
     };
   }, [ytextRef.current]);
 
@@ -508,14 +576,19 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const getCodeMirrorExtensions = () => {
     const extensions = [python()];
     
-    // Add Y.js collaboration if available
-    if (ytextRef.current) {
-      extensions.push(
-        yCollab(ytextRef.current, null, { 
-          // The user ID will be handled by the WebSocket consumer
-          // which already has authentication context
-        })
-      );
+    // Add Y.js collaboration if available and not cleaning up
+    if (ytextRef.current && !isCleaningUpRef.current) {
+      try {
+        extensions.push(
+          yCollab(ytextRef.current, null, { 
+            // The user ID will be handled by the WebSocket consumer
+            // which already has authentication context
+          })
+        );
+      } catch (err) {
+        console.warn('Error creating yCollab extension:', err);
+        // Fallback to basic editor without collaboration
+      }
     }
     
     return extensions;
@@ -666,18 +739,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               theme={oneDark}
               extensions={getCodeMirrorExtensions()}
               onChange={(value) => {
+                // Handle manual changes when Y.js isn't connected
                 if (!ytextRef.current && !isConnected) {
                   setCode(value);
                 }
               }}
               onCreateEditor={(view) => {
                 editorViewRef.current = view;
-                // Set cleanup function
-                editorDestroyRef.current = () => {
-                  if (view) {
-                    view.destroy();
-                  }
-                };
               }}
               className="h-full text-sm"
               basicSetup={{
@@ -688,9 +756,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 indentOnInput: true,
                 bracketMatching: true,
                 closeBrackets: true,
-                autocompletion: false, // Disable autocompletion to reduce errors
-                highlightSelectionMatches: false, // Disable highlight matches
-                searchKeymap: false, // Disable search keymap
+                autocompletion: true,
+                highlightSelectionMatches: true,
+                searchKeymap: true,
               }}
             />
           </div>
