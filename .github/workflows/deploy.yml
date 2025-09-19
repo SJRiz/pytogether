@@ -20,9 +20,16 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # CD to repo and pull from github
             cd pytogether
             git reset --hard
             git pull origin main
             rm -rf frontend
+
+            # Save all projects, then flush redis
+            docker compose exec django python3 -c "from backend.codes.tasks import snapshot_active_projects; snapshot_active_projects()"
+            docker compose exec django python3 -c "from backend.codes.redis_helpers import SYNC_REDIS; SYNC_REDIS.flushall()"
+
+            # Restart all containers
             docker compose down
             docker compose up -d --build
