@@ -493,23 +493,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     }
   };
 
-  // Create CodeMirror extensions including Y.js collaboration
-  const getCodeMirrorExtensions = () => {
-    const extensions = [python()];
-    
-    // Add Y.js collaboration if available
-    if (ytextRef.current) {
-      extensions.push(
-        yCollab(ytextRef.current, null, { 
-          // The user ID will be handled by the WebSocket consumer
-          // which already has authentication context
-        })
-      );
-    }
-    
-    return extensions;
-  };
-
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       {/* Header */}
@@ -649,11 +632,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           </div>
           
           <div className="flex-1 overflow-hidden">
+            {ytextRef.current && (
             <CodeMirror
               value={code}
               height="100%"
               theme={oneDark}
-              extensions={getCodeMirrorExtensions()}
+              extensions={[python(), yCollab(ytextRef.current, null)]}
               onChange={(value) => {
                 // Handle manual changes when Y.js isn't connected
                 if (!ytextRef.current && !isConnected) {
@@ -676,7 +660,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 highlightSelectionMatches: true,
                 searchKeymap: true,
               }}
-            />
+            /> ) }
           </div>
         </div>
 
