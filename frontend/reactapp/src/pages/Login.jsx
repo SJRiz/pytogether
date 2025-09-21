@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus, Info } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 export default function Login() {
@@ -55,7 +55,7 @@ export default function Login() {
   return (
     <>
     <Helmet>
-        <title>PyTogether</title>
+        <title>PyTogether - Login</title>
         <link rel="icon" href="/pytog.ico" />
         <link rel="shortcut icon" href="/pytog.ico" />
         <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
@@ -149,15 +149,28 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Register Button */}
-          <button
-            onClick={() => navigate("/register")}
-            disabled={isLoading}
-            className="w-full mt-4 bg-gray-700/50 text-gray-300 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all duration-300 flex items-center justify-center border border-gray-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <UserPlus className="h-5 w-5 mr-2" />
-            Register
-          </button>
+          {/* Buttons Section */}
+          <div className="flex gap-3 mt-4">
+            {/* Register Button */}
+            <button
+              onClick={() => navigate("/register")}
+              disabled={isLoading}
+              className="flex-1 bg-gray-700/50 text-gray-300 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all duration-300 flex items-center justify-center border border-gray-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <UserPlus className="h-5 w-5 mr-2" />
+              Register
+            </button>
+
+            {/* About Button */}
+            <button
+              onClick={() => navigate("/about")}
+              disabled={isLoading}
+              className="flex-1 bg-gray-700/50 text-gray-300 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all duration-300 flex items-center justify-center border border-gray-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Info className="h-5 w-5 mr-2" />
+              About Us
+            </button>
+          </div>
 
           <div className="flex items-center my-6">
             <div className="flex-grow border-t border-gray-700/50" />
