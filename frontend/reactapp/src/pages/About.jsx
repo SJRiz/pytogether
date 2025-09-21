@@ -11,12 +11,12 @@ export default function About() {
     <Helmet>
         <title>PyTogether - Real-time Collaborative Python IDE Online</title>
         <link rel="icon" href="/pytog.ico" />
-        <link rel="canonical" href="https://pytogether.org/about" />
+        <link rel="canonical" href="https://pytogether.org" />
         <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
         <meta property="og:title" content="PyTogether - About Us" />
         <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://pytogether.org/about" />
+        <meta property="og:url" content="https://pytogether.org" />
         <meta property="og:image" content="https://pytogether.org/pytog.png" />
     </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">

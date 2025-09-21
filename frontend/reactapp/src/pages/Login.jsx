@@ -58,7 +58,7 @@ export default function Login() {
         <meta property="og:title" content="PyTogether" />
         <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://pytogether.org" />
+        <meta property="og:url" content="https://pytogether.org/login" />
         <meta property="og:image" content="https://pytogether.org/pytog.png" />
     </Helmet>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">

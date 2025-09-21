@@ -10,6 +10,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
+        <Route path="/" element= {<About/>} />
         <Route 
           path="/home" 
           element={
@@ -28,7 +29,6 @@ function App() {
         />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element= {<About/>} />
       </Routes>
     </div>
   );
