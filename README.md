@@ -4,7 +4,7 @@
   <em>Google Docs for Python. A simple, beginner-friendly collaborative IDE in the browser</em>
   <br>
   <br>
-  <a href="https://www.pytogether.org">www.pytogether.org</a>
+  <a href="https://pytogether.org">pytogether.org</a>
 </p>
 
 ----
@@ -79,6 +79,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
