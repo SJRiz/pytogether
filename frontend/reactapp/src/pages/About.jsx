@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 
 export default function About() {
   const handleGetStarted = () => {
-    window.location.href = '/login';
+    navigate("/login");
   };
 
   return (
