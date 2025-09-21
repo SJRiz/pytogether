@@ -57,7 +57,7 @@ export default function Login() {
     <Helmet>
         <title>PyTogether - Login</title>
         <link rel="icon" href="/pytog.ico" />
-        <link rel="shortcut icon" href="/pytog.ico" />
+        <link rel="canonical" href="https://www.pytogether.org/login" />
         <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
         <meta property="og:title" content="PyTogether" />
         <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
