@@ -15,7 +15,7 @@ export default function Login() {
   const location = useLocation();
 
   // If redirected to login, save original URL
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/home";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -57,13 +57,13 @@ export default function Login() {
     <Helmet>
         <title>PyTogether - Login</title>
         <link rel="icon" href="/pytog.ico" />
-        <link rel="canonical" href="https://www.pytogether.org/login" />
+        <link rel="canonical" href="https://pytogether.org/login" />
         <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
         <meta property="og:title" content="PyTogether" />
         <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://pytogether.org/" />
-        <meta property="og:image" content="https://www.pytogether.org/pytog.png" />
+        <meta property="og:url" content="https://pytogether.org" />
+        <meta property="og:image" content="https://pytogether.org/pytog.png" />
     </Helmet>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-gray-800/70 backdrop-blur-md border border-gray-700/30 rounded-xl shadow-2xl overflow-hidden transition-all duration-300 hover:bg-gray-800/80">
@@ -163,7 +163,7 @@ export default function Login() {
 
             {/* About Button */}
             <button
-              onClick={() => navigate("/about")}
+              onClick={() => navigate("/")}
               disabled={isLoading}
               className="flex-1 bg-gray-700/50 text-gray-300 py-3 rounded-lg font-medium hover:bg-gray-700 transition-all duration-300 flex items-center justify-center border border-gray-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >

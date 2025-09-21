@@ -11,7 +11,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <Routes>
         <Route 
-          path="/" 
+          path="/home" 
           element={
             <ProtectedRoute>
               <GroupsAndProjectsPage />
@@ -28,7 +28,7 @@ function App() {
         />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/about" element= {<About/>} />
+        <Route path="/" element= {<About/>} />
       </Routes>
     </div>
   );
