@@ -65,7 +65,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         currentPath: window.location.pathname 
       });
       alert("Could not connect to the project. Redirecting back to groups.");
-      navigate("/");
+      navigate("/home");
       return;
     }
 
@@ -136,13 +136,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       console.error('WebSocket error:', error);
       setIsConnected(false);
       alert("Failed to connect to the project. Redirecting back to groups.");
-      navigate("/");
+      navigate("/home");
     };
 
     ws.onclose = () => {
       console.log('WebSocket disconnected');
       if (!isConnected) { // If it never connected successfully
-        navigate("/");
+        navigate("/home");
       }
       setIsConnected(false);
     };
@@ -501,7 +501,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           <div className="flex items-center space-x-3">
             {/* Back Button */}
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/home')}
               className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors duration-200"
               title="Go Back"
             >

@@ -12,10 +12,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // If redirected to login, save original URL
-  const from = location.state?.from?.pathname || "/home";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,7 +31,7 @@ export default function Login() {
       sessionStorage.setItem("access_token", res.data.access);
 
       // Redirect user
-      navigate(from, { replace: true });
+      navigate('/home');
     } catch (err) {
       const data = err.response?.data || {};
       console.error(data);
