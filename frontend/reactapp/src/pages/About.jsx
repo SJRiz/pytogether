@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 
 export default function About() {
   const navigate = useNavigate();
-  
+
   const handleGetStarted = () => {
     navigate("/login");
   };
