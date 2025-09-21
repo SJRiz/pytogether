@@ -1,7 +1,10 @@
 import { LogIn, Users, Code, Save, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
 export default function About() {
+  const navigate = useNavigate();
+  
   const handleGetStarted = () => {
     navigate("/login");
   };
