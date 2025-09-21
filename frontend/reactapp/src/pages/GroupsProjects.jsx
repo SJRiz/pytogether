@@ -62,6 +62,7 @@ export default function GroupsAndProjectsPage() {
 
     // Fetch projects for selected group
     const fetchProjects = async (groupId) => {
+        setProjects([]);
         try {
         const res = await api.get(`/groups/${groupId}/projects/`);
         setProjects(res.data);
@@ -131,14 +132,6 @@ export default function GroupsAndProjectsPage() {
         } catch (err) {
         console.error(err);
         }
-    };
-
-    const viewAccessCode = (group) => {
-        setShowAccessCodeModal(group);
-    };
-
-    const viewMembers = (group) => {
-        setMembersVisible(prev => prev === group.id ? null : group.id);
     };
 
     // Project operations
