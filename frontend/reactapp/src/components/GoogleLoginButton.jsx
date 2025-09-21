@@ -1,14 +1,9 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../../axiosConfig";
 
 export default function GoogleLoginButton() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // If redirected to login, save original URL
-  const from = location.state?.from?.pathname || "/";
 
   const handleSuccess = async (credentialResponse) => {
     try {
@@ -23,8 +18,7 @@ export default function GoogleLoginButton() {
       sessionStorage.setItem("access_token", res.data.access);
 
       console.log("Login successful!");
-      // Redirect to original page
-      navigate(from, { replace: true });
+      navigate('/home');
     } catch (err) {
       console.error("Google login failed:", err);
       alert("Google login failed");

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { Eye, EyeOff, LogIn, UserPlus, Info } from "lucide-react";
