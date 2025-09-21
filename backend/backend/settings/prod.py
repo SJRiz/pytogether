@@ -18,10 +18,11 @@ SESSION_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     config("ORIGIN"),
     f"https://{config('DOMAIN')}",
+    config("NAKED_ORIGIN")
 ]
 
 # CORS
-CORS_ALLOWED_ORIGINS = [config("ORIGIN")]
+CORS_ALLOWED_ORIGINS = [config("ORIGIN"), config("NAKED_ORIGIN")]
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
