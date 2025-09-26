@@ -1,5 +1,55 @@
 import { FolderPlus, Edit2, Trash2, Code2 } from "lucide-react";
 
+const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
+  return (
+    <li 
+      className="bg-gray-700/50 border border-gray-600/50 rounded-lg p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer group animate-fadeIn"
+      onClick={() => onOpen(project)}
+    >
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="text-white font-medium truncate flex-1">{project.project_name}</h3>
+        <div className="flex space-x-1 opacity-50 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onEdit(project);
+            }}
+            className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+            title="Edit Project"
+          >
+            <Edit2 className="h-4 w-4" />
+          </button>
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onDelete(project);
+            }}
+            className="p-1 text-red-400 hover:text-red-300 transition-colors"
+            title="Delete Project"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onOpen(project); 
+            }}
+            className="p-1 text-green-400 hover:text-green-300 transition-colors"
+            title="Open in IDE"
+          >
+            <Code2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div className="text-sm text-gray-400">
+        Last modified: {new Date(project.updated_at).toLocaleDateString()}
+        <br/>
+        Created: {new Date(project.created_at).toLocaleDateString()}
+      </div>
+    </li>
+  );
+};
+
 export const ProjectsList = ({ 
   selectedGroup, 
   projects, 
@@ -46,55 +96,5 @@ export const ProjectsList = ({
         ))}
       </ul>
     </div>
-  );
-};
-
-const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
-  return (
-    <li 
-      className="bg-gray-700/50 border border-gray-600/50 rounded-lg p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer group animate-fadeIn"
-      onClick={() => onOpen(project)}
-    >
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-white font-medium truncate flex-1">{project.project_name}</h3>
-        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onEdit(project);
-            }}
-            className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
-            title="Edit Project"
-          >
-            <Edit2 className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onDelete(project);
-            }}
-            className="p-1 text-red-400 hover:text-red-300 transition-colors"
-            title="Delete Project"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onOpen(project); 
-            }}
-            className="p-1 text-green-400 hover:text-green-300 transition-colors"
-            title="Open in IDE"
-          >
-            <Code2 className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-      <div className="text-sm text-gray-400">
-        Last modified: {new Date(project.updated_at).toLocaleDateString()}
-        <br/>
-        Created: {new Date(project.created_at).toLocaleDateString()}
-      </div>
-    </li>
   );
 };
