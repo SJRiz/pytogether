@@ -1,7 +1,8 @@
 import { Modal } from "./Modal";
 
 export const CreateProjectModal = ({ 
-  isOpen, 
+  isOpen,
+  isCreating, 
   onClose, 
   projectName, 
   onProjectNameChange, 
@@ -26,7 +27,10 @@ export const CreateProjectModal = ({
         </button>
         <button
           onClick={onCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
+          disabled={isCreating || !projectName.trim()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg transition-colors 
+          hover:bg-blue-500
+          disabled:bg-blue-900 disabled:cursor-not-allowed"
         >
           Create
         </button>

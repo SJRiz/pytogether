@@ -33,6 +33,8 @@ export default function GroupsAndProjectsPage() {
     const [accessCode, setAccessCode] = useState("");
     const [newProjectName, setNewProjectName] = useState("");
     const [editProjectName, setEditProjectName] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
+
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -86,6 +88,7 @@ export default function GroupsAndProjectsPage() {
     // Group operations
     const createGroup = async () => {
         if (!newGroupName.trim()) return;
+        setIsCreating(true);
         try {
         const res = await api.post("/groups/create/", { group_name: newGroupName.trim() });
         const newGroup = res.data;
@@ -94,6 +97,8 @@ export default function GroupsAndProjectsPage() {
         setShowCreateGroupModal(false);
         } catch (err) {
         console.error(err);
+        } finally {
+        setIsCreating(false);
         }
     };
 
@@ -137,6 +142,7 @@ export default function GroupsAndProjectsPage() {
     // Project operations
     const createProject = async () => {
         if (!newProjectName.trim() || !selectedGroup) return;
+        setIsCreating(true);
         try {
         const res = await api.post(`/groups/${selectedGroup.id}/projects/create/`, { 
             project_name: newProjectName.trim() 
@@ -146,6 +152,8 @@ export default function GroupsAndProjectsPage() {
         setShowCreateProjectModal(false);
         } catch (err) {
         console.error(err);
+        } finally {
+        setIsCreating(false);
         }
     };
 
@@ -230,6 +238,7 @@ export default function GroupsAndProjectsPage() {
         {/* Modals */}
         <CreateGroupModal
         isOpen={showCreateGroupModal}
+        isCreating={isCreating}
         onClose={() => setShowCreateGroupModal(false)}
         groupName={newGroupName}
         onGroupNameChange={(e) => setNewGroupName(e.target.value)}
@@ -255,6 +264,7 @@ export default function GroupsAndProjectsPage() {
 
         <CreateProjectModal
         isOpen={showCreateProjectModal}
+        isCreating={isCreating}
         onClose={() => setShowCreateProjectModal(false)}
         projectName={newProjectName}
         onProjectNameChange={(e) => setNewProjectName(e.target.value)}
