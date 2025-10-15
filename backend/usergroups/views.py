@@ -38,7 +38,7 @@ def join_group(request):
         group = Group.objects.get(access_code=serializer.validated_data["access_code"])
         group.group_members.add(request.user)
 
-        return Response({"message": f"Joined group {group.group_name}"})
+        return Response(GroupDetailSerializer(group).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])
