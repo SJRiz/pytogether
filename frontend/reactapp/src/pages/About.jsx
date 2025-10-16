@@ -103,7 +103,7 @@ export default function About() {
                   </div>
                   <div className="flex items-start">
                     <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span>Real-time collaboration with live cursors</span>
+                    <span>Real-time collaboration with live cursors and code linting</span>
                   </div>
                   <div className="flex items-start">
                     <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>

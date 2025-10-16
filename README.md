@@ -20,6 +20,7 @@
 - **Secure Authentication** - Log in manually or with Google OAuth.  
 - **Groups & Projects** - Organize your work into teams and projects.  
 - **Smart Autosave** - Code is automatically saved every minute and on exit.  
+- **Live Cursors/Selections** - Google docs-like live selections for smoother collaboration.
 - **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
 
 ## About
