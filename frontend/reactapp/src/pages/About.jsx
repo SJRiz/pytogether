@@ -86,6 +86,7 @@ export default function About() {
                   </div>
                 </div>
               </div>
+              <p className="text-gray-300 mb-4 pt-5">This is also an open-source project! Feel free to view or contribute at <span className="text-blue-400 font-semibold"> <a href="https://github.com/SJRiz/pytogether">https://github.com/SJRiz/pytogether </a></span> </p>
             </div>
 
             {/* Features Section */}

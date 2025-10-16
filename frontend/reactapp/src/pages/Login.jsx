@@ -180,7 +180,10 @@ export default function Login() {
 
         {/* Footer */}
         <div className="p-4 text-center border-t border-gray-700/50">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 italic">
+              This is an open-source project! Check it out at: <span className="text-blue-400 font-semibold"> <a href="https://github.com/SJRiz/pytogether">https://github.com/SJRiz/pytogether </a></span>
+          </p>
+          <p className="text-xs text-gray-500 pt-2">
             For any questions or inquiries, email <a href="mailto:contact@pytogether.org" className="text-blue-400 font-bold underline">contact@pytogether.org</a>
           </p>
         </div>
