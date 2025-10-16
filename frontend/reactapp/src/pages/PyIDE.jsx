@@ -2,8 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
+import { Awareness, encodeAwarenessUpdate, applyAwarenessUpdate } from 'y-protocols/awareness';
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { throttle } from "lodash";
+import { jwtDecode } from "jwt-decode";
 import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon, Send } from "lucide-react";
 import api from "../../axiosConfig";
 
@@ -19,7 +22,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const groupId = propGroupId || location.state?.groupId;
   const projectId = propProjectId || location.state?.projectId;
   const initialProjectName = propProjectName || location.state?.projectName || "Untitled Project";
-  
+
   const [code, setCode] = useState('print("Hello, PyTogether!")');
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +47,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const ydocRef = useRef(null);
   const wsRef = useRef(null);
   const ytextRef = useRef(null);
+  const awarenessRef = useRef(null)
   const editorViewRef = useRef(null);
   const consoleRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -57,6 +61,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
+
     if (!groupId || !projectId) {
       console.error('Missing groupId or projectId:', { 
         groupId, 
@@ -82,6 +87,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     // const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Get JWT token
     const token = sessionStorage.getItem("access_token");
+    const myUserId = jwtDecode(token).user_id
     const tokenParam = token ? `?token=${token}` : "";
     
     const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
@@ -91,6 +97,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
+    // Awareness
+    const awareness = new Awareness(ydoc);
+    awarenessRef.current = awareness;
+
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
@@ -99,14 +109,45 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ws.send(JSON.stringify({ type: 'request_sync' }));
     };
 
+    // Event handler
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         
         if (data.type === 'update') {
-          // Apply remote update to Y.js document
-          const updateBytes = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
-          Y.applyUpdate(ydoc, updateBytes);
+          // document update
+          const update = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
+          Y.applyUpdate(ydoc, update);
+        } else if (data.type === 'awareness') {
+          // awareness update
+          const update = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
+          applyAwarenessUpdate(awareness, update);
+        } else if (data.type === "remove_awareness") {
+          const uid = data.user_id;
+
+          // Loop through all current awareness states
+          const clientsToRemove = [];
+          awareness.getStates().forEach((state, clientID) => {
+            if (state.user && state.user.id === uid) {
+              clientsToRemove.push(clientID);
+            }
+          });
+
+          // Remove those clients from awareness by setting their state to null
+          if (clientsToRemove.length > 0) {
+            
+            // Create an awareness update that sets these clients to null
+            const nullStates = new Map();
+            clientsToRemove.forEach(clientID => {
+              nullStates.set(clientID, null);
+            });
+            
+            // Apply the null states
+            awareness.states = new Map([...awareness.getStates()].filter(([id]) => !clientsToRemove.includes(id)));
+            
+            // Emit the change
+            awareness.emit('change', [{ added: [], updated: [], removed: clientsToRemove }, 'remote']);
+          }
         } else if (data.type === 'sync') {
           // Full document sync
           const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
@@ -118,6 +159,16 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         } else if (data.type === "connection") {
           // Use the full list sent by the backend
           if (data.users) {
+            // Find yourself in the list
+            const me = data.users.find(u => u.id === myUserId); 
+            if (me) {
+              awareness.setLocalStateField("user", {
+                id: me.id,
+                name: me.email,
+                color: me.color,
+                colorLight: me.colorLight
+              });
+            }
             setConnectedUsers(data.users);
           }
         } else if (data.type === 'pong') {
@@ -141,12 +192,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     ws.onclose = () => {
       console.log('WebSocket disconnected');
+      awareness.setLocalState(null);
       if (!isConnected) { // If it never connected successfully
         navigate("/home");
       }
       setIsConnected(false);
     };
-
+    
     // Listen for Y.js updates to send to server
     const updateHandler = (update, origin) => {
       // Don't send updates that came from the network
@@ -162,15 +214,31 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       }));
     };
 
+    const awarenessHandler = ({ added, updated, removed }) => {
+      // Convert Sets to arrays
+      const clients = [...added, ...updated, ...removed];
+
+      const update = encodeAwarenessUpdate(awareness, clients);
+
+      const updateB64 = btoa(String.fromCharCode.apply(null, update));
+      ws.send(JSON.stringify({ type: 'awareness', update_b64: updateB64 }));
+    };
+    // Throttle it to fire at most once every 100 ms
+    const throttledAwarenessHandler = throttle(awarenessHandler, 100, { leading: true, trailing: true });
+
+
     ydoc.on('update', updateHandler);
+    awareness.on("update", throttledAwarenessHandler);
 
     // Cleanup function
     return () => {
       ydoc.off('update', updateHandler);
+      awareness.off('update', awarenessHandler)
       if (ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
       ydoc.destroy();
+      awareness.destroy();
     };
   }, [groupId, projectId]);
 
@@ -217,7 +285,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     };
   }, [ytextRef.current]);
 
-  // Focus on input when editing starts
+  // Focus on input when editing project name starts
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
       nameInputRef.current.focus();
@@ -343,7 +411,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     setWaitingForInput(false);
     setInputResolve(null);
     
-    // Continue execution, so keep isRunning true
   };
 
   const handleInputKeyDown = (e) => {
@@ -588,8 +655,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 {connectedUsers.map((u) => (
                   <span
                     key={u.id}
-                    className="px-2 py-0.5 bg-gray-700 text-xs rounded-md truncate max-w-[100px]"
+                    className="px-2 py-0.5 text-xs rounded-md truncate max-w-[100px]"
                     title={u.email}
+                    style={{
+                      backgroundColor: u.colorLight || '#888', // light background
+                      color: u.color || '#000',               // text color, optional
+                    }}
                   >
                     {u.email}
                   </span>
@@ -631,13 +702,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             </div>
           </div>
           
-          <div className="flex-1 overflow-hidden">
+          {ytextRef.current ? <div className="flex-1 overflow-hidden">
             {ytextRef.current && (
             <CodeMirror
               value={code}
               height="100%"
               theme={oneDark}
-              extensions={[python(), yCollab(ytextRef.current, null)]}
+              extensions={[python(), yCollab(ytextRef.current, awarenessRef.current)]}
               onChange={(value) => {
                 // Handle manual changes when Y.js isn't connected
                 if (!ytextRef.current && !isConnected) {
@@ -661,7 +732,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 searchKeymap: true,
               }}
             /> ) }
-          </div>
+          </div> : <div>Loading editor...</div>}
+
         </div>
 
         {/* Console */}

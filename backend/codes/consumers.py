@@ -1,6 +1,7 @@
 import json
 import base64
 import asyncio
+import random
 import y_py as Y
 
 from django.contrib.auth import get_user_model
@@ -73,7 +74,17 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 # Remove them from the active users in the redis set
                 await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
                 await self.channel_layer.group_send(
-                    self.room, {"type": "users_changed"}
+                    self.room,
+                    {"type": "users_changed"}
+                )
+                # Notify others that the user left
+                await self.channel_layer.group_send(
+                    self.room,
+                    {
+                        "type": "broadcast.remove_awareness",
+                        "user_id": str(self.user.pk),
+                        "sender": self.channel_name
+                    }
                 )
 
                 # If there are no more active users in that project they left, remove that project from the active projects set
@@ -93,20 +104,56 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room, self.channel_name)
 
-    async def users_changed(self, event):
-        """Returns all the members in an active project. Loops through the redis set"""
+    async def broadcast_remove_awareness(self, event):
+        if event.get("sender") == self.channel_name:
+            return
 
+        await self.send_json({
+            "type": "remove_awareness",
+            "user_id": event["user_id"]
+        })
+
+    async def users_changed(self, event):
+        """Returns all the members in an active project, including colors."""
         try:
             active_user_ids = await ASYNC_REDIS.smembers(active_set_key(self.project_id))
             active_users = []
-            for id in active_user_ids:
-                uid = int(id)
+
+            for uid_bytes in active_user_ids:
+                uid = int(uid_bytes)
                 try:
                     user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
-                    active_users.append({"id": str(user_obj.pk), "email": user_obj.email})
+
+                    # Try to get user's color from Redis
+                    color_data = await ASYNC_REDIS.get(f"user_color:{uid}")
+                    if color_data:
+                        color = json.loads(color_data)
+                    else:
+                        # Assign a random color and store in Redis
+                        USER_COLORS = [
+                            {"color": "#30bced", "light": "#30bced33"},
+                            {"color": "#6eeb83", "light": "#6eeb8333"},
+                            {"color": "#ffbc42", "light": "#ffbc4233"},
+                            {"color": "#ecd444", "light": "#ecd44433"},
+                            {"color": "#ee6352", "light": "#ee635233"},
+                            {"color": "#9ac2c9", "light": "#9ac2c933"},
+                            {"color": "#8acb88", "light": "#8acb8833"},
+                            {"color": "#1be7ff", "light": "#1be7ff33"},
+                        ]
+                        color = random.choice(USER_COLORS)
+                        await ASYNC_REDIS.set(f"user_color:{uid}", json.dumps(color))
+
+                    active_users.append({
+                        "id": str(user_obj.pk),
+                        "email": user_obj.email,
+                        "color": color["color"],
+                        "colorLight": color["light"]
+                    })
                 except User.DoesNotExist:
                     continue
+
             await self.send_json({"type": "connection", "users": active_users})
+
         except Exception as e:
             print(f"Error in users_changed: {e}")
 
@@ -160,6 +207,16 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     text = code_obj.content if code_obj else ""
                     await self.send_json({"type": "initial", "content": text})
 
+            elif mtype == "awareness":
+                update_b64 = msg.get("update_b64")
+                if not update_b64:
+                    return
+                await self.channel_layer.group_send(self.room, {
+                    "type": "broadcast.awareness",
+                    "update_b64": update_b64,
+                    "sender": self.channel_name
+                })
+
             elif mtype == "ping":
                 await self.send(json.dumps({
                     'type': 'pong',
@@ -175,6 +232,13 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         if event.get("sender") == self.channel_name:
             return
         await self.send_json({"type": "update", "update_b64": event["update_b64"]})
+    
+    async def broadcast_awareness(self, event):
+        """Prevents the user from sending awareness to themselves"""
+
+        if event.get("sender") == self.channel_name:
+            return
+        await self.send_json({"type": "awareness", "update_b64": event["update_b64"]})
 
     @database_sync_to_async
     def _validate_membership(self, user, group_id, project_id):

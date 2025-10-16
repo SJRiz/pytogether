@@ -25,6 +25,7 @@ class EmailTokenObtainPairSerializer(serializers.Serializer):
             raise serializers.ValidationError("User account is disabled.")
 
         refresh = RefreshToken.for_user(user)
+        
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
