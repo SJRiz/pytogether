@@ -1,6 +1,7 @@
 import { LogIn, Users, Code, Save, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import liveVideo from '../assets/live.webm';
 
 export default function About() {
   const navigate = useNavigate();
@@ -87,6 +88,22 @@ export default function About() {
                 </div>
               </div>
               <p className="text-gray-300 mb-4 pt-5">This is also an open-source project! Feel free to view or contribute at <span className="text-blue-400 font-semibold"> <a href="https://github.com/SJRiz/pytogether">https://github.com/SJRiz/pytogether </a></span> </p>
+            </div>
+
+            {/* Video Demo Section */}
+            <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
+              <div className="rounded-lg overflow-hidden border border-gray-600/30">
+                <video 
+                  className="w-full h-auto"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src={liveVideo} type="video/webm" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             </div>
 
             {/* Features Section */}
