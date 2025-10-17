@@ -23,6 +23,14 @@
 - **Live Cursors/Selections** - Google docs-like live selections for smoother collaboration.
 - **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
 
+----
+
+<p align="center">
+  <img src="docs/live.gif" alt="Demo" width="600">
+</p>
+
+----
+
 ## About
 When starting out in programming, many beginners find traditional IDEs overwhelming: full of plugins, extensions, configuration steps, paywalls, and complex UIs. PyTogether removes these barriers by offering a lightweight, distraction-free environment where you can focus on writing Python code right away.  
 
