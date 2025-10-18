@@ -124,6 +124,10 @@ export default function About() {
                   </div>
                   <div className="flex items-start">
                     <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>Real-time chat and voice calls per project</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                     <span>Reliable autosave (saves on exit and every minute)</span>
                   </div>
                 </div>

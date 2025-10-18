@@ -9,4 +9,9 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
+  <script>
+  window.global = window;
+  window.process = { env: { NODE_ENV: 'production' } };
+  window.Buffer = window.Buffer || require('buffer').Buffer;
+  </script>
 </html>

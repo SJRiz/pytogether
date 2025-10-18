@@ -27,6 +27,7 @@
     "react-dom": "^18.2.0",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.8.1",
+    "simple-peer": "^9.11.1",
     "vite-plugin-ssr": "^0.4.142",
     "vite-ssg": "^28.1.0",
     "y-codemirror.next": "^0.3.5",

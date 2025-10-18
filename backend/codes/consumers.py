@@ -15,6 +15,10 @@ from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, ACTIVE_
 
 User = get_user_model()
 
+def voice_room_key(project_id):
+    """Redis key for voice chat participants"""
+    return f"voice_room:{project_id}"
+
 # We create a consumer object per websocket connection.
 class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
@@ -65,6 +69,9 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             text = code_obj.content if code_obj else ""
             await self.send_json({"type": "initial", "content": text})
 
+        # Send current voice room participants
+        await self._send_voice_room_update()
+
         # Start heartbeat loop
         self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
@@ -73,10 +80,21 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             if self.user and self.user.is_authenticated:
                 # Remove them from the active users in the redis set
                 await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
+                
+                # Remove from voice room if they were in it
+                await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
+                
                 await self.channel_layer.group_send(
                     self.room,
                     {"type": "users_changed"}
                 )
+                
+                # Notify voice room update
+                await self.channel_layer.group_send(
+                    self.room,
+                    {"type": "voice_room_update"}
+                )
+                
                 # Notify others that the user left
                 await self.channel_layer.group_send(
                     self.room,
@@ -176,7 +194,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             return
 
         try:
-            # 2 main events: update and request_sync. Ping/pong is just for testing latency
+            # Main events: update, request_sync, awareness. Ping/pong is just for testing latency
             if mtype == "update":
                 # This event is called anytime a user makes a change to the code
                 # Y.js sends CRDT updates as base64 strings (since we can't really send bytes over JSON), then we turn them into bytes
@@ -217,33 +235,132 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     "sender": self.channel_name
                 })
 
+            elif mtype == "chat_message":
+                # Handle chat message
+                message = msg.get("message", "").strip()
+                if not message or len(message) > 1000:
+                    return
+                
+                user_obj = await database_sync_to_async(User.objects.get)(pk=self.user.pk)
+                color_data = await ASYNC_REDIS.get(f"user_color:{self.user.pk}")
+                color = json.loads(color_data) if color_data else {"color": "#30bced", "light": "#30bced33"}
+                
+                await self.channel_layer.group_send(self.room, {
+                    "type": "broadcast.chat_message",
+                    "message": message,
+                    "user_id": str(self.user.pk),
+                    "user_email": user_obj.email,
+                    "color": color["color"],
+                    "timestamp": asyncio.get_event_loop().time()
+                })
+
+            elif mtype == "join_voice":
+                # Add user to voice room
+                await ASYNC_REDIS.sadd(voice_room_key(self.project_id), str(self.user.pk))
+                await self.channel_layer.group_send(self.room, {
+                    "type": "voice_room_update"
+                })
+
+            elif mtype == "leave_voice":
+                # Remove user from voice room
+                await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
+                await self.channel_layer.group_send(self.room, {
+                    "type": "voice_room_update"
+                })
+
+            elif mtype == "voice_signal":
+                # Forward WebRTC signaling data
+                target_user = msg.get("target_user")
+                signal_data = msg.get("signal_data")
+                
+                if not target_user or not signal_data:
+                    return
+                
+                await self.channel_layer.group_send(self.room, {
+                    "type": "broadcast.voice_signal",
+                    "from_user": str(self.user.pk),
+                    "target_user": target_user,
+                    "signal_data": signal_data,
+                    "sender": self.channel_name
+                })
+
             elif mtype == "ping":
                 await self.send(json.dumps({
                     'type': 'pong',
                     'timestamp': msg.get('timestamp')
                 }))
+            
             return
         except Exception as e:
             print(f"Error processing message: {e}")
 
     async def broadcast_update(self, event):
         """Prevents the user from sending updates to themselves"""
-
         if event.get("sender") == self.channel_name:
             return
         await self.send_json({"type": "update", "update_b64": event["update_b64"]})
     
     async def broadcast_awareness(self, event):
         """Prevents the user from sending awareness to themselves"""
-
         if event.get("sender") == self.channel_name:
             return
         await self.send_json({"type": "awareness", "update_b64": event["update_b64"]})
 
+    async def broadcast_chat_message(self, event):
+        """Broadcast chat message to all users"""
+        await self.send_json({
+            "type": "chat_message",
+            "message": event["message"],
+            "user_id": event["user_id"],
+            "user_email": event["user_email"],
+            "color": event["color"],
+            "timestamp": event["timestamp"]
+        })
+
+    async def voice_room_update(self, event):
+        """Send voice room participants update"""
+        await self._send_voice_room_update()
+
+    async def broadcast_voice_signal(self, event):
+        """Forward WebRTC signaling to specific user"""
+        if event.get("sender") == self.channel_name:
+            return
+        
+        # Only send to the target user
+        if event["target_user"] == str(self.user.pk):
+            await self.send_json({
+                "type": "voice_signal",
+                "from_user": event["from_user"],
+                "signal_data": event["signal_data"]
+            })
+
+    async def _send_voice_room_update(self):
+        """Send current voice room participants to this user"""
+        try:
+            voice_user_ids = await ASYNC_REDIS.smembers(voice_room_key(self.project_id))
+            voice_users = []
+            
+            for uid_bytes in voice_user_ids:
+                uid = int(uid_bytes)
+                try:
+                    user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
+                    voice_users.append({
+                        "id": str(user_obj.pk),
+                        "email": user_obj.email
+                    })
+                except User.DoesNotExist:
+                    continue
+            
+            await self.send_json({
+                "type": "voice_room_update",
+                "participants": voice_users
+            })
+        except Exception as e:
+            print(f"Error sending voice room update: {e}")
+
     @database_sync_to_async
     def _validate_membership(self, user, group_id, project_id):
         """Method to check if a user actually belongs in the group, and the project is valid"""
-
         try:
             project = Project.objects.select_related("group").get(id=project_id)
         except Project.DoesNotExist:
@@ -254,7 +371,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
     async def _apply_update_to_redis_ydoc(self, project_id, update_bytes: bytes):
         """Load Y.Doc from redis (or create), apply update_bytes, store back."""
-
         key = ydoc_key(project_id)
 
         # we fetch current bytes, apply update with y_py, and write back.
@@ -272,7 +388,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await ASYNC_REDIS.set(key, new_bytes)
 
     async def _heartbeat_loop(self):
-        """Periodically refresh active user TTL"""
         try:
             while True:
                 await asyncio.sleep(settings.HEARTBEAT_INTERVAL)
