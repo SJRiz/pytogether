@@ -14,7 +14,7 @@ export default function About() {
     <>
     <Helmet>
         <title>PyTogether - Real-time Collaborative Python IDE Online</title>
-        <link rel="icon" href="/pytog.ico" />
+        <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://pytogether.org" />
         <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
         <meta property="og:title" content="PyTogether - About Us" />
