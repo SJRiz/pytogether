@@ -41,6 +41,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         # add them to the channel layer (which is on memory via redis, keeps track of each room's membership)
         await self.channel_layer.group_add(self.room, self.channel_name)
+        await self.channel_layer.group_add("global_connection_group", self.channel_name)  # This will keep track of ALL websockets
         await self.accept()
 
         # Over here, we keep track of active projects on-the-fly. We do this by tracking members per group on redis
@@ -121,6 +122,13 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             self.heartbeat_task.cancel()
 
         await self.channel_layer.group_discard(self.room, self.channel_name)
+        await self.channel_layer.group_discard("global_connection_group", self.channel_name)
+
+    
+    async def force_disconnect(self, event):
+        """Forcibly close this WebSocket connection"""
+        await self.close(code=4000)
+
 
     async def broadcast_remove_awareness(self, event):
         if event.get("sender") == self.channel_name:

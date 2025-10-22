@@ -226,6 +226,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         } else if (data.type === 'voice_signal') {
           handleVoiceSignal(data.from_user, data.signal_data);
         }
+
       } catch (err) {
         console.error('Error handling WebSocket message:', err);
       }
@@ -238,8 +239,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       navigate("/home");
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
+    ws.onclose = (event) => {
+      console.log('Disconnected.');
+      if (event.code === 4000) {
+        alert("You have been disconnected due to a server update. All your work has been saved. Please check back in 1-2 minutes.");
+      }
       awareness.setLocalState(null);
       if (!isConnected) {
         navigate("/home");
@@ -671,7 +675,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       case 'error': return 'text-red-400';
       case 'input': return 'text-blue-400';
       case 'system': return 'text-yellow-400';
-      default: return 'text-green-400';
+      default: return 'text-white';
     }
   };
   const getEntryPrefix = (type) => {
@@ -772,7 +776,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
           <div className="flex items-center space-x-3">
             {/* Voice Chat */}
-            <div className="flex items-center space-x-2 pr-5">
+            <div className="flex items-center space-x-2">
               {!inVoiceCall ? (
                 <button onClick={joinVoiceCall} className="flex items-center space-x-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-200" title="Join Voice Call">
                   <Phone className="h-4 w-4" />

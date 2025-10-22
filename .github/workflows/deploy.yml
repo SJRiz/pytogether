@@ -27,7 +27,7 @@ jobs:
             rm -rf frontend
 
             # Save all projects, then flush redis
-            docker compose exec django python3 manage.py cleanup_codes
+            docker compose exec django python3 manage.py disconnect_users
 
             # Restart all containers
             docker compose down
