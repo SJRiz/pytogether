@@ -241,10 +241,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     ws.onclose = (event) => {
       console.log('Disconnected.');
+      awareness.setLocalState(null);
       if (event.code === 4000) {
         alert("You have been disconnected due to a server update. All your work has been saved. Please check back in 1-2 minutes.");
       }
-      awareness.setLocalState(null);
       if (!isConnected) {
         navigate("/home");
       }
@@ -255,7 +255,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     // Listen for Y.js updates to send to server
     const updateHandler = (update, origin) => {
        // Don't send updates that came from the network
-      if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN || !isConnected) return;
+      if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN) return;
 
       // Send update to server as base64
       const updateB64 = btoa(String.fromCharCode.apply(null, update));
