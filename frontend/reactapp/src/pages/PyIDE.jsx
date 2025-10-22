@@ -255,7 +255,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     // Listen for Y.js updates to send to server
     const updateHandler = (update, origin) => {
        // Don't send updates that came from the network
-      if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN) return;
+      if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN || !isConnected) return;
 
       // Send update to server as base64
       const updateB64 = btoa(String.fromCharCode.apply(null, update));
