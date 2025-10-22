@@ -20,15 +20,19 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # CD to repo and pull from github
+            # CD to repo
             cd pytogether
+
+            # Save projects
+            docker compose exec django python3 manage.py disconnect_users
+
+            # Stop containers
+            docker compose down
+
+            # Pull latest code
             git reset --hard
             git pull origin main
             rm -rf frontend
 
-            # Save all projects, then flush redis
-            docker compose exec django python3 manage.py disconnect_users
-
-            # Restart all containers
-            docker compose down
+            # Restart and rebuild
             docker compose up -d --build

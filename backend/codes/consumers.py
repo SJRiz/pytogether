@@ -24,6 +24,8 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         self.project_id = int(self.scope["url_route"]["kwargs"]["project_id"])
         self.room = f"project_room_g{self.group_id}_p{self.project_id}"
 
+        self.forced_disconnect = False  # flag
+
         # The user comes from the JWT middleware
         self.user = self.scope.get("user")
 
@@ -106,7 +108,8 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     await ASYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(self.project_id))
 
                     # Save the code when a user leaves
-                    await database_sync_to_async(persist_ydoc_to_db)(self.project_id)
+                    if not self.forced_disconnect:
+                        await database_sync_to_async(persist_ydoc_to_db)(self.project_id)
 
         except Exception as e:
             print(f"Error during disconnect cleanup: {e}")
@@ -121,6 +124,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
     
     async def force_disconnect(self, event):
         """Forcibly close this WebSocket connection"""
+        self.forced_disconnect = True
         await self.close(code=4000)
 
 
