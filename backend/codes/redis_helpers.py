@@ -19,6 +19,12 @@ def ydoc_key(project_id):
 def active_set_key(project_id):
     return f"project_active:{project_id}"   # list of all user ids currently in a room
 
+def voice_room_key(project_id):
+    return f"voice_room:{project_id}"       # voice chat participants
+
+def user_color_key(user_id):
+    return f"user_color:{user_id}"          # colors for each user
+
 def persist_ydoc_to_db(project_id):
     """Saves the code to the database"""
     try:

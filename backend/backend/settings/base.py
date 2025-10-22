@@ -191,3 +191,25 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 # App specific settings
 MAX_MESSAGE_SIZE = 1_000_000    # ~1MB
 HEARTBEAT_INTERVAL = 10         # how long we wait till we check if the user is still alive
+USER_COLORS = [
+  {"color": "#F06292", "light": "#F0629233"},
+  {"color": "#BA68C8", "light": "#BA68C833"},
+  {"color": "#9575CD", "light": "#9575CD33"},
+  {"color": "#7986CB", "light": "#7986CB33"},
+  {"color": "#64B5F6", "light": "#64B5F633"},
+  {"color": "#4FC3F7", "light": "#4FC3F733"},
+  {"color": "#4DD0E1", "light": "#4DD0E133"},
+  {"color": "#4DB6AC", "light": "#4DB6AC33"},
+  {"color": "#81C784", "light": "#81C78433"},
+  {"color": "#AED581", "light": "#AED58133"},
+  {"color": "#DCE775", "light": "#DCE77533"},
+  {"color": "#FFF176", "light": "#FFF17633"},
+  {"color": "#FFD54F", "light": "#FFD54F33"},
+  {"color": "#FFB74D", "light": "#FFB74D33"},
+  {"color": "#FF8A65", "light": "#FF8A6533"},
+  {"color": "#E57373", "light": "#E5737333"},
+  {"color": "#A1887F", "light": "#A1887F33"},
+  {"color": "#90A4AE", "light": "#90A4AE33"},
+  {"color": "#F9A825", "light": "#F9A82533"},
+  {"color": "#00ACC1", "light": "#00ACC133"}
+]

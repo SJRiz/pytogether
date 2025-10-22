@@ -11,13 +11,9 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_color_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
-
-def voice_room_key(project_id):
-    """Redis key for voice chat participants"""
-    return f"voice_room:{project_id}"
 
 # We create a consumer object per websocket connection.
 class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
@@ -79,11 +75,9 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         try:
             if self.user and self.user.is_authenticated:
-                # Remove them from the active users in the redis set
-                await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
-                
-                # Remove from voice room if they were in it
-                await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
+                await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))  # Remove them from the active users in the redis set
+                await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))  # Remove from voice room if they were in it
+                await ASYNC_REDIS.delete(user_color_key(str(self.user.pk)))                   # Remove their color too
                 
                 await self.channel_layer.group_send(
                     self.room,
@@ -151,23 +145,13 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
 
                     # Try to get user's color from Redis
-                    color_data = await ASYNC_REDIS.get(f"user_color:{uid}")
+                    color_data = await ASYNC_REDIS.get(user_color_key(uid))
                     if color_data:
                         color = json.loads(color_data)
                     else:
                         # Assign a random color and store in Redis
-                        USER_COLORS = [
-                            {"color": "#30bced", "light": "#30bced33"},
-                            {"color": "#6eeb83", "light": "#6eeb8333"},
-                            {"color": "#ffbc42", "light": "#ffbc4233"},
-                            {"color": "#ecd444", "light": "#ecd44433"},
-                            {"color": "#ee6352", "light": "#ee635233"},
-                            {"color": "#9ac2c9", "light": "#9ac2c933"},
-                            {"color": "#8acb88", "light": "#8acb8833"},
-                            {"color": "#1be7ff", "light": "#1be7ff33"},
-                        ]
-                        color = random.choice(USER_COLORS)
-                        await ASYNC_REDIS.set(f"user_color:{uid}", json.dumps(color))
+                        color = random.choice(settings.USER_COLORS)
+                        await ASYNC_REDIS.set(user_color_key(uid), json.dumps(color))
 
                     active_users.append({
                         "id": str(user_obj.pk),
