@@ -22,4 +22,4 @@ REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = (
     "rest_framework.permissions.AllowAny",
 )
 
-AUTO_SAVE_INTERVAL = 10     # in seconds
+AUTO_SAVE_INTERVAL = 60     # in seconds
