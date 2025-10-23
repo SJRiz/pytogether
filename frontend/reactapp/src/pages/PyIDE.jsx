@@ -778,28 +778,44 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             {/* Voice Chat */}
             <div className="flex items-center space-x-2">
               {!inVoiceCall ? (
-                <button onClick={joinVoiceCall} className="flex items-center space-x-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-200" title="Join Voice Call">
-                  <Phone className="h-4 w-4" />
-                  <span className="text-sm">Voice Chat</span>
+                <button
+                  onClick={joinVoiceCall}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200"
+                  title="Join Voice Call"
+                >
+                  <Phone className="h-4 w-4 text-white" />
+                  <span className="text-sm text-white">Voice Chat</span>
                 </button>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <button onClick={toggleMute} className={`p-2 rounded-lg transition-colors duration-200 ${isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'}`} title={isMuted ? 'Unmute' : 'Mute'}>
-                    {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  <button
+                    onClick={toggleMute}
+                    className={`p-2 rounded-lg transition-colors duration-200 ${
+                      isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? <MicOff className="h-4 w-4 text-white" /> : <Mic className="h-4 w-4 text-white" />}
                   </button>
-                  <button onClick={leaveVoiceCall} className="flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200" title="Leave Call">
-                    <PhoneOff className="h-4 w-4" />
-                    <span className="text-sm">Leave</span>
+                  <button
+                    onClick={leaveVoiceCall}
+                    className="flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
+                    title="Leave Call"
+                  >
+                    <PhoneOff className="h-4 w-4 text-white" />
+                    <span className="text-sm text-white">Leave</span>
                   </button>
                 </div>
               )}
               {voiceParticipants.length > 0 && (
-                <div className="flex items-center space-x-1 text-purple-400">
+                <div className="flex items-center space-x-1 text-gray-400">
                   <Phone className="h-3 w-3" />
                   <span className="text-xs">{voiceParticipants.length}</span>
                 </div>
               )}
             </div>
+
+
 
             {/* Active Users */}
             {connectedUsers.length > 0 && (
