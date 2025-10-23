@@ -721,7 +721,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    <div className="min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden">
       
       {/* Header */}
       <div className="border-b border-gray-700 bg-gray-800">
