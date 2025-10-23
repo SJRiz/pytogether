@@ -34,6 +34,8 @@ export default function GroupsAndProjectsPage() {
     const [newProjectName, setNewProjectName] = useState("");
     const [editProjectName, setEditProjectName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [loadingGroups, setIsLoadingGroups] = useState(false);
+    const [loadingProjects, setIsLoadingProjects] = useState(false);
 
     const navigate = useNavigate();
 
@@ -54,22 +56,28 @@ export default function GroupsAndProjectsPage() {
 
     // Fetch all groups
     const fetchGroups = async () => {
+        setIsLoadingGroups(true);
         try {
         const res = await api.get("/groups/");
         setGroups(res.data);
         } catch (err) {
         console.error(err);
+        } finally {
+            setIsLoadingGroups(false);
         }
     };
 
     // Fetch projects for selected group
     const fetchProjects = async (groupId) => {
+        setIsLoadingProjects(true);
         setProjects([]);
         try {
         const res = await api.get(`/groups/${groupId}/projects/`);
         setProjects(res.data);
         } catch (err) {
         console.error(err);
+        } finally {
+            setIsLoadingProjects(false);
         }
     };
 
@@ -103,6 +111,7 @@ export default function GroupsAndProjectsPage() {
     };
 
     const joinGroup = async () => {
+        setIsCreating(true);
         if (!accessCode.trim()) return;
         try {
         const res = await api.put("/groups/join/", { access_code: accessCode.trim() });
@@ -112,6 +121,9 @@ export default function GroupsAndProjectsPage() {
         setShowJoinGroupModal(false);
         } catch (err) {
         console.error(err);
+        alert("Invalid code")
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -128,6 +140,7 @@ export default function GroupsAndProjectsPage() {
 
     const editGroup = async (group) => {
         if (!editGroupName.trim()) return;
+        setIsCreating(true);
         try {
         await api.put("/groups/edit/", { id: group.id, group_name: editGroupName.trim() });
         setGroups(prev => prev.map(g => g.id === group.id ? { ...g, group_name: editGroupName.trim() } : g));
@@ -136,6 +149,8 @@ export default function GroupsAndProjectsPage() {
         setShowEditGroupModal(null);
         } catch (err) {
         console.error(err);
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -220,6 +235,7 @@ export default function GroupsAndProjectsPage() {
         groups={groups}
         selectedGroup={selectedGroup}
         setSelectedGroup={setSelectedGroup}
+        loadingGroups={loadingGroups}
         membersVisible={membersVisible}
         setMembersVisible={setMembersVisible}
         setShowCreateGroupModal={setShowCreateGroupModal}
@@ -230,6 +246,7 @@ export default function GroupsAndProjectsPage() {
         setShowConfirmModal={setShowConfirmModal}
         projects={projects}
         setEditProjectName={setEditProjectName}
+        loadingProjects={loadingProjects}
         setShowEditProjectModal={setShowEditProjectModal}
         setShowCreateProjectModal={setShowCreateProjectModal}
         openProject={openProject}
@@ -247,6 +264,7 @@ export default function GroupsAndProjectsPage() {
 
         <JoinGroupModal
         isOpen={showJoinGroupModal}
+        isJoining={isCreating}
         onClose={() => setShowJoinGroupModal(false)}
         accessCode={accessCode}
         onAccessCodeChange={(e) => setAccessCode(e.target.value)}
@@ -255,6 +273,7 @@ export default function GroupsAndProjectsPage() {
 
         <EditGroupModal
         isOpen={!!showEditGroupModal}
+        isEditing={isCreating}
         onClose={() => setShowEditGroupModal(null)}
         groupName={editGroupName}
         onGroupNameChange={(e) => setEditGroupName(e.target.value)}

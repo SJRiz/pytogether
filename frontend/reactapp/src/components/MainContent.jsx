@@ -5,6 +5,7 @@ export const MainContent = ({
   groups,
   selectedGroup,
   setSelectedGroup,
+  loadingGroups,
   membersVisible,
   setMembersVisible,
   setShowCreateGroupModal,
@@ -15,6 +16,7 @@ export const MainContent = ({
   setShowConfirmModal,
   projects,
   setEditProjectName,
+  loadingProjects,
   setShowEditProjectModal,
   setShowCreateProjectModal,
   openProject
@@ -55,6 +57,7 @@ export const MainContent = ({
         groups={groups}
         selectedGroup={selectedGroup}
         onSelectGroup={setSelectedGroup}
+        loading={loadingGroups}
         membersVisible={membersVisible}
         onViewMembers={handleViewMembers}
         onEditGroup={handleEditGroup}
@@ -67,6 +70,7 @@ export const MainContent = ({
       <ProjectsList
         selectedGroup={selectedGroup}
         projects={projects}
+        loading={loadingProjects}
         onEditProject={handleEditProject}
         onDeleteProject={handleDeleteProject}
         onOpenProject={openProject}

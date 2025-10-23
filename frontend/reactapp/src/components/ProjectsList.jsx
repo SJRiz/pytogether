@@ -3,7 +3,9 @@ import { FolderPlus, Edit2, Trash2, Code2 } from "lucide-react";
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
   return (
     <li 
-      className="bg-gray-700/50 border border-gray-600/50 rounded-lg p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer group animate-fadeIn"
+      className="h-[120px] overflow-hidden bg-gray-700/50 border border-gray-600/50 rounded-lg p-4 
+             hover:bg-gray-700 transition-all duration-200 cursor-pointer group animate-fadeIn"
+
       onClick={() => onOpen(project)}
     >
       <div className="flex justify-between items-start mb-3">
@@ -52,7 +54,8 @@ const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
 
 export const ProjectsList = ({ 
   selectedGroup, 
-  projects, 
+  projects,
+  loading, 
   onEditProject, 
   onDeleteProject, 
   onOpenProject, 
@@ -72,8 +75,9 @@ export const ProjectsList = ({
   }
 
   return (
-    <div className="flex-1 p-4 flex flex-col bg-gray-850">
-      <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+    <div className="flex-1 p-4 flex flex-col bg-gray-850 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3 flex-shrink-0">
         <h2 className="text-lg font-semibold text-white">Projects</h2>
         <button 
           onClick={onCreateProject}
@@ -83,18 +87,31 @@ export const ProjectsList = ({
           <span>Create Project</span>
         </button>
       </div>
-      
-      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map(project => (
-          <ProjectItem
-            key={project.id}
-            project={project}
-            onEdit={onEditProject}
-            onDelete={onDeleteProject}
-            onOpen={onOpenProject}
-          />
-        ))}
-      </ul>
+
+      {/* Project list */}
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {loading ? (
+          <div className="flex flex-1 justify-center items-center h-full">
+            <span className="animate-spin border-4 border-white/50 border-t-white h-12 w-12 rounded-full"></span>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="flex flex-1 justify-center items-center h-full text-gray-400 text-lg">
+            No projects yet. Create one to get started!
+          </div>
+        ) : (
+          <ul className="grid grid-cols-3 auto-rows-[150px] gap-x-4 gap-y-4">
+            {projects.map(project => (
+              <ProjectItem
+                key={project.id}
+                project={project}
+                onEdit={onEditProject}
+                onDelete={onDeleteProject}
+                onOpen={onOpenProject}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import { Modal } from "./Modal";
 
 export const EditGroupModal = ({ 
-  isOpen, 
-  onClose, 
+  isOpen,
+  isEditing,
+  onClose,
   groupName, 
   onGroupNameChange, 
   onSave,
@@ -27,7 +28,12 @@ export const EditGroupModal = ({
         </button>
         <button
           onClick={() => onSave(group)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
+          disabled={isEditing}
+          className={`px-4 py-2 rounded-lg text-white transition-colors ${
+            isEditing 
+              ? "bg-blue-400 cursor-not-allowed" 
+              : "bg-blue-600 hover:bg-blue-500"
+          }`}
         >
           Save
         </button>

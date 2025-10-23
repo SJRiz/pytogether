@@ -1,11 +1,14 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import api from "../../axiosConfig";
+import { useState } from "react";
 
 export default function GoogleLoginButton() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleSuccess = async (credentialResponse) => {
+    setLoading(true);
     try {
       // Get Google credential (JWT)
       const googleToken = credentialResponse.credential;
@@ -16,12 +19,12 @@ export default function GoogleLoginButton() {
       });
 
       sessionStorage.setItem("access_token", res.data.access);
-
-      console.log("Login successful!");
-      navigate('/home');
+      navigate("/home");
     } catch (err) {
       console.error("Google login failed:", err);
       alert("Google login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,8 +35,12 @@ export default function GoogleLoginButton() {
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <div className="flex justify-center">
-        <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+      <div className="flex justify-center items-center">
+        {loading ? (
+          <span className="animate-spin border-4 border-white/50 border-t-white h-12 w-12 rounded-full"></span>
+        ) : (
+          <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+        )}
       </div>
     </GoogleOAuthProvider>
   );

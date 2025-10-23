@@ -2,6 +2,7 @@ import { Modal } from "./Modal";
 
 export const JoinGroupModal = ({ 
   isOpen, 
+  isJoining,
   onClose, 
   accessCode, 
   onAccessCodeChange, 
@@ -15,7 +16,7 @@ export const JoinGroupModal = ({
         onChange={onAccessCodeChange}
         placeholder="Enter access code"
         className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-        onKeyPress={(e) => e.key === 'Enter' && onJoin()}
+        onKeyPress={(e) => !isJoining && e.key === 'Enter' && onJoin()}
       />
       <div className="flex justify-end space-x-3 mt-4">
         <button
@@ -26,9 +27,14 @@ export const JoinGroupModal = ({
         </button>
         <button
           onClick={onJoin}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors"
+          disabled={isJoining}
+          className={`px-4 py-2 rounded-lg text-white transition-colors ${
+            isJoining 
+              ? "bg-green-400 cursor-not-allowed" 
+              : "bg-green-600 hover:bg-green-500"
+          }`}
         >
-          Join
+          {isJoining ? "Joining..." : "Join"}
         </button>
       </div>
     </Modal>

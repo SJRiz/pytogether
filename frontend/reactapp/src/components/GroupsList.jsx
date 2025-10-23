@@ -3,7 +3,8 @@ import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen } from 
 export const GroupsList = ({ 
   groups, 
   selectedGroup, 
-  onSelectGroup, 
+  onSelectGroup,
+  loading, 
   membersVisible, 
   onViewMembers, 
   onEditGroup, 
@@ -34,21 +35,29 @@ export const GroupsList = ({
         </div>
       </div>
       
-      <ul className="flex-1 overflow-y-auto space-y-2">
-        {groups.map(group => (
-          <GroupItem
-            key={group.id}
-            group={group}
-            isSelected={selectedGroup?.id === group.id}
-            showMembers={membersVisible === group.id}
-            onSelect={() => onSelectGroup(group)}
-            onEdit={() => onEditGroup(group)}
-            onViewAccessCode={() => onViewAccessCode(group)}
-            onViewMembers={() => onViewMembers(group)}
-            onLeave={() => onLeaveGroup(group)}
-          />
-        ))}
-      </ul>
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+        {loading ? (
+          <div className="flex justify-center items-center h-full">
+            <span className="animate-spin border-4 border-white/50 border-t-white h-10 w-10 rounded-full"></span>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {groups.map(group => (
+              <GroupItem
+                key={group.id}
+                group={group}
+                isSelected={selectedGroup?.id === group.id}
+                showMembers={membersVisible === group.id}
+                onSelect={() => onSelectGroup(group)}
+                onEdit={() => onEditGroup(group)}
+                onViewAccessCode={() => onViewAccessCode(group)}
+                onViewMembers={() => onViewMembers(group)}
+                onLeave={() => onLeaveGroup(group)}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
