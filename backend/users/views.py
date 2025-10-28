@@ -7,6 +7,7 @@ from rest_framework import status
 from .serializers import RegisterSerializer, UserSerializer
 from .tokens import EmailTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -31,6 +32,9 @@ def google_login(request):
     user = User.objects.filter(email=email).first()
     if user is None:
         user = User.objects.create_user(email=email)
+
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
 
     # issue tokens
     refresh = RefreshToken.for_user(user)
