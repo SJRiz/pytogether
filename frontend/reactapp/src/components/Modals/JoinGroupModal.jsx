@@ -27,7 +27,7 @@ export const JoinGroupModal = ({
         </button>
         <button
           onClick={onJoin}
-          disabled={isJoining}
+          disabled={isJoining || !accessCode.trim()}
           className={`px-4 py-2 rounded-lg text-white transition-colors ${
             isJoining 
               ? "bg-green-400 cursor-not-allowed" 

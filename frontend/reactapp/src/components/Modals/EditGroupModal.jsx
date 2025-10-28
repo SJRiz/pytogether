@@ -28,7 +28,7 @@ export const EditGroupModal = ({
         </button>
         <button
           onClick={() => onSave(group)}
-          disabled={isEditing}
+          disabled={isEditing || !groupName.trim()}
           className={`px-4 py-2 rounded-lg text-white transition-colors ${
             isEditing 
               ? "bg-blue-400 cursor-not-allowed" 

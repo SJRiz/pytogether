@@ -731,11 +731,25 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             <button onClick={() => navigate('/home')} className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors duration-200" title="Go Back">
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <img src="/pytog.png" alt="Code Icon" className="h-10 w-11" />
-            <h1 className="text-xl font-semibold text-gray-100">PyTogether</h1>
-            <span className="text-sm text-gray-400">Real-time Python Collaboration</span>
+                <div className="flex items-center gap-3">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-10"></div>
+                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-2 rounded-xl border border-gray-700/50">
+                    <img
+                        src="/pytog.png"
+                        alt="Code Icon"
+                        className="h-8 w-8"
+                    />
+                    </div>
+                </div>
+                <div>
+                    <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                    PyTogether
+                    </h1>
+                </div>
+                </div>
             {/* Connection Status */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pl-2">
               {isConnected ? (
                 <div className="flex items-center space-x-1 text-green-400">
                   <Wifi className="h-4 w-4" />

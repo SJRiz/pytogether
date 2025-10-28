@@ -210,24 +210,32 @@ export default function GroupsAndProjectsPage() {
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100">
         {/* Header */}
-        <div className="border-b border-gray-700 bg-gray-800 px-6 py-4">
+        <div className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-6 py-4 shadow-lg">
             <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-                <img
-                    src="/pytog.png"
-                    alt="Code Icon"
-                    className="h-10 w-11"
-                />
-                <h1 className="text-xl font-semibold text-white">PyTogether</h1>
-            </div>
-            
-            <button
+                <div className="flex items-center gap-3">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-15"></div>
+                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-2 rounded-xl border border-gray-700/50">
+                    <img
+                        src="/pytog.png"
+                        alt="Code Icon"
+                        className="h-8 w-8"
+                    />
+                    </div>
+                </div>
+                <div>
+                    <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                    PyTogether
+                    </h1>
+                </div>
+                </div>
+                <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-red-500 transition-colors duration-200"
-            >
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-700 to-gray-600 text-white rounded-xl hover:from-red-600 hover:to-red-500 transition-all duration-200 shadow-lg hover:shadow-red-500/20 font-medium border border-gray-600/50 hover:border-red-500/50"
+                >
                 <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-            </button>
+                <span className="text-sm">Sign Out</span>
+                </button>
             </div>
         </div>
 
