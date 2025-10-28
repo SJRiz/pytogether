@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import serializers
+from django.utils import timezone
 
 class EmailTokenObtainPairSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -17,12 +18,15 @@ class EmailTokenObtainPairSerializer(serializers.Serializer):
             raise serializers.ValidationError("Must include 'email' and 'password'.")
 
         user = authenticate(username=email, password=password)
-
         if user is None:
             raise serializers.ValidationError("Unable to log in with provided credentials.")
 
         if not getattr(user, "is_active", True):
             raise serializers.ValidationError("User account is disabled.")
+        
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+
 
         refresh = RefreshToken.for_user(user)
         
