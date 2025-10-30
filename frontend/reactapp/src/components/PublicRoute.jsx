@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import { initializeAuth } from "../components/auth.js"
 
-const ProtectedRoute = ({ children }) => {
+const PublicRoute = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -24,13 +24,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    // Not logged in, redirect to login
-    return <Navigate to="/login" replace />;
+  if (isAuthenticated) {
+    // Already logged in, redirect to home
+    return <Navigate to="/home" replace />;
   }
 
-  // Logged in, show protected content
+  // Not logged in, show login/register page
   return children;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;

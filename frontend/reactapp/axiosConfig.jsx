@@ -3,10 +3,9 @@ import axios from "axios";
 // Create Axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000",
-  withCredentials: true, // Required if using HTTP-only cookie for refresh token
+  withCredentials: true,
 });
 
-// Queue for pending requests during token refresh
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -18,21 +17,28 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request interceptor: attach access token
 api.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("access_token"); // Store access token in memory/sessionStorage
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    const token = sessionStorage.getItem("access_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle 401 and refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Don't retry if this is already a refresh request
+    if (error.config?.url?.includes('/auth/token/refresh/')) {
+      sessionStorage.removeItem("access_token");
+      // DON'T redirect here - let route guards handle it
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -40,7 +46,7 @@ api.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers.Authorization = "Bearer " + token;
+            originalRequest.headers.Authorization = `Bearer ${token}`;
             return api(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -50,26 +56,22 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Refresh token is stored in HTTP-only cookie, backend handles it
-        const res = await axios.post(
-          `${api.defaults.baseURL}/api/auth/token/refresh/`,
-          {},
-          { withCredentials: true }
-        );
+        const res = await api.post("/api/auth/token/refresh/");
         const newAccess = res.data.access;
 
-        // Store in memory/sessionStorage
         sessionStorage.setItem("access_token", newAccess);
+        api.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`;
+        
         processQueue(null, newAccess);
 
-        originalRequest.headers.Authorization = "Bearer " + newAccess;
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
 
-        // Clear tokens and redirect to login
+        // Clear tokens but DON'T redirect - let route guards handle it
         sessionStorage.removeItem("access_token");
-        window.location.href = "/login";
+        delete api.defaults.headers.common['Authorization'];
 
         return Promise.reject(err);
       } finally {

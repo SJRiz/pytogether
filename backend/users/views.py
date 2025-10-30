@@ -46,7 +46,8 @@ def google_login(request):
         httponly=True,
         secure=True,
         samesite="Lax",
-        path="/api/auth/token/refresh/"
+        max_age=30*24*60*60,  # 30 days
+        path="/"
     )
 
     return response
@@ -58,7 +59,25 @@ def email_token_obtain_pair(request):
     serializer = EmailTokenObtainPairSerializer(data=request.data)
 
     if serializer.is_valid():
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        tokens = serializer.validated_data
+        
+        # Create response with only access token
+        response = Response({
+            "access": tokens["access"]
+        }, status=status.HTTP_200_OK)
+        
+        # Set refresh token as HttpOnly cookie
+        response.set_cookie(
+            key="refresh_token",
+            value=tokens["refresh"],
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=30*24*60*60,  # 30 days
+            path="/",
+        )
+        
+        return response
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -80,7 +99,7 @@ def logout(request):
     try:
         # Remove refresh token cookie
         response = Response({"detail": "Logged out successfully"}, status=status.HTTP_200_OK)
-        response.delete_cookie("refresh_token", path="/api/auth/token/refresh/")
+        response.delete_cookie("refresh_token", path="/")
         return response
     
     except Exception as e:

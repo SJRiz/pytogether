@@ -1,12 +1,12 @@
 from django.urls import path
 from .views import register, me, google_login, logout
+from .tokens import CookieTokenRefreshView
 from users.views import email_token_obtain_pair
-from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     # JWT token obtain (email + password) and refresh
     path("auth/token/", email_token_obtain_pair, name="token_obtain_pair"),
-    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/token/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     path("auth/logout/", logout, name="logout"),
 
     # Google login

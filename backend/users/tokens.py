@@ -1,7 +1,54 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework.response import Response
 from rest_framework import serializers
+from rest_framework import status
 from django.utils import timezone
+
+class CookieTokenRefreshView(TokenRefreshView):
+    """
+    Custom TokenRefreshView that reads refresh token from HttpOnly cookie
+    instead of request body
+    """
+    def post(self, request, *args, **kwargs):
+        # Get refresh token from cookie
+        refresh_token = request.COOKIES.get('refresh_token')
+        
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token not found in cookies"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        # Add refresh token to request data
+        request.data['refresh'] = refresh_token
+        
+        try:
+            response = super().post(request, *args, **kwargs)
+            
+            # If token rotation is enabled, update the cookie with new refresh token
+            if 'refresh' in response.data:
+                response.set_cookie(
+                    key="refresh_token",
+                    value=response.data['refresh'],
+                    httponly=True,
+                    secure=True,
+                    samesite="Lax",
+                    max_age=30*24*60*60,  # 30 days
+                    path="/"
+                )
+                # Remove refresh token from response body (it's in cookie now)
+                del response.data['refresh']
+            print("ok!")
+            return response
+            
+        except InvalidToken as e:
+            return Response(
+                {"error": "Invalid or expired refresh token"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
 class EmailTokenObtainPairSerializer(serializers.Serializer):
     email = serializers.EmailField()

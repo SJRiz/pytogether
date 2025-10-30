@@ -1,4 +1,4 @@
-import { LogIn, Users, Code, Save, Package } from "lucide-react";
+import { LogIn, Users, Code, Save, Package, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import liveVideo from '../assets/live.webm';
@@ -8,6 +8,10 @@ export default function About() {
 
   const handleGetStarted = () => {
     navigate("/login");
+  };
+
+  const scrollToFeatures = () => {
+    document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -23,76 +27,107 @@ export default function About() {
         <meta property="og:url" content="https://pytogether.org" />
         <meta property="og:image" content="https://pytogether.org/pytog.png" />
     </Helmet>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl bg-gray-800/70 backdrop-blur-md border border-gray-700/30 rounded-xl shadow-2xl overflow-hidden transition-all duration-300 hover:bg-gray-800/80">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-5xl bg-gradient-to-b from-gray-800/60 to-gray-900/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden">
           {/* Header Section */}
-          <div className="p-8 text-center border-b border-gray-700/50">
+          <div className="p-10 text-center border-b border-gray-700/50 bg-gradient-to-r from-gray-800/50 to-gray-900/50">
             <div className="flex justify-center mb-6">
-              <div className="p-3 bg-blue-500/10 rounded-full">
-                <img
-                  src="/pytog.png"
-                  alt="PyTogether Logo"
-                  className="h-15 w-15"
-                />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full blur-2xl opacity-40 animate-pulse"></div>
+                <div className="relative p-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border-2 border-gray-700/50">
+                  <img
+                    src="/pytog.png"
+                    alt="PyTogether Logo"
+                    className="h-16 w-16"
+                  />
+                </div>
               </div>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
               About PyTogether
             </h1>
-            <p className="text-gray-400 text-lg mb-2">Google Docs for Python</p>
-            <p className="text-gray-500 text-sm max-w-2xl mx-auto">
+            <p className="text-gray-300 text-xl font-semibold mb-3">Google Docs for Python</p>
+            <p className="text-gray-400 text-base max-w-2xl mx-auto leading-relaxed mb-6">
               The simplest way to learn, teach, and collaborate on Python projects in real-time, directly in your browser.
             </p>
+            
+            {/* CTA Buttons in Header */}
+            <div className="flex gap-3 justify-center mt-6">
+              <button
+                onClick={handleGetStarted}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 flex items-center hover:scale-105 transform"
+              >
+                <LogIn className="h-5 w-5 mr-2" />
+                Get Started for Free
+              </button>
+              <button
+                onClick={scrollToFeatures}
+                className="px-8 py-3 bg-gray-700/40 text-gray-300 rounded-xl font-semibold hover:bg-gray-700/60 transition-all border border-gray-600/30 hover:border-gray-500/50 flex items-center"
+              >
+                Learn More
+                <ArrowDown className="h-5 w-5 ml-2" />
+              </button>
+            </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-8 space-y-8">
+          <div id="features-section" className="p-8 space-y-6">
             {/* Why PyTogether Section */}
-            <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
-              <h2 className="text-2xl font-semibold text-white mb-4 flex items-center">
-                <Users className="h-6 w-6 mr-3 text-blue-400" />
+            <div className="bg-gradient-to-br from-gray-700/40 to-gray-800/40 rounded-xl p-7 border border-gray-600/30 shadow-lg">
+              <h2 className="text-2xl font-bold text-white mb-5 flex items-center">
+                <div className="p-2 bg-blue-500/20 rounded-lg mr-3">
+                  <Users className="h-6 w-6 text-blue-400" />
+                </div>
                 Why PyTogether?
               </h2>
-              <p className="text-gray-300 mb-4">
-                PyTogether focuses on <span className="text-blue-400 font-semibold">simplicity and education</span>. 
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                PyTogether focuses on <span className="text-blue-400 font-bold">simplicity and education</span>. 
                 We created something easy for beginners to jump right into collaborative Python programming.
               </p>
-              <div className="grid md:grid-cols-2 gap-4 text-gray-300">
+              <div className="grid md:grid-cols-2 gap-6 text-gray-300">
                 <div className="space-y-3">
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>Run Python scripts together in the browser</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>No paywalls or downloads required</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>No AI/copilot features - perfect for learning fundamentals</span>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>No complex features that overwhelm beginners</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>Extremely intuitive interface</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                    <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-blue-500/50"></div>
                     <span>Just create an account, make a group, and start coding!</span>
                   </div>
                 </div>
               </div>
-              <p className="text-gray-300 mb-4 pt-5">This is also an open-source project! Feel free to view or contribute at <span className="text-blue-400 font-semibold"> <a href="https://github.com/SJRiz/pytogether">https://github.com/SJRiz/pytogether </a></span> </p>
+              <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700/30">
+                <p className="text-gray-300 text-sm">
+                  This is also an open-source project! Feel free to view or contribute at 
+                  <a href="https://github.com/SJRiz/pytogether" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors ml-1">
+                    github.com/SJRiz/pytogether
+                  </a>
+                </p>
+              </div>
             </div>
 
             {/* Video Demo Section */}
-            <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
-              <div className="rounded-lg overflow-hidden border border-gray-600/30">
+            <div className="bg-gradient-to-br from-gray-700/40 to-gray-800/40 rounded-xl p-7 border border-gray-600/30 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">See It In Action</h2>
+              <div className="rounded-xl overflow-hidden border-2 border-gray-600/50 shadow-2xl">
                 <video 
                   className="w-full h-auto"
                   autoPlay
@@ -108,47 +143,51 @@ export default function About() {
 
             {/* Features Section */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <Code className="h-5 w-5 mr-3 text-purple-400" />
+              <div className="bg-gradient-to-br from-purple-900/20 to-gray-800/40 rounded-xl p-6 border border-purple-500/30 shadow-lg hover:border-purple-500/50 transition-colors">
+                <h3 className="text-xl font-bold text-white mb-5 flex items-center">
+                  <div className="p-2 bg-purple-500/20 rounded-lg mr-3">
+                    <Code className="h-5 w-5 text-purple-400" />
+                  </div>
                   Core Features
                 </h3>
                 <div className="space-y-3 text-gray-300">
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
                     <span>Group and project management</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
                     <span>Real-time collaboration with live cursors and code linting</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
                     <span>Real-time chat and voice calls per project</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
                     <span>Reliable autosave (saves on exit and every minute)</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <Save className="h-5 w-5 mr-3 text-green-400" />
+              <div className="bg-gradient-to-br from-green-900/20 to-gray-800/40 rounded-xl p-6 border border-green-500/30 shadow-lg hover:border-green-500/50 transition-colors">
+                <h3 className="text-xl font-bold text-white mb-5 flex items-center">
+                  <div className="p-2 bg-green-500/20 rounded-lg mr-3">
+                    <Save className="h-5 w-5 text-green-400" />
+                  </div>
                   Simple & Reliable
                 </h3>
                 <div className="space-y-3 text-gray-300">
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-green-400 to-green-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-green-500/50"></div>
                     <span>Browser-based Python execution</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-green-400 to-green-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-green-500/50"></div>
                     <span>No server setup or configuration</span>
                   </div>
-                  <div className="flex items-start">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-green-400 to-green-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-green-500/50"></div>
                     <span>Perfect for classrooms and study groups</span>
                   </div>
                 </div>
@@ -156,69 +195,74 @@ export default function About() {
             </div>
 
             {/* Supported Packages Section */}
-            <div className="bg-gray-700/30 rounded-lg p-6 border border-gray-600/20">
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <Package className="h-5 w-5 mr-3 text-yellow-400" />
+            <div className="bg-gradient-to-br from-yellow-900/20 to-gray-800/40 rounded-xl p-7 border border-yellow-500/30 shadow-lg">
+              <h3 className="text-xl font-bold text-white mb-5 flex items-center">
+                <div className="p-2 bg-yellow-500/20 rounded-lg mr-3">
+                  <Package className="h-5 w-5 text-yellow-400" />
+                </div>
                 Supported Python Packages
               </h3>
-              <p className="text-gray-300 mb-4">
+              <p className="text-gray-300 mb-5 leading-relaxed">
                 PyTogether uses Skulpt to run Python in the browser. The following packages are currently supported:
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Standard Library Modules</h4>
+              <div className="grid md:grid-cols-2 gap-5">
+                <div className="bg-gray-800/60 rounded-xl p-5 border border-gray-700/50">
+                  <h4 className="text-white font-bold mb-4 text-lg">Standard Library Modules</h4>
                   <div className="space-y-2 text-sm text-gray-300">
-                    <div><span className="text-blue-400 font-medium">math</span> → sin, cos, sqrt, factorial, etc.</div>
-                    <div><span className="text-blue-400 font-medium">random</span> → randint, choice, shuffle, etc.</div>
-                    <div><span className="text-blue-400 font-medium">time</span> → time.time(), sleep (limited)</div>
-                    <div><span className="text-blue-400 font-medium">re</span> → basic regex</div>
-                    <div><span className="text-blue-400 font-medium">string</span> → ascii_letters, constants</div>
-                    <div><span className="text-blue-400 font-medium">itertools</span> → chain, combinations, permutations</div>
-                    <div><span className="text-blue-400 font-medium">functools</span> → reduce, partial</div>
-                    <div><span className="text-blue-400 font-medium">operator</span> → add, mul functions</div>
-                    <div><span className="text-blue-400 font-medium">copy</span> → copy, deepcopy</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">math</span> → sin, cos, sqrt, factorial, etc.</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">random</span> → randint, choice, shuffle, etc.</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">time</span> → time.time(), sleep (limited)</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">re</span> → basic regex</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">string</span> → ascii_letters, constants</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">itertools</span> → chain, combinations, permutations</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">functools</span> → reduce, partial</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">operator</span> → add, mul functions</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">copy</span> → copy, deepcopy</div>
                   </div>
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Partial Support Modules</h4>
-                  <div className="space-y-2 text-sm text-gray-300 mb-4">
-                    <div><span className="text-yellow-400 font-medium">heapq</span> → basic heap functions</div>
+                <div className="bg-gray-800/60 rounded-xl p-5 border border-gray-700/50">
+                  <h4 className="text-white font-bold mb-4 text-lg">Partial Support Modules</h4>
+                  <div className="space-y-2 text-sm text-gray-300 mb-5">
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-yellow-400 font-semibold">heapq</span> → basic heap functions</div>
                   </div>
-                  <div className="bg-gray-700/50 rounded-lg p-3 mt-4">
-                    <h5 className="text-white font-medium mb-2 text-sm">Perfect For Learning:</h5>
-                    <div className="space-y-1 text-xs text-gray-300">
-                      <div>• Data structures & algorithms</div>
-                      <div>• Mathematical computations</div>
-                      <div>• Text processing & regex</div>
-                      <div>• Functional programming</div>
+                  <div className="bg-gradient-to-br from-gray-700/60 to-gray-900/60 rounded-xl p-4 border border-gray-600/30">
+                    <h5 className="text-white font-bold mb-3 text-sm flex items-center">
+                      <div className="w-2 h-2 bg-gradient-to-br from-green-400 to-green-500 rounded-full mr-2"></div>
+                      Perfect For Learning:
+                    </h5>
+                    <div className="space-y-2 text-xs text-gray-300">
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Data structures & algorithms</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Mathematical computations</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Text processing & regex</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Functional programming</div>
                     </div>
                   </div>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm mt-4">
+              <p className="text-gray-400 text-sm mt-5 p-4 bg-gray-800/50 rounded-lg border border-gray-700/30">
                 <em>Note: Partial support modules have limited functionality. Perfect for learning Python fundamentals and core programming concepts.</em>
               </p>
             </div>
 
-            {/* Get Started Button */}
-            <div className="text-center">
+            {/* Get Started Button at Bottom */}
+            <div className="text-center pt-4">
               <button
                 onClick={handleGetStarted}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition-all duration-300 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20 text-lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 text-lg hover:scale-105 transform"
               >
                 <LogIn className="h-6 w-6 mr-3" />
                 Get Started Now
               </button>
-              <p className="text-gray-400 text-sm mt-3">
+              <p className="text-gray-400 text-sm mt-4 font-medium">
                 Start coding together in seconds - no downloads required!
               </p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 text-center border-t border-gray-700/50">
-            <p className="text-xs text-gray-500">
-              Questions? Feedback? Email us at <a href="mailto:contact@pytogether.org" className="text-blue-400 font-bold underline">contact@pytogether.org</a>
+          <div className="p-6 text-center border-t border-gray-700/50 bg-gradient-to-r from-gray-900/50 to-gray-800/50">
+            <p className="text-sm text-gray-400">
+              Questions? Feedback? Email us at <a href="mailto:contact@pytogether.org" className="text-blue-400 font-bold underline hover:text-blue-300 transition-colors">contact@pytogether.org</a>
             </p>
           </div>
         </div>
