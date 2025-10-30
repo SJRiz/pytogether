@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant hover (&:hover);
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 10px;
   height: 10px;

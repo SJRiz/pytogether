@@ -5,9 +5,6 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 let isInitializing = false;
 let initPromise = null;
 
-export const isAuthenticated = () => {
-  return !!sessionStorage.getItem("access_token");
-};
 
 export const initializeAuth = async () => {
   
