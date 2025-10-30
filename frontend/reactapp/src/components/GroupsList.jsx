@@ -84,14 +84,14 @@ const GroupItem = ({
 }) => {
   return (
     <li 
-      className={`rounded-xl transition-all duration-200 overflow-hidden ${
+      className={`rounded-xl transition-all duration-200 overflow-hidden group ${
         isSelected 
           ? "bg-gradient-to-br from-blue-600/30 to-blue-700/20 border-2 border-blue-500/60 shadow-lg shadow-blue-500/10" 
           : "bg-gray-700/40 hover:bg-gray-700/60 border-2 border-gray-600/30 hover:border-gray-500/50"
       }`}
     >
       <div className="p-4">
-        <div className="flex justify-between items-center mb-3">
+        <div className="flex justify-between items-center mb-0 group-hover:mb-3 transition-all duration-200">
           <span 
             onClick={onSelect}
             className={`flex-1 font-semibold truncate cursor-pointer ${
@@ -102,7 +102,7 @@ const GroupItem = ({
           </span>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 max-h-0 opacity-0 overflow-hidden group-hover:max-h-20 group-hover:opacity-100 transition-all duration-200">
           <button 
             onClick={onEdit}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 rounded-lg transition-all duration-200 text-xs font-medium"
