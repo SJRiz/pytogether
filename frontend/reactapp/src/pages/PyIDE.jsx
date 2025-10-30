@@ -7,7 +7,7 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { throttle } from "lodash";
 import { jwtDecode } from "jwt-decode";
-import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, X as XIcon, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
 import api from "../../axiosConfig";
 
 // Y.js imports
@@ -68,6 +68,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const consoleRef = useRef(null);
   const chatRef = useRef(null);
   const nameInputRef = useRef(null);
+  const shouldStopExecutionRef = useRef(false);
   const inputRef = useRef(null);
   const chatInputRef = useRef(null);
   const dragStartX = useRef(0);
@@ -615,17 +616,33 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     });
   }, [voiceParticipants]);
 
+  const stopCode = () => {
+    shouldStopExecutionRef.current = true;
+    setWaitingForInput(false);
+    setInputResolve(null);
+    setIsRunning(false);
+    addConsoleEntry(">>> Execution stopped by user", "system");
+  };
+
   const runCode = async () => {
     if (!window.Sk || isRunning) return;
     setIsRunning(true);
+    shouldStopExecutionRef.current = false; // Reset the ref
     addConsoleEntry(`>>> Running code...`, "input");
     const currentCode = ytextRef.current ? ytextRef.current.toString() : code;
 
-     // Skulpt output callback
-    const outf = (text) => addConsoleEntry(text, "output");
+    // Skulpt output callback
+    const outf = (text) => {
+      if (shouldStopExecutionRef.current) throw new Error('Execution stopped by user');
+      addConsoleEntry(text, "output");
+    };
 
     // Skulpt input callback
     const inputfun = (promptText) => new Promise((resolve) => {
+      if (shouldStopExecutionRef.current) {
+        resolve('');
+        return;
+      }
       if (promptText) addConsoleEntry(promptText, "system");
       setWaitingForInput(true);
       setInputResolve(() => (input) => {
@@ -639,6 +656,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       Sk.configure({
         output: outf,
         read: (x) => {
+          if (shouldStopExecutionRef.current) throw new Error('Execution stopped by user');
           if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[x] === undefined) {
             throw `File not found: '${x}'`;
           }
@@ -651,12 +669,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         __future__: Sk.python3
       });
       await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<stdin>', false, currentCode, true));
-      if (!waitingForInput) addConsoleEntry(">>> Code execution completed", "system");
+      if (!waitingForInput && !shouldStopExecutionRef.current) addConsoleEntry(">>> Code execution completed", "system");
     } catch (err) {
       setWaitingForInput(false);
       setInputResolve(null);
-      addConsoleEntry(err.toString(), "error");
-      addConsoleEntry(">>> Code execution failed", "system");
+      if (!shouldStopExecutionRef.current) {
+        addConsoleEntry(err.toString(), "error");
+        addConsoleEntry(">>> Code execution failed", "system");
+      }
     } finally {
       if (!waitingForInput) setIsRunning(false);
     }
@@ -721,10 +741,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden custom-scrollbar">
+    <div className="min-h-screen bg-slate-850 text-gray-100 overflow-x-hidden custom-scrollbar">
       
       {/* Header */}
-      <div className="border-b border-gray-700 bg-gray-800">
+      <div className="border-b border-gray-700 bg-gray-850">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center space-x-3">
             {/* Back Button */}
@@ -859,6 +879,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               <Play className="h-4 w-4" />
               <span>{isRunning ? 'Running...' : 'Run Code'}</span>
             </button>
+            {isRunning && (
+              <button onClick={stopCode} className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
+                <X className="h-4 w-4" />
+                <span>Stop</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
