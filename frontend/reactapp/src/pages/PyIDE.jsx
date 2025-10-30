@@ -875,14 +875,16 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 <span className="text-sm">Loading...</span>
               </div>
             )}
+            {!isRunning && (
             <button onClick={runCode} disabled={isRunning || isLoading} className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors duration-200">
               <Play className="h-4 w-4" />
               <span>{isRunning ? 'Running...' : 'Run Code'}</span>
             </button>
+            )}
             {isRunning && (
               <button onClick={stopCode} className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
                 <X className="h-4 w-4" />
-                <span>Stop</span>
+                <span>Stop Code</span>
               </button>
             )}
           </div>
