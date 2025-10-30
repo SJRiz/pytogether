@@ -74,7 +74,7 @@ export const ProjectsList = ({
 }) => {
   if (!selectedGroup) {
     return (
-      <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-850">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
         </div>
@@ -87,7 +87,7 @@ export const ProjectsList = ({
   }
 
   return (
-    <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 overflow-hidden">
+    <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-850 overflow-hidden">
       {/* Header */}
       <div className="mb-6 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
