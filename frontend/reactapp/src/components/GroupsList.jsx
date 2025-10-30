@@ -14,7 +14,7 @@ export const GroupsList = ({
   onJoinGroup 
 }) => {
   return (
-    <div className="w-1/4 bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700/50 p-6 flex flex-col">
+    <div className="w-1/4 bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-600/50 p-6 flex flex-col">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
         <div className="flex gap-3 pb-3 border-b-1 border-gray-700">

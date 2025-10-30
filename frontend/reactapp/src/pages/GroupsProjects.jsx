@@ -210,7 +210,7 @@ export default function GroupsAndProjectsPage() {
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100">
         {/* Header */}
-        <div className="border-b border-gray-700/50 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-6 py-4 shadow-lg">
+        <div className="border-b border-gray-600/50 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-6 py-4 shadow-lg">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                 <div className="relative">
