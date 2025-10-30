@@ -43,14 +43,24 @@ export default function About() {
                 </div>
               </div>
             </div>
+
             <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
               About PyTogether
             </h1>
             <p className="text-gray-300 text-xl font-semibold mb-3">Google Docs for Python</p>
+            
+            {/* FREE Badge */}
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400/50 rounded-full px-6 py-2 mb-4">
+              <span className="text-gray-300 font-semibold">100% FREE</span>
+              <span className="text-gray-300 font-semibold">•</span>
+              <span className="text-gray-300 font-semibold">No Paywalls</span>
+              <span className="text-gray-300 font-semibold">•</span>
+              <span className="text-gray-300 font-semibold">No Downloads</span>
+            </div>
+            
             <p className="text-gray-400 text-base max-w-2xl mx-auto leading-relaxed mb-6">
               The simplest way to learn, teach, and collaborate on Python projects in real-time, directly in your browser.
             </p>
-            
             {/* CTA Buttons in Header */}
             <div className="flex gap-3 justify-center mt-6">
               <button
