@@ -240,6 +240,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 user_obj = await database_sync_to_async(User.objects.get)(pk=self.user.pk)
                 color_data = await ASYNC_REDIS.get(f"user_color:{self.user.pk}")
                 color = json.loads(color_data) if color_data else {"color": "#30bced", "light": "#30bced33"}
+                print("text message sent")
                 
                 await self.channel_layer.group_send(self.room, {
                     "type": "broadcast.chat_message",
@@ -252,6 +253,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
             elif mtype == "join_voice":
                 # Add user to voice room
+                print("a user joined vc")
                 await ASYNC_REDIS.sadd(voice_room_key(self.project_id), str(self.user.pk))
                 await self.channel_layer.group_send(self.room, {
                     "type": "voice_room_update"

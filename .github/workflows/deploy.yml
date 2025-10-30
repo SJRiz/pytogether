@@ -3,6 +3,11 @@ name: Deploy Backend to VPS
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+      - 'docker-compose.yaml'
+
 
 jobs:
   deploy:
