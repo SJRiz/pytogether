@@ -154,6 +154,50 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     setShowDownloadMenu(false); // Close menu
   };
 
+  // .pdf Handler
+  const handleDownloadPDF = () => {
+    if (!ytextRef.current) return;
+    const code = ytextRef.current.toString();
+    const doc = new jsPDF();
+    
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(10);
+    
+    const margin = 10;
+    const lineHeight = 5;
+    
+    // Get page dimensions
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+
+    const allLines = code.split('\n');
+    
+    let currentY = margin;
+
+    allLines.forEach((line) => {
+      const wrappedLines = doc.splitTextToSize(line, maxWidth);
+
+      wrappedLines.forEach((wrappedLine) => {
+        if (currentY + lineHeight > pageHeight - margin) {
+          doc.addPage();
+          currentY = margin;
+        }
+        
+        // Add the line of text
+        doc.text(wrappedLine, margin, currentY);
+        
+        currentY += lineHeight;
+      });
+    });
+
+    // Save the complete document
+    doc.save(getCleanFilename('.pdf'));
+    setShowDownloadMenu(false);
+  };
+
   // Load SimplePeer from CDN
   useEffect(() => {
     const loadSimplePeer = () => {
@@ -898,7 +942,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     }
     
     return () => {
-      document.title = 'PyTogether';
+      document.title = 'Unnamed - PyTogether';
     };
   }, [projectName]);
 
@@ -1123,6 +1167,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                       >
                         <span>Download as .docx</span>
                       </li>
+                      <li
+                        onClick={handleDownloadPDF}
+                        className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer flex items-center space-x-2"
+                      >
+                        <span>Download as .pdf</span>
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -1256,7 +1306,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           ref={canvasContainerRef} 
           className="flex-1 flex flex-col border-r border-gray-700 min-w-0 relative"
         >
-          <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+          <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between z-20">
             <h2 className="text-sm font-medium text-gray-300">main.py</h2>
             <div className="flex items-center space-x-2">
               <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-orange-400'}`}></div>
