@@ -14,6 +14,7 @@
 </p>
 
 ----
+https://pytogether.org/
 
 ## Features
 - **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
@@ -90,6 +91,7 @@ cd frontend/reactapp
 npm run dev
 ```
 The frontend will be live on http://localhost:5173
+
 
 
 
