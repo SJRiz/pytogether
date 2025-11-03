@@ -7,7 +7,10 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { throttle } from "lodash";
 import { jwtDecode } from "jwt-decode";
-import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff } from "lucide-react";
+import { saveAs } from 'file-saver';
+import { jsPDF } from "jspdf";
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff, Download } from "lucide-react";
 import api from "../../axiosConfig";
 
 // Y.js imports
@@ -38,6 +41,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [isDragging, setIsDragging] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   // Input handling state
   const [waitingForInput, setWaitingForInput] = useState(false);
@@ -90,6 +94,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const lastPingTimeRef = useRef(null);
   const simplePeerLoadedRef = useRef(false);
   const scrollerRef = useRef(null);
+  const downloadMenuRef = useRef(null);
 
   // drawing stuff refs
   const ydrawingsRef = useRef(null);
@@ -100,6 +105,54 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // Refs for real-time drawing
   const isDrawingRef = useRef(false);
   const currentPathRef = useRef([]);
+
+  // Helper to get a clean filename
+  const getCleanFilename = (extension) => {
+    return (projectName || 'main').replace(/[^a-z0-9]/gi, '_').toLowerCase() + extension;
+  };
+
+  // .py Handler
+  const handleDownloadPY = () => {
+    if (!ytextRef.current) return;
+    const code = ytextRef.current.toString();
+    const blob = new Blob([code], { type: 'text/python;charset=utf-8' });
+    saveAs(blob, getCleanFilename('.py'));
+    setShowDownloadMenu(false); // Close menu
+  };
+
+  // .txt Handler
+  const handleDownloadTXT = () => {
+    if (!ytextRef.current) return;
+    const code = ytextRef.current.toString();
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, getCleanFilename('.txt'));
+    setShowDownloadMenu(false); // Close menu
+  };
+
+  // .docx Handler
+  const handleDownloadDOCX = () => {
+    if (!ytextRef.current) return;
+    const code = ytextRef.current.toString();
+    const lines = code.split('\n');
+    const paragraphs = lines.map(
+      (line) =>
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: line,
+              font: "Courier New",
+              size: 20, // 10pt
+            }),
+          ],
+        })
+    );
+    const doc = new Document({ sections: [{ children: paragraphs }] });
+
+    Packer.toBlob(doc).then((blob) => {
+      saveAs(blob, getCleanFilename('.docx'));
+    });
+    setShowDownloadMenu(false); // Close menu
+  };
 
   // Load SimplePeer from CDN
   useEffect(() => {
@@ -377,6 +430,21 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const addConsoleEntry = (content, type = 'output', timestamp = new Date()) => {
     setConsoleOutput(prev => [...prev, { id: Date.now() + Math.random(), content, type, timestamp }]);
   };
+
+  // Effect to close download menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
+        setShowDownloadMenu(false);
+      }
+    };
+    // Add listener
+    document.addEventListener('mousedown', handleClickOutside);
+    // Cleanup listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Load Skulpt
   useEffect(() => {
@@ -1012,6 +1080,43 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                   </button>
                 </>
               )}
+
+              {/* Download */}
+              <div className="relative" ref={downloadMenuRef}>
+                <button
+                  onClick={() => setShowDownloadMenu(prev => !prev)}
+                  className="p-1 text-gray-400 hover:text-gray-200"
+                  title="Download project"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
+
+                {showDownloadMenu && (
+                  <div className="absolute left-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-50">
+                    <ul className="py-1">
+                      <li
+                        onClick={handleDownloadPY}
+                        className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer flex items-center space-x-2"
+                      >
+                        <span>Download as .py</span>
+                      </li>
+                      <li
+                        onClick={handleDownloadTXT}
+                        className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer flex items-center space-x-2"
+                      >
+                        <span>Download as .txt</span>
+                      </li>
+                      <li
+                        onClick={handleDownloadDOCX}
+                        className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer flex items-center space-x-2"
+                      >
+                        <span>Download as .docx</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
 
