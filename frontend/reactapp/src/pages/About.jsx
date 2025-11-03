@@ -264,6 +264,7 @@ export default function About() {
                       Perfect For Learning:
                     </h5>
                     <div className="space-y-2 text-xs text-gray-300">
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Core programming fundamentals</div>
                       <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Data structures & algorithms</div>
                       <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Mathematical computations</div>
                       <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Text processing & regex</div>

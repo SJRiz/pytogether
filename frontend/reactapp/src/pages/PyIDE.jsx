@@ -71,6 +71,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [eraseWidth, setEraseWidth] = useState(20);
 
   const [drawings, setDrawings] = useState([]);
+  const [latency, setLatency] = useState(null);
   
   // Y.js and WebSocket refs
   const ydocRef = useRef(null);
@@ -90,7 +91,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const localStreamRef = useRef(null);
   const peersRef = useRef({});
   const audioElementsRef = useRef({});
-  const [latency, setLatency] = useState(null);
   const lastPingTimeRef = useRef(null);
   const simplePeerLoadedRef = useRef(false);
   const scrollerRef = useRef(null);
@@ -101,8 +101,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null); // Ref for the <CodeMirror> parent div
   const ctxRef = useRef(null); // 2D drawing context
-
-  // Refs for real-time drawing
   const isDrawingRef = useRef(false);
   const currentPathRef = useRef([]);
 
