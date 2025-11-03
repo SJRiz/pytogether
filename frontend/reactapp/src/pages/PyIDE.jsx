@@ -1,5 +1,5 @@
 // this code is a huge big mess i will refactor this later when i have time
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
 import { Awareness, encodeAwarenessUpdate, applyAwarenessUpdate } from 'y-protocols/awareness';
@@ -7,7 +7,7 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { throttle } from "lodash";
 import { jwtDecode } from "jwt-decode";
-import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff } from "lucide-react";
+import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff } from "lucide-react";
 import api from "../../axiosConfig";
 
 // Y.js imports
@@ -58,6 +58,15 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [isMuted, setIsMuted] = useState(false);
   const [voiceParticipants, setVoiceParticipants] = useState([]);
   const [peers, setPeers] = useState({});
+
+  // drawing tool state
+  const [drawingMode, setDrawingMode] = useState('none'); // 'none', 'draw', 'erase'
+  const [showDrawings, setShowDrawings] = useState(true);
+  const [drawColor, setDrawColor] = useState('#EF4444');
+  const [strokeWidth, setStrokeWidth] = useState(2);
+  const [eraseWidth, setEraseWidth] = useState(20);
+
+  const [drawings, setDrawings] = useState([]);
   
   // Y.js and WebSocket refs
   const ydocRef = useRef(null);
@@ -80,6 +89,17 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [latency, setLatency] = useState(null);
   const lastPingTimeRef = useRef(null);
   const simplePeerLoadedRef = useRef(false);
+  const scrollerRef = useRef(null);
+
+  // drawing stuff refs
+  const ydrawingsRef = useRef(null);
+  const canvasRef = useRef(null);
+  const canvasContainerRef = useRef(null); // Ref for the <CodeMirror> parent div
+  const ctxRef = useRef(null); // 2D drawing context
+
+  // Refs for real-time drawing
+  const isDrawingRef = useRef(false);
+  const currentPathRef = useRef([]);
 
   // Load SimplePeer from CDN
   useEffect(() => {
@@ -118,8 +138,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('codetext');
+    const ydrawings = ydoc.getArray('drawings');
+
     ydocRef.current = ydoc;
     ytextRef.current = ytext;
+    ydrawingsRef.current = ydrawings;
 
 
     // Create WebSocket connection
@@ -318,6 +341,25 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     return () => ytext.unobserve(observer);
   }, [ytextRef.current]);
 
+  // Sync Y.js drawings array with local React state
+  useEffect(() => {
+    if (!ydrawingsRef.current) return;
+
+    const ydrawings = ydrawingsRef.current;
+
+    const observer = () => {
+      setDrawings(ydrawings.toArray());
+    };
+
+    // Listen for changes
+    ydrawings.observe(observer);
+    
+    // Initial load
+    observer();
+
+    return () => ydrawings.unobserve(observer);
+  }, [ydrawingsRef.current]);
+
   // Focus on input when editing project name starts
   useEffect(() => {
     if (isEditingName && nameInputRef.current) {
@@ -416,6 +458,171 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       document.body.style.userSelect = '';
     };
   }, [isDragging, consoleWidth]);
+
+  // Helper to get coordinates relative to the canvas
+  const getCoords = (e) => {
+    const canvas = canvasRef.current;
+    const scroller = scrollerRef.current; // Get the scroller
+    if (!canvas || !scroller) return { x: 0, y: 0, docX: 0, docY: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left; // Viewport X (relative to canvas)
+    const y = e.clientY - rect.top;  // Viewport Y (relative to canvas)
+    
+    // Calculate the document-relative (scrolled) coordinates
+    const docX = x + scroller.scrollLeft;
+    const docY = y + scroller.scrollTop;
+    
+    return { x, y, docX, docY };
+  };
+
+  // Function to redraw all paths from the drawings state
+  const redrawAllDrawings = useCallback(() => {
+    const ctx = ctxRef.current;
+    const scroller = scrollerRef.current;
+
+    if (!ctx || !scroller) {
+      if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      return;
+    }
+
+    const { scrollTop, scrollLeft } = scroller;
+
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    if (!showDrawings) return;
+
+    drawings.forEach(path => {
+      if (path.points.length < 2) return;
+
+      // Get the first saved point and transform it
+      const firstPoint = path.points[0];
+      const viewX = firstPoint.x - scrollLeft;
+      const viewY = firstPoint.y - scrollTop;
+
+      ctx.beginPath();
+      ctx.moveTo(viewX, viewY);
+
+      // Transform and draw the rest of the points
+      for (let i = 1; i < path.points.length; i++) {
+        const point = path.points[i];
+        ctx.lineTo(point.x - scrollLeft, point.y - scrollTop);
+      }
+      
+      ctx.strokeStyle = path.type === 'erase' ? '#000000' : path.color;
+      ctx.lineWidth = path.width;
+      ctx.globalCompositeOperation = path.type === 'erase' ? 'destination-out' : 'source-over';
+      ctx.stroke();
+      ctx.closePath();
+    });
+    
+    ctx.globalCompositeOperation = 'source-over';
+  }, [drawings, showDrawings]);
+
+  // This effect attaches the scroll listener
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    scroller.addEventListener('scroll', redrawAllDrawings);
+
+    // Cleanup function
+    return () => {
+      scroller.removeEventListener('scroll', redrawAllDrawings);
+    };
+  }, [redrawAllDrawings]); // Re-attaches the listener if redrawAllDrawings ever changes
+  
+  // Effect to handle canvas resizing
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = canvasContainerRef.current;
+    if (!canvas || !container) return;
+
+    // Store the 2D context
+    ctxRef.current = canvas.getContext('2d');
+    ctxRef.current.lineCap = 'round';
+    ctxRef.current.lineJoin = 'round';
+
+    const resizeObserver = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      canvas.width = width;
+      canvas.height = height;
+      redrawAllDrawings(); // Redraw on resize
+    });
+
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [redrawAllDrawings]); // Re-run if redrawAllDrawings changes
+
+  // Effect to redraw when drawings state changes
+  useEffect(() => {
+    redrawAllDrawings();
+  }, [drawings, showDrawings]);
+
+
+  // Canvas Event Handlers 
+  const handleCanvasMouseDown = (e) => {
+    if (drawingMode === 'none') return;
+    isDrawingRef.current = true;
+    
+    const ctx = ctxRef.current;
+    const { x, y, docX, docY } = getCoords(e);
+    currentPathRef.current = [{ x: docX, y: docY }];
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineWidth = strokeWidth;
+    
+    if (drawingMode === 'erase') {
+      ctx.lineWidth = eraseWidth;
+      ctx.globalCompositeOperation = 'destination-out';
+    } else {
+      ctx.lineWidth = strokeWidth;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = drawColor;
+    }
+  };
+
+  const handleCanvasMouseMove = (e) => {
+    if (!isDrawingRef.current || drawingMode === 'none') return;
+
+    const ctx = ctxRef.current;
+    const { x, y, docX, docY } = getCoords(e);
+    currentPathRef.current.push({ x: docX, y: docY });
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const handleCanvasMouseUp = () => {
+    if (!isDrawingRef.current || drawingMode === 'none') return;
+    isDrawingRef.current = false;
+    ctxRef.current.closePath();
+
+    const currentWidth = drawingMode === 'erase' ? eraseWidth : strokeWidth;
+
+    // Create the path object and add it to Y.js
+    const newPath = {
+      type: drawingMode,
+      color: drawColor,
+      width: currentWidth,
+      points: currentPathRef.current,
+    };
+    
+    if (ydrawingsRef.current) {
+      ydrawingsRef.current.push([newPath]);
+    }
+    // End Y.js sync
+
+    currentPathRef.current = [];
+  };
+
+  // Action for "Delete All" button
+  const deleteAllDrawings = () => {
+    if (ydrawingsRef.current) {
+      ydrawingsRef.current.delete(0, ydrawingsRef.current.length);
+    }
+  };
 
   // Handle input submission
   const submitInput = () => {
@@ -809,6 +1016,42 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Drawing Controls */}
+            <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
+              <button
+                onClick={() => setDrawingMode(p => p === 'draw' ? 'none' : 'draw')}
+                title="Draw"
+                className={`p-2 rounded ${drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setDrawingMode(p => p === 'erase' ? 'none' : 'erase')}
+                title="Erase"
+                className={`p-2 rounded ${drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}
+              >
+                <Eraser className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowDrawings(p => !p)}
+                title={showDrawings ? "Hide Drawings" : "Show Drawings"}
+                className="p-2 hover:bg-gray-600 rounded"
+              >
+                {showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all drawings for everyone?')) {
+                    deleteAllDrawings();
+                  }
+                }}
+                title="Delete All Drawings"
+                className="p-2 hover:bg-red-500/50 rounded text-red-400"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+
             {/* Voice Chat */}
             <div className="flex items-center space-x-2">
               {!inVoiceCall ? (
@@ -848,8 +1091,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 </div>
               )}
             </div>
-
-
 
             {/* Active Users */}
             {connectedUsers.length > 0 && (
@@ -895,7 +1136,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       <div className="flex h-[calc(100vh-80px)]">
 
         {/* Code Editor */}
-        <div className="flex-1 flex flex-col border-r border-gray-700 min-w-0">
+        <div 
+          ref={canvasContainerRef} 
+          className="flex-1 flex flex-col border-r border-gray-700 min-w-0 relative"
+        >
           <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
             <h2 className="text-sm font-medium text-gray-300">main.py</h2>
             <div className="flex items-center space-x-2">
@@ -913,7 +1157,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 onChange={(value) => {
                   if (!ytextRef.current && !isConnected) setCode(value);
                 }}
-                onCreateEditor={(view) => { editorViewRef.current = view; }}
+                onCreateEditor={(view) => { editorViewRef.current = view; scrollerRef.current = view.dom.querySelector('.cm-scroller');}}
                 className="h-full text-sm"
                 basicSetup={{
                   lineNumbers: true,
@@ -927,6 +1171,20 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                   highlightSelectionMatches: true,
                   searchKeymap: true,
                 }}
+              />
+              {/* Canvas Overlay */}
+              <canvas
+                ref={canvasRef}
+                className="absolute top-0 left-0"
+                style={{
+                  // Click-through when not drawing
+                  pointerEvents: drawingMode !== 'none' ? 'auto' : 'none',
+                  zIndex: 10,
+                }}
+                onMouseDown={handleCanvasMouseDown}
+                onMouseMove={handleCanvasMouseMove}
+                onMouseUp={handleCanvasMouseUp}
+                onMouseLeave={handleCanvasMouseUp} // Stop drawing if mouse leaves
               />
             </div>
           ) : (

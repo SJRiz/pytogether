@@ -2,6 +2,7 @@ import { LogIn, Users, Code, Save, Package, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import liveVideo from '../assets/live.webm';
+import drawing from '../assets/drawing.png';
 
 export default function About() {
   const navigate = useNavigate();
@@ -134,20 +135,30 @@ export default function About() {
               </div>
             </div>
 
+
             {/* Video Demo Section */}
             <div className="bg-gradient-to-br from-gray-700/40 to-gray-800/40 rounded-xl p-7 border border-gray-600/30 shadow-lg">
               <h2 className="text-xl font-bold text-white mb-4">See It In Action</h2>
-              <div className="rounded-xl overflow-hidden border-2 border-gray-600/50 shadow-2xl">
-                <video 
-                  className="w-full h-auto"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                >
-                  <source src={liveVideo} type="video/webm" />
-                  Your browser does not support the video tag.
-                </video>
+              <div className="space-y-4">
+                <div className="rounded-xl overflow-hidden border-2 border-gray-600/50 shadow-2xl">
+                  <video 
+                    className="w-full h-auto"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  >
+                    <source src={liveVideo} type="video/webm" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div className="rounded-xl overflow-hidden border-2 border-gray-600/50 shadow-2xl">
+                  <img 
+                    src={drawing}
+                    alt="Real-time drawing feature demonstration"
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
             </div>
 
@@ -168,6 +179,10 @@ export default function About() {
                   <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
                     <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
                     <span>Real-time collaboration with live cursors and code linting</span>
+                  </div>
+                  <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
+                    <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
+                    <span>Real-time drawing for note-taking and teaching</span>
                   </div>
                   <div className="flex items-start p-3 bg-gray-800/50 rounded-lg">
                     <div className="w-2 h-2 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full mt-2 mr-3 flex-shrink-0 shadow-lg shadow-purple-500/50"></div>
