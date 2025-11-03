@@ -891,6 +891,17 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     });
   }, [voiceParticipants]);
 
+  // Effect to update the browser tab title
+  useEffect(() => {
+    if (projectName) {
+      document.title = `${projectName} - PyTogether`;
+    }
+    
+    return () => {
+      document.title = 'PyTogether';
+    };
+  }, [projectName]);
+
   const stopCode = () => {
     shouldStopExecutionRef.current = true;
     setWaitingForInput(false);

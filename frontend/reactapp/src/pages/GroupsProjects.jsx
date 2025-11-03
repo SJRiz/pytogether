@@ -38,6 +38,8 @@ export default function GroupsAndProjectsPage() {
     const [loadingProjects, setIsLoadingProjects] = useState(false);
 
     const navigate = useNavigate();
+    
+    document.title = 'PyTogether';
 
     const handleLogout = async () => {
     try {
