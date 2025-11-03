@@ -21,7 +21,7 @@ export default function About() {
         <title>PyTogether - Real-time Collaborative Python IDE Online</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://pytogether.org" />
-        <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
+        <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free. The only beginner-friendly collaborative Python IDE that lets you draw directly on your code for teaching and notes." />
         <meta property="og:title" content="PyTogether - About Us" />
         <meta property="og:description" content="Pair programming made simple with real-time collaboration." />
         <meta property="og:type" content="website" />
@@ -49,6 +49,8 @@ export default function About() {
               About PyTogether
             </h1>
             <p className="text-gray-300 text-xl font-semibold mb-3">Google Docs for Python</p>
+            <p className="text-gray-400 text-s font-semibold mb-3">The only beginner-friendly collaborative Python IDE that lets you draw directly on your code for teaching and notes.</p>
+            
             
             {/* FREE Badge */}
             <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-400/50 rounded-full px-6 py-2 mb-4">
