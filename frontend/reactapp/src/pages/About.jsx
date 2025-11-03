@@ -2,6 +2,7 @@ import { LogIn, Users, Code, Save, Package, ArrowDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import liveVideo from '../assets/live.webm';
+import liveDrawing from '../assets/drawinglive.webm';
 import drawing from '../assets/drawing.png';
 
 export default function About() {
@@ -155,11 +156,16 @@ export default function About() {
                   </video>
                 </div>
                 <div className="rounded-xl overflow-hidden border-2 border-gray-600/50 shadow-2xl">
-                  <img 
-                    src={drawing}
-                    alt="Real-time drawing feature demonstration"
+                  <video 
                     className="w-full h-auto"
-                  />
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  >
+                    <source src={liveDrawing} type="video/webm" />
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
               </div>
             </div>
