@@ -1311,7 +1311,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               <span className="text-xs text-gray-500">{isConnected ? 'Synced' : 'Modified'}</span>
             </div>
           </div>
-          {ytextRef.current ? (
+          {ytextRef.current && isConnected ? (
             <div className="flex-1 overflow-auto custom-scrollbar">
               <CodeMirror
                 value={code}
@@ -1352,7 +1352,20 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               />
             </div>
           ) : (
-            <div>Loading editor...</div>
+            <div className="flex-1 flex items-center justify-center bg-gray-900">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Wifi className="h-6 w-6 text-blue-500 animate-pulse" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-300 font-medium">Connecting to '{projectName}'...</p>
+                  <p className="text-gray-500 text-sm mt-1">Establishing secure connection</p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
