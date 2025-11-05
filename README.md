@@ -12,9 +12,6 @@
 <p align="center">
   <img src="docs/demo.gif" alt="Collab Demo" width="600">
 </p>
-<p align="center">
-  <img src="docs/drawinglive.gif" alt="Drawing Demo" width="600">
-</p>
 
 ----
 https://pytogether.org/
@@ -33,6 +30,9 @@ https://pytogether.org/
 
 <p align="center">
   <img src="docs/live.gif" alt="Demo" width="600">
+</p>
+<p align="center">
+  <img src="docs/drawinglive.gif" alt="Drawing Demo" width="600">
 </p>
 
 ----
