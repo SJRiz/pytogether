@@ -44,8 +44,8 @@ services:
         until pg_isready -h $$POSTGRES_HOST -p $$POSTGRES_PORT; do
           sleep 1
         done
-        echo 'Django: Postgres is ready! Starting Daphne...'
-        daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+        echo 'Django: Postgres is ready! Starting Django dev server...'
+        python manage.py runserver 0.0.0.0:8000
       "
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings.dev
@@ -95,6 +95,8 @@ services:
         condition: service_started
       django-init:
         condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
     networks:
       - backend
 
@@ -110,6 +112,8 @@ services:
         condition: service_started
       django-init:
         condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
     networks:
       - backend
 
