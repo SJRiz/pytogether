@@ -10,7 +10,10 @@
 ----
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demo" width="600">
+  <img src="docs/demo.gif" alt="Collab Demo" width="600">
+</p>
+<p align="center">
+  <img src="docs/drawinglive.gif" alt="Drawing Demo" width="600">
 </p>
 
 ----
@@ -72,7 +75,7 @@ npm install
 cd frontend/reactapp && npm install && cd ../..
 npm run dev
 ```
-(if you already ran the install commands, you can simply run ```npm run dev```)
+(if you already ran the install commands, you can simply run ```npm run dev``` in the project root)
 
 This will install all required packages and run the backend container and start the frontend. It should take around 2-5 minutes on initial launch.
 The frontend will be live on http://localhost:5173. You can do CTRL+C to stop the program/containers.
