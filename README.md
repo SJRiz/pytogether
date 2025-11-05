@@ -63,34 +63,28 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx (reverse proxy)
 - **CI/CD**: GitHub Actions (deploy backend to VPS on push to main)
 
-## Local Development Setup
-- Requirements: Docker, Node, PostgreSQL database credentials
+## Contributing & Local Setup
+- Requirements: Docker, Node
 
-Before running a development server, you must create a .env file in the backend folder (pytogether/backend/) with the following variables:
-
-```env
-DJANGO_SECRET_KEY="some-crazy-random-string"
-
-POSTGRES_DB=postgres
-POSTGRES_USER=postgresusername
-POSTGRES_PASSWORD=postgrespassword
-POSTGRES_HOST=postgreshost
-POSTGRES_PORT=5432
-DATABASE_URL=your/postgres/database/url/combining/all/the/above
-```
-You can also configure basic settings in backend/backend/settings.
-Then, in your terminal, run the following in the project root (MAKE SURE DOCKER IS RUNNING):
+If you would like to contribute, running PyTogether locally is extremely easy. In your terminal, run the following in the project root:
 ```bash
-docker compose -f docker-compose-dev.yaml up
-```
-Your backend should now be running on http://localhost:8000
-
-Now start your frontend with the following command in your project root:
-```bash
-cd frontend/reactapp
+npm install
+cd frontend/reactapp && npm install && cd ../..
 npm run dev
 ```
-The frontend will be live on http://localhost:5173
+(if you already ran the install commands, you can simply run ```npm run dev```)
+
+This will install all required packages and run the backend container and start the frontend. It should take around 2-5 minutes on initial launch.
+The frontend will be live on http://localhost:5173. You can do CTRL+C to stop the program/containers.
+
+> **Note**
+> Two superusers are created automatically:
+> * **Email:** `test1@gmail.com`
+> * **Email:** `test2@gmail.com`
+>
+> Both have the password `testtest`. You can log in with them on the frontend.
+
+You may also adjust the settings in backend/backend/settings/dev.py
 
 
 

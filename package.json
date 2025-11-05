@@ -1,0 +1,10 @@
+{
+  "name": "pytogether",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend/reactapp\" \"docker compose -f docker-compose-dev.yaml up --build\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

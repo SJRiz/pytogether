@@ -7,6 +7,7 @@
 *.err
 .DS_Store
 Thumbs.db
+node_modules/
 
 #  Python (backend) 
 __pycache__/

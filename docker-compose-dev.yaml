@@ -1,22 +1,79 @@
 # docker compose -f docker-compose-dev.yaml up -d
 
 services:
-  django:
+  # build the image all other services will use
+  django-builder:
     image: pytogether-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    command: "true"
+
+  # for running migrations and superuser script
+  django-init:
+    image: pytogether-backend:latest
+    command: >
+      sh -c "
+        echo 'Django-Init: Waiting for Postgres...'
+        until pg_isready -h $$POSTGRES_HOST -p $$POSTGRES_PORT; do
+          sleep 1
+        done
+        echo 'Django-Init: Postgres is ready! Running migrations...'
+        python manage.py migrate
+        echo 'Django-Init: Creating superusers...'
+        python manage.py shell -c \"from users.models import User;User.objects.filter(email='test1@gmail.com').exists() or User.objects.create_superuser('test1@gmail.com', 'testtest');User.objects.filter(email='test2@gmail.com').exists() or User.objects.create_superuser('test2@gmail.com', 'testtest')\"
+        echo 'Django-Init: Complete.'
+      "
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings.dev
     env_file:
-      - ./backend/.env
+      - ./backend/.env.dev
+    networks:
+      - backend
+    volumes:
+      - ./backend:/app
     depends_on:
-      - redis
+      - db
+      - django-builder # Ensures image is built first
+
+  django:
+    image: pytogether-backend:latest
+    command: >
+      sh -c "
+        echo 'Django: Waiting for Postgres...'
+        until pg_isready -h $$POSTGRES_HOST -p $$POSTGRES_PORT; do
+          sleep 1
+        done
+        echo 'Django: Postgres is ready! Starting Daphne...'
+        daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+      "
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.dev
+    env_file:
+      - ./backend/.env.dev
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init: # WAITS FOR MIGRATIONS TO FINISH
+        condition: service_completed_successfully
     networks:
       - backend
     ports:
-      - "8000:8000"   # so you can communicate using npm run dev on frontend
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  db:
+    image: postgres:15
+    env_file: ./backend/.env.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
 
   redis:
     image: redis:7-alpine
@@ -28,11 +85,16 @@ services:
 
   celery:
     image: pytogether-backend:latest
-    command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every minute (and the task does not take longer than a minute yet)
+    command: celery -A backend worker --concurrency=1 -l info
     env_file:
-      - ./backend/.env
+      - ./backend/.env.dev
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init:
+        condition: service_completed_successfully
     networks:
       - backend
 
@@ -40,14 +102,20 @@ services:
     image: pytogether-backend:latest
     command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
-      - ./backend/.env
+      - ./backend/.env.dev
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init:
+        condition: service_completed_successfully
     networks:
       - backend
 
 volumes:
   redis_data:
+  postgres_data:
 
 networks:
   backend:
