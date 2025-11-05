@@ -69,13 +69,14 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 ## Contributing & Local Setup
 - Requirements: Docker, Node
 
-If you would like to contribute, running PyTogether locally is extremely easy. In your terminal, run the following in the project root:
+Running PyTogether locally is a simple two-step process. Run the following commands from the project root:
 ```bash
+# 1. Install all dependencies (automatically does it for root and frontend)
 npm install
-cd frontend/reactapp && npm install && cd ../..
+
+# 2. Start the servers
 npm run dev
 ```
-(if you already ran the install commands, you can simply run ```npm run dev``` in the project root)
 
 This will install all required packages and run the backend container and start the frontend. It should take around 2-5 minutes on initial launch.
 The frontend will be live on http://localhost:5173. You can do CTRL+C to stop the program/containers.

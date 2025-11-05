@@ -2,6 +2,7 @@
   "name": "pytogether",
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "cd frontend/reactapp && npm install",
     "dev": "concurrently \"npm run dev --prefix frontend/reactapp\" \"docker compose -f docker-compose-dev.yaml up --build\""
   },
   "devDependencies": {
