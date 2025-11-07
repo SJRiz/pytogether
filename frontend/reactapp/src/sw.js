@@ -7,29 +7,38 @@ import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
-addEventListener('fetch', serviceWorkerFetchListener());
-
 clientsClaim();
 skipWaiting();
 
+// precache Vite assets
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Only intercept Pyodide/CDN requests and IDE pages
+  if (
+    url.pathname.startsWith('/ide/') || // IDE
+    url.origin.startsWith('https://cdn.jsdelivr.net') // Pyodide CDN
+  ) {
+    event.respondWith(serviceWorkerFetchListener()(event));
+  }
+});
+
+// Runtime caching for Pyodide/CDN and IDE assets
 registerRoute(
   ({url}) => {
-    const urlString = url.toString();
     return (
-      urlString.startsWith('https://cdn.jsdelivr.net/') || // Pyodide
-      url.hostname.endsWith('pytogether.org') ||
-      url.hostname.includes('localhost') ||
-      url.hostname.includes('127.0.0.1')
+      url.pathname.startsWith('/ide/') ||
+      url.origin.startsWith('https://cdn.jsdelivr.net')
     );
   },
   new StaleWhileRevalidate({
-    cacheName: 'everything',
+    cacheName: 'pyodide-ide',
     plugins: [
-      new ExpirationPlugin({maxEntries: 30}),
-      new CacheableResponsePlugin({statuses: [0, 200]}),
+      new ExpirationPlugin({ maxEntries: 50 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   }),
 );
