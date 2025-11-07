@@ -3,7 +3,7 @@ import {makeChannel} from "sync-message";
 import * as Comlink from 'comlink';
 import {PyodideClient} from "pyodide-worker-runner";
 
-const channel = makeChannel({serviceWorker: {scope: "/ide/"}});
+const channel = makeChannel({serviceWorker: {scope: "/"}});
 
 export const taskClient = new PyodideClient(() => new MyPyodideWorker(), channel);
 

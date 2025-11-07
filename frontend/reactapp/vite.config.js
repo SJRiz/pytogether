@@ -15,7 +15,7 @@ export default defineConfig({
         enabled: true,
         type: 'module',
       },
-      scope: '/ide/',
+      scope: '/',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,tar}'],
       },
