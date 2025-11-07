@@ -631,7 +631,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // This effect attaches the scroll listener
   useEffect(() => {
     const scroller = scrollerRef.current;
-    if (!scroller) return;
+    // Wait for both the scroller AND the connection to be ready
+    if (!scroller || !isConnected) return;
 
     scroller.addEventListener('scroll', redrawAllDrawings);
 
@@ -639,13 +640,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     return () => {
       scroller.removeEventListener('scroll', redrawAllDrawings);
     };
-  }, [redrawAllDrawings]); // Re-attaches the listener if redrawAllDrawings ever changes
+  }, [redrawAllDrawings, isConnected]);
   
   // Effect to handle canvas resizing
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = canvasContainerRef.current;
-    if (!canvas || !container) return;
+    if (!canvas || !container || !isConnected) return;
 
     // Store the 2D context
     ctxRef.current = canvas.getContext('2d');
@@ -662,7 +663,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
-  }, [redrawAllDrawings]); // Re-run if redrawAllDrawings changes
+  }, [redrawAllDrawings, isConnected]);
 
   // Effect to redraw when drawings state changes
   useEffect(() => {
