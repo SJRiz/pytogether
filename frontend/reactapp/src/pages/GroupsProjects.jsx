@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
-
+import PyodideNotice from "../components/PyodideNotice";
 import { MainContent } from "../components/MainContent";
 
 // Modal components
@@ -211,6 +211,7 @@ export default function GroupsAndProjectsPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100">
+        <PyodideNotice />
         {/* Header */}
         <div className="border-b border-gray-600/50 bg-slate-800 px-6 py-4 shadow-lg">
             <div className="flex items-center justify-between">
