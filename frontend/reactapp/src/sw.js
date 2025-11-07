@@ -28,17 +28,18 @@ addEventListener('fetch', (event) => {
 
 // Runtime caching for Pyodide/CDN and IDE assets
 registerRoute(
-  ({url}) => {
+  ({ url }) => {
+    // Only handle your IDE/Pyodide assets, not internal worker routes
     return (
-      url.pathname.startsWith('/ide/') ||
-      url.origin.startsWith('https://cdn.jsdelivr.net')
+      (url.pathname.startsWith('/ide/') || url.origin.includes('cdn.jsdelivr.net')) &&
+      !url.pathname.startsWith('/__SyncMessageServiceWorkerInput__')
     );
   },
   new StaleWhileRevalidate({
-    cacheName: 'pyodide-ide',
+    cacheName: 'everything',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 50 }),
+      new ExpirationPlugin({ maxEntries: 30 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
-  }),
+  })
 );
