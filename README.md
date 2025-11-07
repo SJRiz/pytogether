@@ -7,14 +7,7 @@
   <a href="https://pytogether.org">pytogether.org</a>
 </p>
 
-----
-
-<p align="center">
-  <img src="docs/demo.gif" alt="Collab Demo" width="600">
-</p>
-
-----
-https://pytogether.org/
+(https://pytogether.org/)
 
 ## Features
 - **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
@@ -89,6 +82,7 @@ The frontend will be live on http://localhost:5173. You can do CTRL+C to stop th
 > Both have the password `testtest`. You can log in with them on the frontend.
 
 You may also adjust the settings in backend/backend/settings/dev.py
+
 
 
 
