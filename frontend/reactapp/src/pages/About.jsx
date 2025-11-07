@@ -236,45 +236,42 @@ export default function About() {
                 Supported Python Packages
               </h3>
               <p className="text-gray-300 mb-5 leading-relaxed">
-                PyTogether uses Skulpt to run Python in the browser. The following packages are currently supported:
+                PyTogether uses <span className="text-yellow-400 font-bold">Pyodide</span> to run real Python (CPython 3.13) directly in your browser. This means access to thousands of packages from PyPI!
               </p>
               <div className="grid md:grid-cols-2 gap-5">
                 <div className="bg-gray-800/60 rounded-xl p-5 border border-gray-700/50">
-                  <h4 className="text-white font-bold mb-4 text-lg">Standard Library Modules</h4>
+                  <h4 className="text-white font-bold mb-4 text-lg">Pre-installed Packages</h4>
                   <div className="space-y-2 text-sm text-gray-300">
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">math</span> → sin, cos, sqrt, factorial, etc.</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">random</span> → randint, choice, shuffle, etc.</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">time</span> → time.time(), sleep (limited)</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">re</span> → basic regex</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">string</span> → ascii_letters, constants</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">itertools</span> → chain, combinations, permutations</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">functools</span> → reduce, partial</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">operator</span> → add, mul functions</div>
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">copy</span> → copy, deepcopy</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">matplotlib</span> → Full plotting and visualization</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">numpy</span> → Scientific computing & arrays</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">pandas</span> → Data analysis & manipulation</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">scipy</span> → Advanced mathematics & science</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-blue-400 font-semibold">And many more!</span></div>
                   </div>
                 </div>
                 <div className="bg-gray-800/60 rounded-xl p-5 border border-gray-700/50">
-                  <h4 className="text-white font-bold mb-4 text-lg">Partial Support Modules</h4>
+                  <h4 className="text-white font-bold mb-4 text-lg">Full Python Standard Library</h4>
                   <div className="space-y-2 text-sm text-gray-300 mb-5">
-                    <div className="p-2 bg-gray-900/50 rounded-lg"><span className="text-yellow-400 font-semibold">heapq</span> → basic heap functions</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg">All built-in modules work perfectly</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg">math, random, datetime, json, re, etc.</div>
+                    <div className="p-2 bg-gray-900/50 rounded-lg">Full CPython 3.13 compatibility</div>
                   </div>
                   <div className="bg-gradient-to-br from-gray-700/60 to-gray-900/60 rounded-xl p-4 border border-gray-600/30">
                     <h5 className="text-white font-bold mb-3 text-sm flex items-center">
                       <div className="w-2 h-2 bg-gradient-to-br from-green-400 to-green-500 rounded-full mr-2"></div>
-                      Perfect For Learning:
+                      Perfect For:
                     </h5>
                     <div className="space-y-2 text-xs text-gray-300">
-                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Core programming fundamentals</div>
                       <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Data structures & algorithms</div>
-                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Mathematical computations</div>
-                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Text processing & regex</div>
-                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Functional programming</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Data science & analytics</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Scientific computing</div>
+                      <div className="flex items-center"><div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2"></div>Data visualization</div>
                     </div>
                   </div>
                 </div>
               </div>
               <p className="text-gray-400 text-sm mt-5 p-4 bg-gray-800/50 rounded-lg border border-gray-700/30">
-                <em>Note: Partial support modules have limited functionality. Perfect for learning Python fundamentals and core programming concepts.</em>
+                <em>Note: PyTogether automatically installs packages when you import them! Just write <span className="text-blue-400 font-mono">import package_name</span> and we'll handle the rest.</em>
               </p>
             </div>
 

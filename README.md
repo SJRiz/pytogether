@@ -62,7 +62,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 - **Data Store**: PostgreSQL (via Supabase)
 - **Caching, Broker, & Channel layers**: Redis
 - **Frontend**: React, Tailwind CSS, CodeMirror (code linting)
-- **Python Execution**: Skulpt
+- **Python Execution**: Pyodide (via Web Worker)
 - **Deployment**: Vercel (Frontend), Docker on VPS (Backend), Nginx (reverse proxy)
 - **CI/CD**: GitHub Actions (deploy backend to VPS on push to main)
 

@@ -1,4 +1,3 @@
-// this code is a huge big mess i will refactor this later when i have time
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
@@ -13,18 +12,59 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff, Download } from "lucide-react";
 import api from "../../axiosConfig";
 
+import { StateField, StateEffect } from "@codemirror/state";
+import { Decoration, EditorView } from "@codemirror/view";
+
 // Y.js imports
 import * as Y from 'yjs';
 import { yCollab } from 'y-codemirror.next';
+
+// Pyodide imports
+import { runCodeTask, taskClient } from "../pyrunner/TaskClient.js";
+
+
+// Define the appearance of the error line
+const errorLineDeco = Decoration.line({ class: "cm-error-line" });
+
+// Define effects to add or remove the error
+const addErrorEffect = StateEffect.define();
+const removeErrorEffect = StateEffect.define();
+
+// Create a StateField to manage the decorations
+const errorLineField = StateField.define({
+  create() { return Decoration.none; },
+  update(value, tr) {
+    value = value.map(tr.changes);
+    for (let e of tr.effects) {
+      if (e.is(addErrorEffect)) {
+        // Find the line and apply the decoration
+        try {
+          value = Decoration.set([errorLineDeco.range(tr.state.doc.line(e.value).from)]);
+        } catch (err) {
+          console.error("Failed to apply error decoration:", err);
+        }
+      } else if (e.is(removeErrorEffect)) {
+        // Remove all decorations
+        value = Decoration.none;
+      }
+    }
+    return value;
+  },
+  provide: f => EditorView.decorations.from(f)
+});
+
 
 export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, projectName: propProjectName }) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // hide scrollbars
+  // hide scrollbars & add error line style
   useEffect(() => {
     const style = document.createElement('style');
-    style.textContent = `.scrollbar-hide::-webkit-scrollbar { display: none; }`;
+    style.textContent = `
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .cm-error-line { background-color: rgba(255, 0, 0, 0.2); }
+    `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
@@ -35,18 +75,24 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   const [code, setCode] = useState('print("Hello, PyTogether!")');
   const [consoleOutput, setConsoleOutput] = useState([]);
+
+  // Pyodide States
   const [isLoading, setIsLoading] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [currentInput, setCurrentInput] = useState("");
+
+  // Plot states
+  const [showPlot, setShowPlot] = useState(false);
+  const [plotSrc, setPlotSrc] = useState(null);
+
+  const [errorLine, setErrorLine] = useState(null);
+
   const [consoleWidth, setConsoleWidth] = useState(384);
   const [isDragging, setIsDragging] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-
-  // Input handling state
-  const [waitingForInput, setWaitingForInput] = useState(false);
-  const [currentInput, setCurrentInput] = useState("");
-  const [inputResolve, setInputResolve] = useState(null);
 
   // Project name editing state
   const [projectName, setProjectName] = useState(initialProjectName);
@@ -57,7 +103,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // VC and chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
-  const [showChat, setShowChat] = useState(true);
+  const [showChat, setShowChat] = useState(true); // This will now be toggled
   const [inVoiceCall, setInVoiceCall] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [voiceParticipants, setVoiceParticipants] = useState([]);
@@ -73,6 +119,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [drawings, setDrawings] = useState([]);
   const [latency, setLatency] = useState(null);
   
+  const terminalRef = useRef(null);
+
   // Y.js and WebSocket refs
   const ydocRef = useRef(null);
   const wsRef = useRef(null);
@@ -82,7 +130,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const consoleRef = useRef(null);
   const chatRef = useRef(null);
   const nameInputRef = useRef(null);
-  const shouldStopExecutionRef = useRef(false);
   const inputRef = useRef(null);
   const chatInputRef = useRef(null);
   const dragStartX = useRef(0);
@@ -222,6 +269,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     });
   }, []);
 
+  const addConsoleEntry = (content, type = 'output', timestamp = new Date()) => {
+    setConsoleOutput(prev => [...prev, { id: Date.now() + Math.random(), content, type, timestamp }]);
+  };
+
   // Initialize Y.js document and WebSocket connection
   useEffect(() => {
     if (!groupId || !projectId) {
@@ -230,6 +281,46 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       navigate("/home");
       return;
     }
+
+    // Connect the Pyodide runner's ref to our console state
+    terminalRef.current = {
+      pushToStdout: (parts) => {
+        parts.forEach(part => {
+          if (part.type === 'show_image') {
+
+            // MATPLOTLIB LOGIC
+            const src = `data:image/${part.format};base64,${part.data}`;
+            setPlotSrc(src);
+            setShowPlot(true);
+            setShowChat(false); // Toggle off chat
+          } else if (part.type === 'input_prompt') {
+            // Handle Pyodide input()
+            addConsoleEntry(part.text, "system");
+            setWaitingForInput(true);
+          } else if (part.type === 'internal_error') {
+            // Handle Pyodide errors
+            addConsoleEntry(part.text, "error");
+            // ERROR LINE LOGIC
+            const match = /File "\/main\.py", line (\d+)/.exec(part.text);
+            if (match && match[1]) {
+              setErrorLine(parseInt(match[1]));
+            }
+          } else {
+            // Handle standard output
+            addConsoleEntry(part.text, "output");
+          }
+        });
+      },
+      clearStdout: () => {
+        setConsoleOutput([]);
+        setPlotSrc(null); // Also clear the plot
+      },
+      focusTerminal: () => {
+        inputRef.current?.focus();
+      },
+    };
+    //
+
 
     const ydoc = new Y.Doc();
     const ytext = ydoc.getText('codetext');
@@ -376,6 +467,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
        // Don't send updates that came from the network
       if (origin === ws || !ws || ws.readyState !== WebSocket.OPEN) return;
 
+      if (origin !== 'remote') {
+        setErrorLine(null);
+      }
+
       // Send update to server as base64
       const updateB64 = btoa(String.fromCharCode.apply(null, update));
       ws.send(JSON.stringify({
@@ -468,11 +563,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     if (waitingForInput && inputRef.current) inputRef.current.focus();
   }, [waitingForInput]);
 
-  // Console entry types
-  const addConsoleEntry = (content, type = 'output', timestamp = new Date()) => {
-    setConsoleOutput(prev => [...prev, { id: Date.now() + Math.random(), content, type, timestamp }]);
-  };
-
   // Effect to close download menu on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -488,43 +578,38 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     };
   }, []);
 
-  // Load Skulpt
+  // Load Pyodide Worker
   useEffect(() => {
-    const loadSkulpt = async () => {
+    const initializePyodide = async () => {
+      setIsLoading(true);
+      addConsoleEntry("Loading Python interpreter...", "system");
       try {
-        addConsoleEntry("Loading Python interpreter...", "system");
-        if (!window.Sk) {
-          const loadScript = (src) => new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-          });
-          try {
-            // Try the official Skulpt CDN first
-            await loadScript('https://skulpt.org/js/skulpt.min.js');
-            await loadScript('https://skulpt.org/js/skulpt-stdlib.js');
-          } catch (error) {
-            // Fallback to unpkg
-            addConsoleEntry("Trying fallback CDN...", "system");
-            await loadScript('https://unpkg.com/skulpt@0.11.1/dist/skulpt.min.js');
-            await loadScript('https://unpkg.com/skulpt@0.11.1/dist/skulpt-stdlib.js');
-          }
-          addConsoleEntry("Python interpreter loaded successfully!", "system");
-          setIsLoading(false);
-        } else {
-          addConsoleEntry("Python interpreter already loaded!", "system");
-          setIsLoading(false);
-        }
+        await taskClient.call(taskClient.workerProxy.init);
+        addConsoleEntry("Python interpreter loaded successfully!", "system");
       } catch (err) {
+        console.error("Pyodide init failed:", err);
         addConsoleEntry(`Failed to load interpreter: ${err.message || err}`, "error");
         addConsoleEntry("Try refreshing the page if the issue persists.", "system");
+      } finally {
         setIsLoading(false);
       }
     };
-    loadSkulpt();
-  }, []);
+    
+    initializePyodide();
+  }, []); // Runs once on mount
+  //
+
+  //
+  useEffect(() => {
+    const view = editorViewRef.current;
+    if (!view) return;
+
+    if (errorLine) {
+      view.dispatch({ effects: addErrorEffect.of(errorLine) });
+    } else {
+      view.dispatch({ effects: removeErrorEffect.of() });
+    }
+  }, [errorLine]);
 
   // Auto-scroll console
   useEffect(() => {
@@ -577,7 +662,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left; // Viewport X (relative to canvas)
-    const y = e.clientY - rect.top;  // Viewport Y (relative to canvas)
+    const y = e.clientY - rect.top; 	// Viewport Y (relative to canvas)
     
     // Calculate the document-relative (scrolled) coordinates
     const docX = x + scroller.scrollLeft;
@@ -736,13 +821,19 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   };
 
   // Handle input submission
-  const submitInput = () => {
-    if (!waitingForInput || !inputResolve) return;
+  const submitInput = async () => {
+    if (!waitingForInput) return;
     addConsoleEntry(currentInput, "input");
-    inputResolve(currentInput);
+    const command = currentInput;
     setCurrentInput("");
     setWaitingForInput(false);
-    setInputResolve(null);
+    // Send the input to the waiting worker
+    try {
+      await taskClient.writeMessage(command);
+    } catch (e) {
+      console.warn("Write message failed:", e);
+      addConsoleEntry("Failed to send input.", "error");
+    }
   };
 
   const handleInputKeyDown = (e) => {
@@ -945,76 +1036,53 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     };
   }, [projectName]);
 
-  const stopCode = () => {
-    shouldStopExecutionRef.current = true;
+
+  const handleStopCode = () => {
+    taskClient.interrupt();
     setWaitingForInput(false);
-    setInputResolve(null);
     setIsRunning(false);
     addConsoleEntry(">>> Execution stopped by user", "system");
   };
 
-  const runCode = async () => {
-    if (!window.Sk || isRunning) return;
+  const handleRunEditorCode = async () => {
+    if (isLoading || isRunning) return;
     setIsRunning(true);
-    shouldStopExecutionRef.current = false; // Reset the ref
+    setErrorLine(null); // Clear error line
+    setPlotSrc(null); // Clear old plot
     addConsoleEntry(`>>> Running code...`, "input");
     const currentCode = ytextRef.current ? ytextRef.current.toString() : code;
-
-    // Skulpt output callback
-    const outf = (text) => {
-      if (shouldStopExecutionRef.current) throw new Error('Execution stopped by user');
-      addConsoleEntry(text, "output");
-    };
-
-    // Skulpt input callback
-    const inputfun = (promptText) => new Promise((resolve) => {
-      if (shouldStopExecutionRef.current) {
-        resolve('');
-        return;
-      }
-      if (promptText) addConsoleEntry(promptText, "system");
-      setWaitingForInput(true);
-      setInputResolve(() => (input) => {
-        setWaitingForInput(false);
-        resolve(input);
-      });
-    });
+    
+    const entry = { input: currentCode };
 
     try {
-      // Configure Skulpt
-      Sk.configure({
-        output: outf,
-        read: (x) => {
-          if (shouldStopExecutionRef.current) throw new Error('Execution stopped by user');
-          if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[x] === undefined) {
-            throw `File not found: '${x}'`;
-          }
-          return Sk.builtinFiles.files[x];
-        },
-        inputfun,
-        inputfunTakesPrompt: true,
-        execLimit: 100000,
-        yieldLimit: 100,
-        __future__: Sk.python3
-      });
-      await Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<stdin>', false, currentCode, true));
-      if (!waitingForInput && !shouldStopExecutionRef.current) addConsoleEntry(">>> Code execution completed", "system");
+      // Call the Pyodide runner task
+      await runCodeTask(
+        entry,
+        (parts) => terminalRef.current.pushToStdout(parts),
+        () => terminalRef.current.focusTerminal()
+      );
+      if (!waitingForInput) {
+        addConsoleEntry(">>> Code execution completed", "system");
+      }
     } catch (err) {
+      // This catches JS-side errors from the worker (e.g., InterruptError)
       setWaitingForInput(false);
-      setInputResolve(null);
-      if (!shouldStopExecutionRef.current) {
+      if (err.type !== "InterruptError") {
         addConsoleEntry(err.toString(), "error");
         addConsoleEntry(">>> Code execution failed", "system");
       }
     } finally {
-      if (!waitingForInput) setIsRunning(false);
+      // Only set isRunning to false if we're not waiting for input
+      if (!waitingForInput) {
+        setIsRunning(false);
+      }
     }
   };
 
   const clearConsole = () => {
     setConsoleOutput([]);
+    setPlotSrc(null);
     setWaitingForInput(false);
-    setInputResolve(null);
     setCurrentInput("");
   };
 
@@ -1077,26 +1145,39 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center space-x-3">
             {/* Back Button */}
-            <button onClick={() => navigate('/home')} className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors duration-200" title="Go Back">
+            <button 
+              onClick={() => {
+                if (isRunning) {
+                  taskClient.interrupt();
+                  setIsRunning(false);
+                }
+                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                  wsRef.current.close();
+                }
+                navigate('/home');
+              }} 
+              className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors duration-200" 
+              title="Go Back"
+            >
               <ArrowLeft className="h-5 w-5" />
             </button>
-                <div className="flex items-center gap-3">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-10"></div>
-                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-2 rounded-xl border border-gray-700/50">
-                    <img
-                        src="/pytog.png"
-                        alt="Code Icon"
-                        className="h-8 w-8"
-                    />
-                    </div>
-                </div>
-                <div>
-                    <h1 className="text-2xl font-bold pl-2 bg-clip-text">
-                    PyTogether
-                    </h1>
-                </div>
-                </div>
+              <div className="flex items-center gap-3">
+              <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-10"></div>
+                  <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-2 rounded-xl border border-gray-700/50">
+                  <img
+                      src="/pytog.png"
+                      alt="Code Icon"
+                      className="h-8 w-8"
+                  />
+                  </div>
+              </div>
+              <div>
+                  <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                  PyTogether
+                  </h1>
+              </div>
+              </div>
             {/* Connection Status */}
             <div className="flex items-center space-x-2 pl-2">
               {isConnected ? (
@@ -1281,14 +1362,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 <span className="text-sm">Loading...</span>
               </div>
             )}
-            {!isRunning && (
-            <button onClick={runCode} disabled={isRunning || isLoading} className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors duration-200">
+            {!isLoading && !isRunning && (
+            <button onClick={handleRunEditorCode} disabled={isRunning || isLoading} className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors duration-200">
               <Play className="h-4 w-4" />
-              <span>{isRunning ? 'Running...' : 'Run Code'}</span>
+              <span>Run Code</span>
             </button>
             )}
             {isRunning && (
-              <button onClick={stopCode} className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
+              <button onClick={handleStopCode} className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
                 <X className="h-4 w-4" />
                 <span>Stop Code</span>
               </button>
@@ -1318,7 +1399,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 value={code}
                 height="100%"
                 theme={oneDark}
-                extensions={[python(), yCollab(ytextRef.current, awarenessRef.current)]}
+                extensions={[python(), yCollab(ytextRef.current, awarenessRef.current), errorLineField]}
                 onChange={(value) => {
                   if (!ytextRef.current && !isConnected) setCode(value);
                 }}
@@ -1385,9 +1466,27 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 <h2 className="text-sm font-medium text-gray-300">Console</h2>
                 {waitingForInput && <span className="text-xs text-blue-400 animate-pulse">Waiting for input...</span>}
               </div>
-              <button onClick={clearConsole} className="p-1 hover:bg-gray-700 rounded transition-colors duration-200" title="Clear Console">
-                <X className="h-4 w-4 text-gray-400 hover:text-gray-200" />
-              </button>
+              {/* toggles */}
+              <div className="flex items-center">
+                <button 
+                  onClick={() => { setShowChat(!showChat); if (!showChat) setShowPlot(false); }} 
+                  className={`p-1 hover:bg-gray-700 rounded ${showChat ? 'text-blue-400' : 'text-gray-400'}`} 
+                  title={showChat ? "Hide Chat" : "Show Chat"}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => { setShowPlot(!showPlot); if (!showPlot) setShowChat(false); }} 
+                  className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`} 
+                  title={showPlot ? "Hide Plot" : "Show Plot"}
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button onClick={clearConsole} className="p-1 hover:bg-gray-700 rounded transition-colors duration-200" title="Clear Console">
+                  <X className="h-4 w-4 text-gray-400 hover:text-gray-200" />
+                </button>
+              </div>
+
             </div>
             
             <div ref={consoleRef} className="flex-1 p-4 overflow-y-auto bg-gray-900 font-mono text-sm space-y-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -1416,16 +1515,54 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 <div className="text-xs text-gray-400 mt-1">Press Enter to send input</div>
               </div>
             )}
+
+            {/* plot panel */}
+            <div 
+              className="border-t border-gray-700 flex-col" 
+              style={{ 
+                height: showPlot ? '400px' : 'auto', 
+                display: showPlot ? 'flex' : 'none' 
+              }}
+            >
+              <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Eye className="h-4 w-4 text-gray-400" />
+                  <h2 className="text-sm font-medium text-gray-300">Plot</h2>
+                </div>
+                <button 
+                  onClick={() => setShowPlot(false)} 
+                  className="p-1 hover:bg-gray-700 rounded" 
+                  title="Hide Plot"
+                >
+                  <X className="h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+              <div className="flex-1 p-3 overflow-y-auto bg-gray-900 flex items-center justify-center" style={{ minHeight: '100px' }}>
+                {plotSrc ? (
+                  <img 
+                    src={plotSrc} 
+                    alt="Matplotlib plot" 
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: 'white' }} 
+                  />
+                ) : (
+                  <div className="text-gray-500 italic text-xs">Plots will appear here...</div>
+                )}
+              </div>
+            </div>
             
             {/* Chat box */}
-            <div className="border-t border-gray-700 flex flex-col" style={{ height: showChat ? '400px' : 'auto' }}>
+            <div className="border-t border-gray-700 flex flex-col" style={{ height: showChat ? '400px' : 'auto', display: showChat ? 'flex' : 'none' }}>
               <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <MessageSquare className="h-4 w-4 text-gray-400" />
                   <h2 className="text-sm font-medium text-gray-300">Chat</h2>
                 </div>
-                <button onClick={() => setShowChat(!showChat)} className="p-1 hover:bg-gray-700 rounded transition-colors duration-200" title={showChat ? "Hide Chat" : "Show Chat"}>
-                  {showChat ? <X className="h-4 w-4 text-gray-400" /> : <MessageSquare className="h-4 w-4 text-gray-400" />}
+                <button 
+                  onClick={() => { setShowChat(false); }} 
+                  className="p-1 hover:bg-gray-700 rounded transition-colors duration-200" 
+                  title="Hide Chat"
+                >
+                  <X className="h-4 w-4 text-gray-400" />
                 </button>
               </div>
               
