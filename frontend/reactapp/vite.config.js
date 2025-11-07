@@ -9,22 +9,22 @@ export default defineConfig({
   plugins: [react(), tailwindcss(),
     VitePWA({
       strategies: 'injectManifest',
-      
       srcDir: 'src',
       filename: 'sw.js',
-
       devOptions: {
         enabled: true,
         type: 'module',
       },
-
-      scope: '/ide/', 
-
+      scope: '/ide/',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,tar}'],
       },
     }),
   ],
+
+  worker: {
+    format: 'es',
+  },
 
   server: {
     headers: {
