@@ -1,7 +1,7 @@
 ﻿<p align="center">
   <img src="https://www.pytogether.org/pytog.png" alt="Logo" width="150"><br>
   <strong style="font-size: 24px;">PyTogether</strong><br>
-  <em>Google Docs for Python. A simple, beginner-friendly collaborative IDE in the browser</em>
+  <em>Google docs for Python. A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
   <br>
   <br>
   <a href="https://pytogether.org">pytogether.org</a>
@@ -82,6 +82,7 @@ The frontend will be live on http://localhost:5173. You can do CTRL+C to stop th
 > Both have the password `testtest`. You can log in with them on the frontend.
 
 You may also adjust the settings in backend/backend/settings/dev.py
+
 
 
 
