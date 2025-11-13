@@ -54,13 +54,13 @@ export default function About() {
           }
         `}</style>
     </Helmet>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Animated gradient orbs */}
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
           
           {/* Grid pattern overlay */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"></div>
@@ -105,7 +105,7 @@ export default function About() {
             <div className="flex gap-3 justify-center mt-6">
               <button
                 onClick={handleGetStarted}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 flex items-center hover:scale-105 transform"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 flex items-center transform"
               >
                 <LogIn className="h-5 w-5 mr-2" />
                 Get Started for Free
@@ -315,7 +315,7 @@ export default function About() {
             <div className="text-center pt-4">
               <button
                 onClick={handleGetStarted}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 text-lg hover:scale-105 transform"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-bold hover:from-blue-500 hover:to-purple-500 transition-all duration-300 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 text-lg transform"
               >
                 <LogIn className="h-6 w-6 mr-3" />
                 Get Started Now
