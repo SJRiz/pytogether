@@ -103,7 +103,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // VC and chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
-  const [showChat, setShowChat] = useState(true); // This will now be toggled
+  const [showChat, setShowChat] = useState(true);
   const [inVoiceCall, setInVoiceCall] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [voiceParticipants, setVoiceParticipants] = useState([]);
@@ -597,9 +597,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     
     initializePyodide();
   }, []); // Runs once on mount
-  //
 
-  //
+  
   useEffect(() => {
     const view = editorViewRef.current;
     if (!view) return;

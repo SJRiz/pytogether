@@ -17,6 +17,8 @@ import warnings
 import io
 import base64
 import sys
+import inspect
+import os
 
 warnings.filterwarnings(
     "ignore",
@@ -28,21 +30,60 @@ default_runner = PyodideRunner()
 
 try:
     import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
 
     def custom_plt_show(*args, **kwargs):
         fig = plt.gcf()
         
+        target_anim = None
+        try:
+            caller_frame = inspect.currentframe().f_back
+            if caller_frame:
+                for name, val in caller_frame.f_locals.items():
+                    if isinstance(val, animation.Animation) and val._fig == fig:
+                        target_anim = val
+                        break
+        except Exception:
+            pass
+
         buf = io.BytesIO()
-        fig.savefig(buf, format='png')
+        output_format = 'png' # Default fallback
+
+        if target_anim:
+            try:
+                temp_filename = "/tmp/temp_animation.gif"
+                
+                writer = animation.PillowWriter(fps=15)
+                target_anim.save(temp_filename, writer=writer)
+                
+                with open(temp_filename, 'rb') as f:
+                    buf.write(f.read())
+                
+                # Clean up the temp file
+                if os.path.exists(temp_filename):
+                    os.remove(temp_filename)
+
+                output_format = 'gif'
+                
+            except Exception as e:
+                print(f"Animation render failed: {e}")
+                # Reset buffer if animation failed
+                buf = io.BytesIO() 
+                fig.savefig(buf, format='png')
+                output_format = 'png'
+        else:
+            # 3. Standard Static Plot
+            fig.savefig(buf, format='png')
+            output_format = 'png'
+
         buf.seek(0)
-        
         image_data = base64.b64encode(buf.read()).decode('utf-8')
         
         default_runner.output(
             "show_image",
             text="",
             data=image_data,
-            format="png"
+            format=output_format
         )
         
         plt.clf()
@@ -110,6 +151,9 @@ const reloader = new PyodideFatalErrorReloader(async () => {
   
   console.log("Installing matplotlib...");
   await micropip.install("matplotlib");
+
+  console.log("Installing Pillow for GIF support...");
+  await micropip.install("Pillow");
 
   console.log("Setting Matplotlib backend to 'Agg'...");
   pyodide.runPython(`
