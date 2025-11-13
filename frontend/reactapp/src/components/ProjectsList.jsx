@@ -74,11 +74,14 @@ export const ProjectsList = ({
 }) => {
   if (!selectedGroup) {
     return (
-      <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-850">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
+      <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-950 to-gray-950 relative">
+        {/* Subtle grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f15_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f15_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+        
+        <div className="mb-6 relative z-10">
+          <h2 className="text-xl font-bold text-white tracking-tight"></h2>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 space-y-4">
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 space-y-4 relative z-10">
           <Folder className="h-16 w-16 opacity-50" />
           <p className="text-lg font-medium">Select a group to see projects</p>
         </div>
@@ -87,9 +90,12 @@ export const ProjectsList = ({
   }
 
   return (
-    <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-900 to-gray-850 overflow-hidden">
+    <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-slate-950 to-slate-950 overflow-hidden relative">
+      {/* Subtle grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f15_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f15_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
       {/* Header */}
-      <div className="mb-6 flex-shrink-0">
+      <div className="mb-6 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
           <button 
@@ -104,7 +110,7 @@ export const ProjectsList = ({
       </div>
 
       {/* Project list */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto pr-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto overflow-x-auto pr-2 custom-scrollbar relative z-10">
         {loading ? (
           <div className="flex flex-1 justify-center items-center h-full">
             <div className="relative">
