@@ -300,10 +300,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           } else if (part.type === 'internal_error') {
             // Handle Pyodide errors
             addConsoleEntry(part.text, "error");
-            // ERROR LINE LOGIC
-            const match = /File "\/main\.py", line (\d+)/.exec(part.text);
-            if (match && match[1]) {
-              setErrorLine(parseInt(match[1]));
+            // ERROR LINE LOGIC (find last traceback line)
+            const matches = [...part.text.matchAll(/File "\/main\.py", line (\d+)/g)];
+            if (matches.length > 0) {
+              const lastMatch = matches[matches.length - 1];
+              setErrorLine(parseInt(lastMatch[1]));
             }
           } else {
             // Handle standard output
@@ -598,7 +599,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     initializePyodide();
   }, []); // Runs once on mount
 
-  
+
   useEffect(() => {
     const view = editorViewRef.current;
     if (!view) return;
