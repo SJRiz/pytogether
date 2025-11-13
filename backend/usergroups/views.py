@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Group
 from .serializers import GroupCreateSerializer, GroupDetailSerializer, GroupJoinSerializer, GroupUpdateSerializer
+from datetime import timedelta
+from django.utils import timezone
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -46,7 +48,16 @@ def join_group(request):
 def list_groups(request):
     """ View to list all the groups a user is in """
 
-    groups = Group.objects.filter(group_members=request.user)
+    user = request.user
+    
+    now = timezone.now()
+    # Check if last_login is None (new user) OR if it has been more than 24 hours
+    if user.last_login is None or (now - user.last_login) > timedelta(days=1):
+        user.last_login = now
+        user.save(update_fields=['last_login'])
+
+    groups = Group.objects.filter(group_members=user)
+
     serializer = GroupDetailSerializer(groups, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
