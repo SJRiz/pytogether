@@ -70,10 +70,23 @@ export default function About() {
         {/* Navbar */}
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#0B0F17]/80 backdrop-blur-md border-b border-slate-800' : 'bg-transparent'}`}>
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/pytog.png" alt="PyTogether Logo" className="h-8 w-8" onError={(e) => e.target.style.display = 'none'} />
-              <span className="font-bold text-lg tracking-tight text-white">PyTogether</span>
-            </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-15"></div>
+                        <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1 rounded-xl border border-gray-700/50">
+                        <img
+                            src="/pytog.png"
+                            alt="Code Icon"
+                            className="h-8 w-8"
+                        />
+                        </div>
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                        PyTogether
+                        </h1>
+                    </div>
+                </div>
             <div className="flex items-center gap-4">
               <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium">
                 <Github className="w-4 h-4" />
@@ -102,13 +115,13 @@ export default function About() {
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 max-w-4xl leading-[1.1]">
             The "Google Docs"<br />
             <span className="bg-gradient-to-r from-indigo-400 via-blue-400 to-purple-400 text-transparent bg-clip-text text-glow">
-              for Python Education
+              for Python
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            A zero-setup, real-time collaborative IDE built for teachers and students. 
-            Code, draw, and run Python directly in your browser.
+            A zero-setup, real-time collaborative IDE built for teachers, educators, interviewers, and students. 
+            Code, communicate, draw, and run Python directly in your browser.
           </p>
 
           {/* CTA Group */}
@@ -206,7 +219,7 @@ export default function About() {
         <section className="relative z-10 bg-[#0F141F] py-24 border-t border-slate-800">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Everything you need to teach Python</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Everything you need to learn or teach Python</h2>
               <p className="text-slate-400">Built for the modern classroom, stripped of unnecessary complexity.</p>
             </div>
 
@@ -252,7 +265,7 @@ export default function About() {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Reliable Autosave</h3>
                 <p className="text-slate-400 text-sm">
-                  Never lose student work. Projects save automatically every minute and upon exit.
+                  Never lose work. Projects save automatically every minute and upon exit.
                 </p>
               </div>
 

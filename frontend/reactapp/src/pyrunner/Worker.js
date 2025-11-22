@@ -161,6 +161,16 @@ const reloader = new PyodideFatalErrorReloader(async () => {
     matplotlib.use('Agg')
   `);
   console.log("Patching urllib with whitelist...");
+
+  console.log("Installing pandas...");
+  await micropip.install("pandas");
+
+  console.log("Installing scipy...");
+  await micropip.install("scipy");
+
+  console.log("Installing numpy...");
+  await micropip.install("numpy");
+
   await pyodide.runPythonAsync(`
 import urllib.request, urllib.parse, sys, types
 

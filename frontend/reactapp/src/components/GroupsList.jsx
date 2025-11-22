@@ -14,13 +14,13 @@ export const GroupsList = ({
   onJoinGroup 
 }) => {
   return (
-    <div className="w-1/4 bg-gradient-to-b from-gray-850 to-gray-850 border-r border-gray-600/50 p-6 flex flex-col">
+    <div className="w-1/4 bg-[#0B0F17]/70 border-r border-slate-800 p-6 flex flex-col">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
         <div className="flex gap-3 pb-3 border-b-1 border-gray-700">
           <button 
             onClick={onCreateGroup}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-500 hover:to-blue-400 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-800 to-blue-800 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all duration-200 hover:shadow-blue-500/30 font-medium"
             title="Create Group"
           >
             <Plus className="h-4 w-4" />
@@ -28,7 +28,7 @@ export const GroupsList = ({
           </button>
           <button 
             onClick={onJoinGroup}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:from-green-500 hover:to-green-400 transition-all duration-200 shadow-lg shadow-green-500/20 hover:shadow-green-500/30 font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-800 to-green-800 text-white rounded-xl hover:from-green-700 hover:to-green-700 transition-all duration-200 hover:shadow-green-500/30 font-medium"
             title="Join Group"
           >
             <Users className="h-4 w-4" />

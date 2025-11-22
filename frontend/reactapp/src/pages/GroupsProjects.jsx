@@ -211,28 +211,28 @@ export default function GroupsAndProjectsPage() {
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100">
         {/* Header */}
-        <div className="border-b border-gray-600/50 bg-gray-850 px-6 py-4 shadow-lg">
+        <div className="border-b border-slate-800 bg-[#0B0F17]/80 px-6 py-2 shadow-lg">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-15"></div>
-                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-2 rounded-xl border border-gray-700/50">
-                    <img
-                        src="/pytog.png"
-                        alt="Code Icon"
-                        className="h-8 w-8"
-                    />
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-15"></div>
+                        <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1 rounded-xl border border-gray-700/50">
+                        <img
+                            src="/pytog.png"
+                            alt="Code Icon"
+                            className="h-8 w-8"
+                        />
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <h1 className="text-2xl font-bold pl-2 bg-clip-text">
-                    PyTogether
-                    </h1>
-                </div>
+                    <div>
+                        <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                        PyTogether
+                        </h1>
+                    </div>
                 </div>
                 <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-700 to-gray-600 text-white rounded-xl hover:from-red-600 hover:to-red-500 transition-all duration-200 shadow-lg hover:shadow-red-500/20 font-medium border border-gray-600/50 hover:border-red-500/50"
+                className="flex items-center gap-2 px-2.5 py-2 text-black bg-gradient-to-r from-gray-200 to-gray-200 rounded-xl hover:from-gray-300 hover:to-gray-300 transition-all duration-200 shadow-lg hover:shadow-red-500/20 font-medium border border-gray-600/50 hover:border-red-500/50"
                 >
                 <LogOut className="h-4 w-4" />
                 <span className="text-sm">Sign Out</span>
