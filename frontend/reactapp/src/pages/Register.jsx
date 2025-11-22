@@ -30,8 +30,19 @@ export default function Register() {
         email,
         password: password1,
       });
-      alert("Registration successful, please log in.");
-      navigate("/login");
+      // Send credentials to backend
+      const res = await api.post("/api/auth/token/", {
+        email,
+        password: password1,
+      }, {
+        withCredentials: true, // important so refresh token cookie is set
+      });
+
+      // Save access token in sessionStorage
+      sessionStorage.setItem("access_token", res.data.access);
+
+      // Redirect user
+      navigate('/home');
     } catch (err) {
       console.error(err.response?.data || err.message);
       if (err.response?.data) {
