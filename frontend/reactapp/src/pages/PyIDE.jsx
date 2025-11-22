@@ -9,7 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
 import { Document, Packer, Paragraph, TextRun } from 'docx';
-import { ArrowLeft, Play, Terminal, X, GripVertical, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff, Download } from "lucide-react";
+import { ArrowLeft, Play, Terminal, X, GripVertical, Highlighter, Users, Wifi, WifiOff, Edit2, Check, Send, MessageSquare, Phone, PhoneOff, Mic, MicOff, Pencil, Eraser, Trash2, Eye, EyeOff, Download } from "lucide-react";
 import api from "../../axiosConfig";
 
 import { StateField, StateEffect } from "@codemirror/state";
@@ -112,6 +112,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // drawing tool state
   const [drawingMode, setDrawingMode] = useState('none'); // 'none', 'draw', 'erase'
   const [showDrawings, setShowDrawings] = useState(true);
+  const lastDrawPointRef = useRef(null);
   const [drawColor, setDrawColor] = useState('#EF4444');
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [eraseWidth, setEraseWidth] = useState(20);
@@ -779,15 +780,18 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     
     const ctx = ctxRef.current;
     const { x, y, docX, docY } = getCoords(e);
-    currentPathRef.current = [{ x: docX, y: docY }];
-
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineWidth = strokeWidth;
     
+    currentPathRef.current = [{ x: docX, y: docY }];
+    
+    lastDrawPointRef.current = { x, y };
+
     if (drawingMode === 'erase') {
       ctx.lineWidth = eraseWidth;
       ctx.globalCompositeOperation = 'destination-out';
+    } else if (drawingMode === 'highlight') {
+      ctx.lineWidth = 20;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = 'rgba(255, 255, 0, 0.15)'; 
     } else {
       ctx.lineWidth = strokeWidth;
       ctx.globalCompositeOperation = 'source-over';
@@ -800,10 +804,18 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     const ctx = ctxRef.current;
     const { x, y, docX, docY } = getCoords(e);
+
     currentPathRef.current.push({ x: docX, y: docY });
 
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    if (lastDrawPointRef.current) {
+      ctx.beginPath();
+      ctx.moveTo(lastDrawPointRef.current.x, lastDrawPointRef.current.y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.closePath();
+    }
+
+    lastDrawPointRef.current = { x, y };
   };
 
   const handleCanvasMouseUp = () => {
@@ -811,12 +823,20 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     isDrawingRef.current = false;
     ctxRef.current.closePath();
 
-    const currentWidth = drawingMode === 'erase' ? eraseWidth : strokeWidth;
+    // Determine width and color based on mode
+    let currentWidth = strokeWidth;
+    let currentColor = drawColor;
 
-    // Create the path object and add it to Y.js
+    if (drawingMode === 'erase') {
+      currentWidth = eraseWidth;
+    } else if (drawingMode === 'highlight') {
+      currentWidth = 20;
+      currentColor = 'rgba(255, 255, 0, 0.15)';
+    }
+
     const newPath = {
       type: drawingMode,
-      color: drawColor,
+      color: currentColor, // Saves the transparent yellow
       width: currentWidth,
       points: currentPathRef.current,
     };
@@ -824,7 +844,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     if (ydrawingsRef.current) {
       ydrawingsRef.current.push([newPath]);
     }
-    // End Y.js sync
+    
     drawingUndoManagerRef.current?.stopCapturing();
     currentPathRef.current = [];
   };
@@ -1318,6 +1338,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           <div className="flex items-center space-x-3">
             {/* Drawing Controls */}
             <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
+                <input
+                  type="color"
+                  value={drawColor}
+                  onChange={(e) => setDrawColor(e.target.value)}
+                  className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors"
+                  title="Change Pen Color"
+                />
               <button
                 onClick={() => setDrawingMode(p => p === 'draw' ? 'none' : 'draw')}
                 title="Draw"
@@ -1326,17 +1353,24 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 <Pencil className="h-4 w-4" />
               </button>
               <button
+                onClick={() => setDrawingMode(p => p === 'highlight' ? 'none' : 'highlight')}
+                title="Highlighter"
+                className={`p-2 rounded ${drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}
+              >
+                <Highlighter className="h-4 w-4" />
+              </button>
+              <button
                 onClick={() => setDrawingMode(p => p === 'erase' ? 'none' : 'erase')}
                 title="Erase"
                 className={`p-2 rounded ${drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}
               >
                 <Eraser className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => setShowDrawings(p => !p)}
-                title={showDrawings ? "Hide Drawings" : "Show Drawings"}
-                className="p-2 hover:bg-gray-600 rounded"
-              >
+                <button
+                  onClick={() => setShowDrawings(p => !p)}
+                  title={showDrawings ? "Hide Drawings" : "Show Drawings"}
+                  className="p-2 hover:bg-gray-600 rounded"
+                >
                 {showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
               <button
