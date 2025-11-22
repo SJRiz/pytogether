@@ -123,6 +123,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   // Y.js and WebSocket refs
   const ydocRef = useRef(null);
+  const codeUndoManagerRef = useRef(null);
   const wsRef = useRef(null);
   const ytextRef = useRef(null);
   const awarenessRef = useRef(null);
@@ -145,6 +146,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   // drawing stuff refs
   const ydrawingsRef = useRef(null);
+  const drawingUndoManagerRef = useRef(null);
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null); // Ref for the <CodeMirror> parent div
   const ctxRef = useRef(null); // 2D drawing context
@@ -331,6 +333,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     ytextRef.current = ytext;
     ydrawingsRef.current = ydrawings;
 
+    const drawingUndoManager = new Y.UndoManager(ydrawings);
+    drawingUndoManagerRef.current = drawingUndoManager;
+
+    const codeUndoManager = new Y.UndoManager(ytext, {
+      trackedOrigins: new Set([null]), // y-codemirror transactions often have null origin locally
+      captureTimeout: 150
+    });
+    codeUndoManagerRef.current = codeUndoManager;
 
     // Create WebSocket connection
     // Point to Django backend with JWT token
@@ -368,7 +378,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         if (data.type === 'update') {
           // Document update
           const update = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
-          Y.applyUpdate(ydoc, update);
+          Y.applyUpdate(ydoc, update, 'server');
 
         } else if (data.type === 'awareness') {
           // Awareness update
@@ -392,12 +402,16 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         } else if (data.type === 'sync') {
           // Full document sync
           const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
-          Y.applyUpdate(ydoc, stateBytes);
+          Y.applyUpdate(ydoc, stateBytes, 'server');
 
         } else if (data.type === 'initial') {
           // Initial content from db
-          ytext.delete(0, ytext.length);
-          ytext.insert(0, data.content || '');
+          ydoc.transact(() => {
+              ytext.delete(0, ytext.length);
+              ytext.insert(0, data.content || '');
+            }, 'server');
+          codeUndoManagerRef.current?.clear();
+          drawingUndoManagerRef.current?.clear();
 
         } else if (data.type === "connection") {
           // get all users
@@ -501,6 +515,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     return () => {
       ydoc.off('update', updateHandler);
       awareness.off('update', awarenessHandler);
+      drawingUndoManager.destroy();
+      codeUndoManager.destroy();
       cleanupVoiceCall();
       if (ws.readyState === WebSocket.OPEN) ws.close();
       ydoc.destroy();
@@ -809,7 +825,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ydrawingsRef.current.push([newPath]);
     }
     // End Y.js sync
-
+    drawingUndoManagerRef.current?.stopCapturing();
     currentPathRef.current = [];
   };
 
@@ -819,6 +835,44 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ydrawingsRef.current.delete(0, ydrawingsRef.current.length);
     }
   };
+
+  // Undo/Redo Handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isCtrlZ = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z';
+      const isCtrlY = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y';
+      
+      if (isCtrlZ || isCtrlY) {
+        const isRedo = e.shiftKey || isCtrlY;
+
+        // Drawing Tool Selected -> Drawing History
+        if (drawingMode !== 'none') {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (isRedo) {
+            drawingUndoManagerRef.current?.redo();
+          } else {
+            drawingUndoManagerRef.current?.undo();
+          }
+        }
+        
+        else {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (isRedo) {
+            codeUndoManagerRef.current?.redo();
+          } else {
+            codeUndoManagerRef.current?.undo();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [drawingMode]);
 
   // Handle input submission
   const submitInput = async () => {
@@ -1399,7 +1453,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 value={code}
                 height="100%"
                 theme={oneDark}
-                extensions={[python(), yCollab(ytextRef.current, awarenessRef.current), errorLineField]}
+                extensions={[
+                  python(), 
+                  yCollab(ytextRef.current, awarenessRef.current, { undoManager: codeUndoManagerRef.current }), 
+                  errorLineField
+                ]}
                 onChange={(value) => {
                   if (!ytextRef.current && !isConnected) setCode(value);
                 }}
