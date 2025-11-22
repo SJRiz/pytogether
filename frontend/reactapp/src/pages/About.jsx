@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github, CheckCircle2, AlertTriangle } from "lucide-react";
+import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github, 
+  Linkedin, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
@@ -280,21 +281,61 @@ export default function About() {
                  </div>
               </div>
 
-              {/* --- NEW DISCLAIMER CARD --- */}
-              <div className="col-span-1 md:col-span-3 bg-amber-900/10 border border-amber-500/20 p-6 rounded-3xl flex items-start gap-4">
+              {/* Disclaimer */}
+              <div className="col-span-1 md:col-span-2 bg-amber-900/10 border border-amber-500/20 p-6 rounded-3xl flex items-start gap-4">
                  <div className="shrink-0 mt-1">
                     <AlertTriangle className="w-6 h-6 text-amber-500" />
                  </div>
                  <div>
                     <h3 className="text-lg font-bold text-amber-400 mb-1">Platform Limitations</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
-                       Because PyTogether runs Python entirely in the browser (using Pyodide/WASM), 
-                       <strong> desktop GUI libraries like Pygame, Tkinter, and Turtle are not supported</strong>. 
-                       Standard input/output and data science libraries (Matplotlib, Pandas) work perfectly.
+                       Because PyTogether runs entirely in the browser (WASM), 
+                       <strong> GUI libraries like Pygame and Tkinter are not supported</strong>. 
+                       Though standard I/O and data science libraries (Pandas, Numpy) work perfectly.
                     </p>
                  </div>
               </div>
 
+              {/* me */}
+              <div className="col-span-1 bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden group hover:border-indigo-500 transition-all">  
+                 <div>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
+                            <span className="font-bold text-white text-sm">SJR</span> 
+                        </div>
+                        <div>
+                            <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
+                            <p className="text-xs text-slate-400">By Jawad Rizvi</p>
+                        </div>
+                    </div>
+                    
+                    <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                       Designed, developed, and deployed entirely by one person.
+                    </p>
+                 </div>
+
+                 {/* Icon Buttons */}
+                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
+                    <div className="flex gap-4">
+                        <a 
+                            href="https://github.com/SJRiz" 
+                            target="_blank" 
+                            rel="noreferrer"
+                            title="GitHub"
+                        >
+                            <Github className="w-4 h-4" />
+                        </a>
+                        <a 
+                            href="https://www.linkedin.com/in/syed-jawad-rizvi" 
+                            target="_blank" 
+                            rel="noreferrer"
+                            title="LinkedIn"
+                        >
+                            <Linkedin className="w-4 h-4" />
+                        </a>
+                    </div>
+                 </div>
+              </div>
             </div>
           </div>
         </section>
