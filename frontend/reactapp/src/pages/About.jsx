@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github, CheckCircle2, Play } from "lucide-react";
+import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
@@ -278,7 +278,21 @@ export default function About() {
                     <h3 className="text-2xl font-bold text-white mb-2">Group Management</h3>
                     <p className="text-slate-400">Create groups, invite via pass code, and manage projects effortlessly. Built-in voice calls and chat for every project.</p>
                  </div>
-                
+              </div>
+
+              {/* --- NEW DISCLAIMER CARD --- */}
+              <div className="col-span-1 md:col-span-3 bg-amber-900/10 border border-amber-500/20 p-6 rounded-3xl flex items-start gap-4">
+                 <div className="shrink-0 mt-1">
+                    <AlertTriangle className="w-6 h-6 text-amber-500" />
+                 </div>
+                 <div>
+                    <h3 className="text-lg font-bold text-amber-400 mb-1">Platform Limitations</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                       Because PyTogether runs Python entirely in the browser (using Pyodide/WASM), 
+                       <strong> desktop GUI libraries like Pygame, Tkinter, and Turtle are not supported</strong>. 
+                       Standard input/output and data science libraries (Matplotlib, Pandas) work perfectly.
+                    </p>
+                 </div>
               </div>
 
             </div>
