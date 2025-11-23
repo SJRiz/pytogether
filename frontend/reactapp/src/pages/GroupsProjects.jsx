@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Coffee, Github } from "lucide-react";
 import { MainContent } from "../components/MainContent";
 
 // Modal components
@@ -230,13 +230,23 @@ export default function GroupsAndProjectsPage() {
                         </h1>
                     </div>
                 </div>
-                <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-2.5 py-2 text-black bg-gradient-to-r from-gray-200 to-gray-200 rounded-xl hover:from-gray-300 hover:to-gray-300 transition-all duration-200 shadow-lg hover:shadow-red-500/20 font-medium border border-gray-600/50 hover:border-red-500/50"
-                >
-                <LogOut className="h-4 w-4" />
-                <span className="text-sm">Sign Out</span>
-                </button>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://buymeacoffee.com/sjriz" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
+              >
+                <Coffee className="w-4 h-4" />
+              </a>
+              <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
+                <Github className="w-4 h-4" />
+
+              </a>
+              <button onClick={handleLogout} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">
+                Sign Out
+              </button>
+            </div>
             </div>
         </div>
 

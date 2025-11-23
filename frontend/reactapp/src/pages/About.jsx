@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github, 
-  Linkedin, CheckCircle2, AlertTriangle } from "lucide-react";
+  Linkedin, Coffee, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
@@ -21,6 +21,9 @@ export default function About() {
   
   const scrollToFeatures = () => {
     document.getElementById('features-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+  const scrollToBento = () => {
+    document.getElementById('bento-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -89,7 +92,16 @@ export default function About() {
                     </div>
                 </div>
             <div className="flex items-center gap-4">
-              <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium">
+              <a 
+                href="https://buymeacoffee.com/sjriz" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
+              >
+                <Coffee className="w-4 h-4" />
+                <span>Donate</span>
+              </a>
+              <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
                 <Github className="w-4 h-4" />
                 <span>Star on GitHub</span>
               </a>
@@ -143,6 +155,14 @@ export default function About() {
             >
               See How It Works
             </button>
+
+            <button 
+              onClick={scrollToBento}
+              className="px-8 py-4 bg-transparent hover:bg-slate-800/30 text-slate-300 border border-slate-700/50 hover:border-slate-600 rounded-xl font-semibold transition-all"
+            >
+              Learn More
+            </button>
+            
           </div>
 
           {/* Supported Logos Strip */}
@@ -217,7 +237,7 @@ export default function About() {
         </section>
 
         {/* Bento Grid Features */}
-        <section className="relative z-10 bg-[#0F141F] py-24 border-t border-slate-800">
+        <section id="bento-section" className="relative z-10 bg-[#0F141F] py-24 border-t border-slate-800">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Everything you need to learn or teach Python</h2>
@@ -298,7 +318,7 @@ export default function About() {
 
               {/* me */}
               <div className="col-span-1 bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden group hover:border-indigo-500 transition-all">  
-                 <div>
+                  <div>
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
                             <span className="font-bold text-white text-sm">SJR</span> 
@@ -310,31 +330,43 @@ export default function About() {
                     </div>
                     
                     <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                       Designed, developed, and deployed entirely by one person.
+                        Designed, developed, and deployed entirely by one person. All support is appreciated!!
                     </p>
-                 </div>
+                    <a 
+                      href="https://buymeacoffee.com/sjriz"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#FFDD00] hover:bg-[#e6c700] text-black text-sm font-bold rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-yellow-500/10 mb-2"
+                    >
+                      <Coffee className="w-4 h-4 stroke-[3]" />
+                      <span>Buy me a coffee</span>
+                    </a>
 
-                 {/* Icon Buttons */}
-                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
-                    <div className="flex gap-4">
-                        <a 
-                            href="https://github.com/SJRiz" 
-                            target="_blank" 
-                            rel="noreferrer"
-                            title="GitHub"
-                        >
-                            <Github className="w-4 h-4" />
-                        </a>
-                        <a 
-                            href="https://www.linkedin.com/in/syed-jawad-rizvi" 
-                            target="_blank" 
-                            rel="noreferrer"
-                            title="LinkedIn"
-                        >
-                            <Linkedin className="w-4 h-4" />
-                        </a>
-                    </div>
-                 </div>
+                  </div>
+
+                  {/* Icon Buttons */}
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
+                     <div className="flex gap-4">
+                         <a 
+                             href="https://github.com/SJRiz" 
+                             target="_blank" 
+                             rel="noreferrer"
+                             title="GitHub"
+                             className="text-slate-400 hover:text-white transition-colors"
+                         >
+                             <Github className="w-4 h-4" />
+                         </a>
+                         <a 
+                             href="https://www.linkedin.com/in/syed-jawad-rizvi" 
+                             target="_blank" 
+                             rel="noreferrer"
+                             title="LinkedIn"
+                             className="text-slate-400 hover:text-white transition-colors"
+                         >
+                             <Linkedin className="w-4 h-4" />
+                         </a>
+                     </div>
+                  </div>
               </div>
             </div>
           </div>
