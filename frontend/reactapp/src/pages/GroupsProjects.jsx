@@ -241,10 +241,10 @@ export default function GroupsAndProjectsPage() {
               </a>
               <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
                 <Github className="w-4 h-4" />
-
               </a>
               <button onClick={handleLogout} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">
                 Sign Out
+                <LogOut className="inline-block w-4 h-4 ml-2" />
               </button>
             </div>
             </div>
