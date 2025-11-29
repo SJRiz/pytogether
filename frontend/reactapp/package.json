@@ -35,6 +35,7 @@
     "react-router-dom": "^7.8.1",
     "simple-peer": "^9.11.1",
     "sync-message": "^0.0.12",
+    "vite-plugin-node-polyfills": "^0.24.0",
     "vite-plugin-pwa": "^1.1.0",
     "vite-plugin-ssr": "^0.4.142",
     "vite-ssg": "^28.1.0",
