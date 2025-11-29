@@ -323,10 +323,17 @@ export default function About() {
                         <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
                             <span className="font-bold text-white text-sm">SJR</span> 
                         </div>
-                        <div>
-                            <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
-                            <p className="text-xs text-slate-400">By Jawad Rizvi</p>
-                        </div>
+                      <div>
+                          <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
+                          <a 
+                            href="https://www.linkedin.com/in/syed-jawad-rizvi" 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
+                          >
+                            By Jawad Rizvi
+                          </a>
+                      </div>
                     </div>
                     
                     <p className="text-slate-400 text-sm mb-6 leading-relaxed">
