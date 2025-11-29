@@ -165,16 +165,6 @@ export default function About() {
             
           </div>
 
-          {/* Supported Logos Strip */}
-          <div className="mt-16 pt-8 border-t border-slate-800/50 w-full max-w-3xl">
-            <p className="text-sm text-slate-500 mb-4 uppercase tracking-widest font-semibold">Powered By</p>
-            <div className="flex justify-center gap-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-               <div className="flex items-center gap-2"><span className="font-mono font-bold text-slate-300">Pyodide</span></div>
-               <div className="flex items-center gap-2"><span className="font-mono font-bold text-blue-400">React</span></div>
-               <div className="flex items-center gap-2"><span className="font-mono font-bold text-yellow-400">Django</span></div>
-               <div className="flex items-center gap-2"><span className="font-mono font-bold text-green-400">Supabase</span></div>
-            </div>
-          </div>
         </section>
 
         {/* Main Demo/Showcase */}
@@ -246,15 +236,33 @@ export default function About() {
 
             <div className="grid md:grid-cols-3 gap-6">
               
-              {/* Simplicity */}
-              <div className="col-span-1 md:col-span-2 bg-slate-900/50 border border-slate-800 p-8 rounded-3xl hover:border-indigo-500/30 transition-colors group">
-                <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Zap className="w-6 h-6 text-indigo-400" />
+              {/* Simplicity & Tech Stack */}
+              <div className="col-span-1 md:col-span-2 bg-slate-900/50 border border-slate-800 p-8 rounded-3xl hover:border-indigo-500/30 transition-colors group flex flex-col justify-between">
+                <div>
+                    <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <Zap className="w-6 h-6 text-indigo-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Lightning Fast & Browser Based</h3>
+                    <p className="text-slate-400 leading-relaxed mb-6">
+                    No servers to spin up. No software to install. PyTogether runs CPython 3.13 via Pyodide (WebAssembly) directly in your browser. It works on Chromebooks, tablets, and low-end laptops instantly.
+                    </p>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Lightning Fast & Browser Based</h3>
-                <p className="text-slate-400 leading-relaxed">
-                  No servers to spin up. No software to install. PyTogether runs CPython 3.13 via WebAssembly directly in your browser. It works on Chromebooks, tablets, and low-end laptops instantly.
-                </p>
+
+                {/* Tech stack */}
+                <div className="pt-6 border-t border-slate-800/50">
+                    <p className="text-xs text-slate-500 font-mono mb-3 uppercase">Built With</p>
+                    <div className="flex gap-6 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                        <img src="/logos/react.png" alt="React" className="h-6 w-auto object-contain" title="React" />
+                        <img src="/logos/django.png" alt="Django" className="h-6 w-auto object-contain" title="Django" />
+                        <img src="/logos/supabase.png" alt="Supabase" className="h-6 w-auto object-contain" title="Supabase" />
+                        <img 
+                            src="/logos/wasm.png" 
+                            alt="WebAssembly" 
+                            className="h-6 w-auto object-contain" 
+                            title="Pyodide (via WebAssembly)" 
+                        />
+                    </div>
+                </div>
               </div>
 
               {/* Packages */}
@@ -311,29 +319,29 @@ export default function About() {
                     <p className="text-slate-400 text-sm leading-relaxed">
                        Because PyTogether runs entirely in the browser (WASM), 
                        <strong> GUI libraries like Pygame and Tkinter are not supported</strong>. 
-                       Though standard I/O and data science libraries (Pandas, Numpy) work perfectly.
+                       Though standard I/O and data science libraries (Matplotlib, Numpy) work perfectly.
                     </p>
                  </div>
               </div>
 
-              {/* me */}
+              {/* ME */}
               <div className="col-span-1 bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden group hover:border-indigo-500 transition-all">  
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
                             <span className="font-bold text-white text-sm">SJR</span> 
                         </div>
-                      <div>
-                          <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
-                          <a 
-                            href="https://www.linkedin.com/in/syed-jawad-rizvi" 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
-                          >
-                            By Jawad Rizvi
-                          </a>
-                      </div>
+                        <div>
+                            <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
+                            <a 
+                              href="https://www.linkedin.com/in/syed-jawad-rizvi" 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
+                            >
+                              By Jawad Rizvi
+                            </a>
+                        </div>
                     </div>
                     
                     <p className="text-slate-400 text-sm mb-6 leading-relaxed">
@@ -353,27 +361,29 @@ export default function About() {
 
                   {/* Icon Buttons */}
                   <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
-                     <div className="flex gap-4">
-                         <a 
-                             href="https://github.com/SJRiz" 
-                             target="_blank" 
-                             rel="noreferrer"
-                             title="GitHub"
-                             className="text-slate-400 hover:text-white transition-colors"
-                         >
-                             <Github className="w-4 h-4" />
-                         </a>
-                         <a 
-                             href="https://www.linkedin.com/in/syed-jawad-rizvi" 
-                             target="_blank" 
-                             rel="noreferrer"
-                             title="LinkedIn"
-                             className="text-slate-400 hover:text-white transition-colors"
-                         >
-                             <Linkedin className="w-4 h-4" />
-                         </a>
-                     </div>
-                  </div>
+                      <div className="flex gap-4">
+                          <a 
+                              href="https://github.com/SJRiz" 
+                              target="_blank" 
+                              rel="noreferrer"
+                              title="GitHub"
+                              aria-label="Jawad Rizvi's GitHub Profile"
+                              className="text-slate-400 hover:text-white transition-colors"
+                          >
+                              <Github className="w-4 h-4" />
+                          </a>
+                          <a 
+                              href="https://www.linkedin.com/in/syed-jawad-rizvi" 
+                              target="_blank" 
+                              rel="noreferrer"
+                              title="LinkedIn"
+                              aria-label="Jawad Rizvi's LinkedIn Profile"
+                              className="text-slate-400 hover:text-white transition-colors"
+                          >
+                              <Linkedin className="w-4 h-4" />
+                          </a>
+                      </div>
+                   </div>
               </div>
             </div>
           </div>
@@ -425,6 +435,7 @@ export default function About() {
           <p className="text-slate-500 text-sm mb-4">
             &copy; {new Date().getFullYear()} PyTogether. Built with ❤️ for the Python community.
           </p>
+
           <a href="mailto:contact@pytogether.org" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors">
             contact@pytogether.org
           </a>
