@@ -83,6 +83,14 @@ The frontend will be live on http://localhost:5173. You can do CTRL+C to stop th
 
 You may also adjust the settings in backend/backend/settings/dev.py
 
+## Author
+**Jawad Rizvi**
+
+- [LinkedIn](https://linkedin.com/in/syed-jawad-rizvi)
+- [GitHub](https://github.com/SJRiz)
+  
+*Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
