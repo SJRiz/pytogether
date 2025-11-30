@@ -6,8 +6,10 @@ import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import About from './pages/About';
+import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
 
 function App() {
+  useUmamiHeartbeat();
   return (
     <div className="min-h-screen bg-gray-900">
       <Routes>
