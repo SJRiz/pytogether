@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const useUmamiHeartbeat = (interval = 600000) => {
+const useUmamiHeartbeat = (interval = 300000) => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (window.umami && document.visibilityState === 'visible') {
