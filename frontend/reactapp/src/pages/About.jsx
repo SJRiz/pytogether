@@ -133,7 +133,7 @@ export default function About() {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            A zero-setup, real-time collaborative IDE built for teachers, educators, interviewers, and students. 
+            A free & open-sourced, zero-setup, real-time collaborative IDE built for teachers, educators, interviewers, and students. 
             Code, communicate, draw, and run Python directly in your browser.
           </p>
 
