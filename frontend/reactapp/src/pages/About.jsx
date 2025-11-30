@@ -30,7 +30,7 @@ export default function About() {
     <>
       <Helmet>
         {/* Primary Meta Tags */}
-        <title>PyTogether - Free Collaborative Python IDE Online</title>
+        <title>PyTogether - Free Online Python IDE & Collaborative Editor </title>
         <meta name="title" content="PyTogether | Free Collaborative Python IDE Online for Teachers & Students" />
         <meta name="description" content="The free 'Google Docs for Python'. A real-time collaborative Python compiler and IDE in the browser. Perfect for pair programming, teaching, and online tutoring." />
         <meta name="keywords" content="collaborative python ide, python for teachers, pair programming online, google docs for python, online python compiler, multiplayer coding, free python ide, online python ide" />
@@ -133,7 +133,7 @@ export default function About() {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            A free & open-sourced, zero-setup, real-time collaborative IDE & editor online. Built for pair programming, interviews, learning and teaching. 
+            A free & open-source, zero-setup, real-time collaborative online Python IDE & editor. Built for pair programming, interviews, learning, and teaching. 
             Code, communicate, draw, and run Python directly in your browser.
           </p>
 
