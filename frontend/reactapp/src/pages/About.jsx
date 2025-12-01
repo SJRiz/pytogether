@@ -328,8 +328,12 @@ export default function About() {
               <div className="col-span-1 bg-gradient-to-br from-indigo-900/20 to-slate-900 border border-indigo-500/30 p-6 rounded-3xl flex flex-col justify-between relative overflow-hidden group hover:border-indigo-500 transition-all">  
                   <div>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
-                            <span className="font-bold text-white text-sm">SJR</span> 
+                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)] overflow-hidden border border-indigo-400/30">
+                            <img 
+                                src="/me.jpg" 
+                                alt="Jawad Rizvi" 
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div>
                             <h3 className="text-base font-bold text-white leading-tight">Built Solo</h3>
@@ -345,7 +349,7 @@ export default function About() {
                     </div>
                     
                     <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                        Designed, developed, and deployed entirely by one person. All support is appreciated!!
+                        Designed, deployed, and developed entirely by Jawad Rizvi. All support is appreciated!
                     </p>
                     <a 
                       href="https://buymeacoffee.com/sjriz"
