@@ -1,4 +1,6 @@
-import { FolderPlus, Edit2, Trash2, Code2, Folder } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History } from "lucide-react";
 
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
   return (
@@ -72,6 +74,27 @@ export const ProjectsList = ({
   onOpenProject, 
   onCreateProject 
 }) => {
+  const navigate = useNavigate();
+  const [lastSession, setLastSession] = useState(null);
+
+  // Check local storage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('previousProjectData');
+    if (stored) {
+      try {
+        setLastSession(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse project data", e);
+      }
+    }
+  }, []);
+
+  const handleContinueSession = () => {
+    if (lastSession) {
+      navigate("/ide", { state: lastSession });
+    }
+  };
+
   if (!selectedGroup) {
     return (
       <div className="flex-1 p-6 flex flex-col bg-gradient-to-b from-gray-950 to-gray-950 relative">
@@ -81,9 +104,49 @@ export const ProjectsList = ({
         <div className="mb-6 relative z-10">
           <h2 className="text-xl font-bold text-white tracking-tight"></h2>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 space-y-4 relative z-10">
-          <Folder className="h-16 w-16 opacity-50" />
-          <p className="text-lg font-medium">Select a group to see projects</p>
+
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+          
+          {lastSession ? (
+            <div className="w-full max-w-md animate-fadeIn">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-white mb-2">Welcome Back!</h3>
+                <p className="text-gray-400">Ready to continue where you left off?</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                    <History className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium text-lg">{lastSession.projectName}</h4>
+                    <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full border border-blue-400/20">
+                      Last Active Session
+                    </span>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleContinueSession}
+                  className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
+                >
+                  <span>Continue Coding</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+              
+              <p className="text-center text-gray-600 text-sm mt-8">
+                Or select a group from the sidebar to view other projects
+              </p>
+            </div>
+          ) : (
+            <div className="text-gray-500 space-y-4 flex flex-col items-center">
+              <Folder className="h-16 w-16 opacity-50" />
+              <p className="text-lg font-medium">Select a group to see projects</p>
+            </div>
+          )}
+
         </div>
       </div>
     );

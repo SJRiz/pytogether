@@ -199,12 +199,17 @@ export default function GroupsAndProjectsPage() {
 
     const openProject = (project) => {
         if (!selectedGroup) return;
-        navigate("/ide", {
-        state: {
+
+        const projectData = {
             groupId: selectedGroup.id,
             projectId: project.id,
             projectName: project.project_name
-        },
+        };
+
+        localStorage.setItem('previousProjectData', JSON.stringify(projectData));
+
+        navigate("/ide", {
+            state: projectData,
         });
     };
 
