@@ -241,6 +241,19 @@ export default function Login() {
 
           {/* OAuth */}
           <GoogleLoginButton disabled={isLoading} />
+
+          {/* TERMS OF SERVICE */}
+          <p className="text-xs text-gray-500 mt-6 text-center leading-relaxed">
+            By creating an account or logging in, you agree to our{' '}
+            <a href="/terms" target="_blank" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a href="/privacy" target="_blank" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+              Privacy Policy
+            </a>.
+          </p>
+
         </div>
 
         {/* Footer */}

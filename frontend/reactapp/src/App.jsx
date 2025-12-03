@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import About from './pages/About';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
 
 function App() {
@@ -19,16 +21,26 @@ function App() {
           </PublicRoute>
           }
             />
-        <Route 
-          path="/home" 
+        <Route path="/terms" element= {
+          <PublicRoute>
+            <TermsOfService/>
+          </PublicRoute>
+          }
+            />
+        <Route path="/privacy" element= {
+          <PublicRoute>
+            <PrivacyPolicy/>
+          </PublicRoute>
+          }
+            />
+        <Route path="/home" 
           element={
             <ProtectedRoute>
               <GroupsAndProjectsPage />
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/ide" 
+        <Route path="/ide" 
           element={
             <ProtectedRoute>
               <PyIDE />
