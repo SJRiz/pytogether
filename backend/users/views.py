@@ -20,7 +20,7 @@ def google_login(request):
     if not token:
         return Response({"error": "Missing Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
-    google_resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}")
+    google_resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
     if google_resp.status_code != 200:
         return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
