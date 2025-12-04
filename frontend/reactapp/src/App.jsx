@@ -8,6 +8,7 @@ import PublicRoute from './components/PublicRoute';
 import About from './pages/About';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import OfflinePlayground from './pages/OfflinePlayground';
 import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
 
 function App() {
@@ -20,15 +21,19 @@ function App() {
             <About/>
           </PublicRoute>
           }
-            />
+        />
         <Route path="/terms" element= {
             <TermsOfService/>
           }
-            />
+        />
         <Route path="/privacy" element= {
             <PrivacyPolicy/>
           }
-            />
+        />
+        <Route path="/playground" element= {
+            <OfflinePlayground/>
+          }
+        />
         <Route path="/home" 
           element={
             <ProtectedRoute>
@@ -47,12 +52,14 @@ function App() {
           <PublicRoute>
             <Register />
           </PublicRoute>
-          } />
+          }
+        />
         <Route path="/login" element={
           <PublicRoute>
             <Login />
           </PublicRoute>
-        } />
+        }
+        />
       </Routes>
     </div>
   );

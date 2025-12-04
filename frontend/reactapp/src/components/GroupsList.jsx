@@ -1,4 +1,5 @@
-import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen, Code } from "lucide-react";
 
 export const GroupsList = ({ 
   groups, 
@@ -13,11 +14,15 @@ export const GroupsList = ({
   onCreateGroup, 
   onJoinGroup 
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="w-1/4 bg-[#0B0F17]/70 border-r border-slate-800 p-6 flex flex-col">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
-        <div className="flex gap-3 pb-3 border-b-1 border-gray-700">
+        
+        {/* Create / Join Row */}
+        <div className="flex gap-3 pb-3 border-b-0 border-gray-700">
           <button 
             onClick={onCreateGroup}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-800 to-blue-800 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all duration-200 hover:shadow-blue-500/30 font-medium"
@@ -35,6 +40,19 @@ export const GroupsList = ({
             <span className="text-sm">Join</span>
           </button>
         </div>
+
+        {/* Offline Playground Button */}
+        <div className="pb-3 border-b border-gray-700">
+            <button 
+              onClick={() => navigate('/playground')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-800 text-gray-300 hover:text-white rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-200 font-medium group"
+              title="Go to Offline Playground"
+            >
+              <Code className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+              <span className="text-sm">Offline Playground</span>
+            </button>
+        </div>
+
       </div>
       
       <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar relative">
@@ -48,7 +66,7 @@ export const GroupsList = ({
         ) : groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-3">
             <Users className="h-12 w-12 opacity-50" />
-            <p className="text-sm">No groups yet</p>
+            <p className="text-sm">No groups yet. Create one to get started!</p>
           </div>
         ) : (
           <ul className="space-y-3 min-w-max pr-2">

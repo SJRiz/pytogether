@@ -213,6 +213,7 @@ export default function GroupsAndProjectsPage() {
         {/* Header */}
         <div className="border-b border-slate-800 bg-[#0B0F17]/80 px-6 py-2 shadow-lg">
             <div className="flex items-center justify-between">
+                
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl blur-md opacity-15"></div>
@@ -229,33 +230,39 @@ export default function GroupsAndProjectsPage() {
                         PyTogether
                         </h1>
                     </div>
-                </div>
-            <div className="flex items-center gap-4">
-                <a 
-                href="mailto:contact@pytogether.org" 
-                className="hidden md:flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium mr-3"
-                title="Send Feedback"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="hidden lg:inline">Feedback</span>
-              </a>
-              <a 
-                href="https://buymeacoffee.com/sjriz" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
-              >
-                <Coffee className="w-4 h-4" />
-              </a>
 
-              <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
-                <Github className="w-4 h-4" />
-              </a>
-              <button onClick={handleLogout} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">
-                Sign Out
-                <LogOut className="inline-block w-4 h-4 ml-2" />
-              </button>
-            </div>
+                    <div className="hidden md:flex items-center ml-4 pl-4 border-l border-gray-700 h-8">
+                        <a 
+                            href="mailto:contact@pytogether.org" 
+                            className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors text-sm font-medium"
+                            title="Send Feedback"
+                        >
+                            <Mail className="w-4 h-4" />
+                            <span className="hidden lg:inline">Feedback</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <a 
+                        href="https://buymeacoffee.com/sjriz" 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
+                    >
+                        <Coffee className="w-4 h-4" />
+                        <span className="hidden lg:inline">Support</span>
+                    </a>
+
+                    <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
+                        <Github className="w-4 h-4" />
+                    </a>
+                    
+                    <button onClick={handleLogout} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">
+                        Sign Out
+                        <LogOut className="inline-block w-4 h-4 ml-2" />
+                    </button>
+                </div>
             </div>
         </div>
 
