@@ -1,7 +1,6 @@
 import jwt
 from urllib.parse import parse_qs
 from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 
@@ -13,6 +12,7 @@ def get_user(user_id):
     try:
         return User.objects.get(id=user_id)
     except User.DoesNotExist:
+        from django.contrib.auth.models import AnonymousUser
         return AnonymousUser()
 
 class JWTAuthMiddleware:
@@ -27,6 +27,7 @@ class JWTAuthMiddleware:
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
+        from django.contrib.auth.models import AnonymousUser
         scope['user'] = AnonymousUser()
         scope['share_context'] = None
 
@@ -58,6 +59,7 @@ class JWTAuthMiddleware:
             return await get_user(user_id)
         except (jwt.ExpiredSignatureError, jwt.DecodeError, jwt.InvalidTokenError) as e:
             print(f"JWT Error: {e}")
+            from django.contrib.auth.models import AnonymousUser
             return AnonymousUser()
         except Exception as e:
             print(f"Generic JWT Error: {e}")
