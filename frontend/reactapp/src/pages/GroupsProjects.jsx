@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Coffee, Github } from "lucide-react";
+import { LogOut, Coffee, Github, Mail } from "lucide-react";
 import { MainContent } from "../components/MainContent";
 
 // Modal components
@@ -42,13 +42,8 @@ export default function GroupsAndProjectsPage() {
 
     const handleLogout = async () => {
     try {
-        // Call backend to clear refresh token cookie
         await api.post("/api/auth/logout/", {}, { withCredentials: true });
-
-        // Clear tokens from sessionStorage
         sessionStorage.removeItem("access_token");
-
-        // Redirect to login
         navigate("/login");
     } catch (err) {
         console.error("Logout failed", err);
@@ -214,7 +209,7 @@ export default function GroupsAndProjectsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100">
+        <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
         {/* Header */}
         <div className="border-b border-slate-800 bg-[#0B0F17]/80 px-6 py-2 shadow-lg">
             <div className="flex items-center justify-between">
@@ -236,6 +231,14 @@ export default function GroupsAndProjectsPage() {
                     </div>
                 </div>
             <div className="flex items-center gap-4">
+                <a 
+                href="mailto:contact@pytogether.org" 
+                className="hidden md:flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium mr-3"
+                title="Send Feedback"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="hidden lg:inline">Feedback</span>
+              </a>
               <a 
                 href="https://buymeacoffee.com/sjriz" 
                 target="_blank" 
@@ -244,6 +247,7 @@ export default function GroupsAndProjectsPage() {
               >
                 <Coffee className="w-4 h-4" />
               </a>
+
               <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
                 <Github className="w-4 h-4" />
               </a>
@@ -255,26 +259,45 @@ export default function GroupsAndProjectsPage() {
             </div>
         </div>
 
-        <MainContent
-        groups={groups}
-        selectedGroup={selectedGroup}
-        setSelectedGroup={setSelectedGroup}
-        loadingGroups={loadingGroups}
-        membersVisible={membersVisible}
-        setMembersVisible={setMembersVisible}
-        setShowCreateGroupModal={setShowCreateGroupModal}
-        setShowJoinGroupModal={setShowJoinGroupModal}
-        setEditGroupName={setEditGroupName}
-        setShowEditGroupModal={setShowEditGroupModal}
-        setShowAccessCodeModal={setShowAccessCodeModal}
-        setShowConfirmModal={setShowConfirmModal}
-        projects={projects}
-        setEditProjectName={setEditProjectName}
-        loadingProjects={loadingProjects}
-        setShowEditProjectModal={setShowEditProjectModal}
-        setShowCreateProjectModal={setShowCreateProjectModal}
-        openProject={openProject}
-        />
+        {/* Main Content */}
+        <div className="flex-grow">
+            <MainContent
+                groups={groups}
+                selectedGroup={selectedGroup}
+                setSelectedGroup={setSelectedGroup}
+                loadingGroups={loadingGroups}
+                membersVisible={membersVisible}
+                setMembersVisible={setMembersVisible}
+                setShowCreateGroupModal={setShowCreateGroupModal}
+                setShowJoinGroupModal={setShowJoinGroupModal}
+                setEditGroupName={setEditGroupName}
+                setShowEditGroupModal={setShowEditGroupModal}
+                setShowAccessCodeModal={setShowAccessCodeModal}
+                setShowConfirmModal={setShowConfirmModal}
+                projects={projects}
+                setEditProjectName={setEditProjectName}
+                loadingProjects={loadingProjects}
+                setShowEditProjectModal={setShowEditProjectModal}
+                setShowCreateProjectModal={setShowCreateProjectModal}
+                openProject={openProject}
+            />
+        </div>
+
+        {/* Footer Section */}
+        <footer className="w-full border-t border-slate-800 bg-[#0B0F17] py-6 mt-auto">
+            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p className="text-gray-500 text-sm">
+                    &copy; {new Date().getFullYear()} PyTogether. All rights reserved.
+                </p>
+                
+                {/* Footer Links */}
+                <div className="flex gap-6 text-sm text-gray-400">
+                    <a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a>
+                    <a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a>
+                    <a href="mailto:contact@pytogether.org" className="hover:text-blue-400 transition-colors">Contact</a>
+                </div>
+            </div>
+        </footer>
 
         {/* Modals */}
         <CreateGroupModal

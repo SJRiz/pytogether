@@ -1,15 +1,9 @@
-import { ArrowLeft, FileText, AlertTriangle, Gavel } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { FileText, AlertTriangle, Gavel } from 'lucide-react';
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-gray-300 p-8 flex justify-center">
       <div className="max-w-3xl w-full">
-        {/* Navigation */}
-        <Link to="/login" className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-8 transition-colors">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Login
-        </Link>
         
         {/* Header */}
         <div className="border-b border-gray-800 pb-8 mb-8">
