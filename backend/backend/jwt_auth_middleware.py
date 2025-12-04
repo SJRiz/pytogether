@@ -1,82 +1,56 @@
-import jwt
-from urllib.parse import parse_qs
-from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
-from channels.db import database_sync_to_async
-from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+# Websocket scope only has a path and a query string. We need to add the user to the scope for security measures
 
-# Fetch the user from the database
+import jwt
+from django.conf import settings
+from channels.db import database_sync_to_async
+
+# fetch the user from the database
+# websockets are async and django orms are sync, so we need to use this decorator to bridge that
 @database_sync_to_async
 def get_user(user_id):
-    from django.contrib.auth import get_user_model
+    from django.contrib.auth import get_user_model  # lazy import again, keep getting errors
     User = get_user_model()
     try:
         return User.objects.get(id=user_id)
     except User.DoesNotExist:
+        from django.contrib.auth.models import AnonymousUser
         return AnonymousUser()
+
 
 class JWTAuthMiddleware:
     """
-    Custom auth middleware for Django Channels.
-    Handles:
-    1. JWT Auth ('token' param) for logged-in users.
-    2. Share Token Auth ('share_token' param) for shared project access.
+    Custom JWT auth middleware for our Django Channels.
+    Looks for 'token' in query string or 'Authorization' header.
     """
 
     def __init__(self, inner):
-        self.inner = inner
+        self.inner = inner  # classic middleware structure, each middleware wraps around the next
 
     async def __call__(self, scope, receive, send):
-        scope['user'] = AnonymousUser()
-        scope['share_context'] = None
-
-        # parse_qs handles the split logic safely for us
-        query_string = scope.get("query_string", b"").decode("utf-8")
-        query_params = parse_qs(query_string)
+        # Set the user in scope (the scope is all the connection metadata)
+        scope['user'] = await self.get_user_from_jwt(scope)
         
-        # Get raw tokens (parse_qs returns lists, e.g. {'token': ['xyz']})
-        token = query_params.get("token", [None])[0]
-        share_token = query_params.get("share_token", [None])[0]
-
-        if token:
-            scope['user'] = await self.get_user_from_jwt(token)
-
-        if share_token and ":" in share_token:
-            share_data = await self.validate_share_token(share_token)
-            if share_data:
-                # Add the share data to scope so consumers can use it
-                scope['share_context'] = share_data
-                print(f"Share Token Validated: {share_data}")
-
+        # Call the inner application with the modified scope (in this case, the websocket)
         return await self.inner(scope, receive, send)
 
-    async def get_user_from_jwt(self, token):
+    async def get_user_from_jwt(self, scope):
+        from django.contrib.auth.models import AnonymousUser
+        token = None
+
+        # Check query string
+        query_string = scope.get("query_string", b"").decode()
+        if "token=" in query_string:
+            token = query_string.split("token=")[-1].split("&")[0]
+
+        if not token:
+            return AnonymousUser()
+
+        # Decode JWT and fetch user
         try:
-            # Decode JWT and fetch user
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = payload.get("user_id")
             return await get_user(user_id)
-        except (jwt.ExpiredSignatureError, jwt.DecodeError, jwt.InvalidTokenError) as e:
-            print(f"JWT Error: {e}")
-            return AnonymousUser()
+        
         except Exception as e:
-            print(f"Generic JWT Error: {e}")
+            print(f"JWT decode error: {e}")
             return AnonymousUser()
-
-    @database_sync_to_async
-    def validate_share_token(self, token_string):
-        """
-        Validates the share_token using Django's TimestampSigner.
-        Expected format: 'payload:timestamp:signature'
-        """
-        signer = TimestampSigner()
-        try:
-            # unsign_object validates the signature and returns the original python object
-            original_data = signer.unsign_object(token_string) 
-            return original_data
-        except SignatureExpired:
-            print("Share link expired")
-            return None
-        except BadSignature:
-            print("Invalid share link signature")
-            return None

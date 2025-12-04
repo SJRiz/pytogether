@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
 import { Document, Packer, Paragraph, TextRun } from 'docx';
-import { Send, Check, X, Edit2, Pencil, Highlighter, Eraser, Eye, EyeOff, Trash2, Phone, PhoneOff, Mic, MicOff, Wifi, Share2, RotateCcw, RotateCw } from "lucide-react";
+import { Send, Check, X, Edit2, Pencil, Highlighter, Eraser, Eye, EyeOff, Trash2, Phone, PhoneOff, Mic, MicOff, Wifi } from "lucide-react";
 
 // CodeMirror
 import CodeMirror from "@uiw/react-codemirror";
@@ -24,7 +24,6 @@ import api from "../../axiosConfig";
 
 // Hooks & Components
 import CodeLayout from "../components/CodeLayout";
-import { ShareModal } from "../components/Modals/ShareModal";
 import { usePyRunner } from "../hooks/usePyRunner";
 import { useVoiceChat } from "../hooks/useVoiceChat";
 import { useSharedCanvas } from "../hooks/useSharedCanvas";
@@ -64,7 +63,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(projectName);
   const [latency, setLatency] = useState(null);
-  const [showShareModal, setShowShareModal] = useState(false);
 
   // Refs
   const ydocRef = useRef(null);
@@ -80,9 +78,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // User ID
   const token = sessionStorage.getItem("access_token");
   const myUserId = token ? jwtDecode(token).user_id : "anon";
-  
-  // Get shareToken from location state (if joining via link)
-  const shareToken = location.state?.shareToken;
 
   // CUSTOM HOOKS
   const runner = usePyRunner();
@@ -117,13 +112,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     // Setup WebSocket
     const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
-    
-    // Logic to include share_token if present
-    let tokenParam = token ? `?token=${token}` : "?";
-    if (shareToken) {
-        tokenParam += `&share_token=${shareToken}`;
-    }
-
+    const tokenParam = token ? `?token=${token}` : "";
     const wsUrl = `${wsBase}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -279,7 +268,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       codeUndoManager.destroy();
       awareness.destroy();
     };
-  }, [groupId, projectId, shareToken]); // Added shareToken dependency
+  }, [groupId, projectId]);
 
   // ACTIONS
   // Undo/Redo (Global)
@@ -368,14 +357,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     <>
         <h2 className="text-lg font-medium text-white truncate">{projectName}</h2>
         <button onClick={() => { setTempName(projectName); setIsEditingName(true); }} className="p-1 text-gray-400 hover:text-gray-200"><Edit2 className="h-4 w-4"/></button>
-        <button 
-            onClick={() => setShowShareModal(true)} 
-            className="p-1.5 ml-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-md transition-colors flex items-center gap-1.5"
-            title="Share Project"
-        >
-            <Share2 className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium hidden sm:inline">Share</span>
-        </button>
     </>
   );
 
@@ -541,40 +522,31 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   );
 
   return (
-    <>
-        <CodeLayout 
-            headerContent={headerSlot}
-            editorContent={editorSlot}
-            consoleContent={consoleSlot}
-            onClearConsole={runner.clearConsole}
-            chatContent={chatSlot}
-            chatInputContent={chatInputSlot}
-            plotContent={runner.plotSrc ? <img src={runner.plotSrc} alt="Plot" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: 'white' }} /> : null}
-            inputContent={inputSlot}
-            voiceControls={voiceSlot}
-            drawingControls={drawingSlot}
-            
-            onBack={() => {
-                if (runner.isRunning) { runner.stopCode(); }
-                if (wsRef.current) wsRef.current.close();
-                navigate('/home');
-            }}
-            isConnected={isConnected}
-            connectedUsers={connectedUsers}
-            
-            isLoading={runner.isLoading}
-            isRunning={runner.isRunning}
-            onRun={() => runner.runCode(ytextRef.current ? ytextRef.current.toString() : code)}
-            onStop={runner.stopCode}
-            onDownloadOption={handleDownload}
-        />
-
-        <ShareModal 
-            isOpen={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            project={{ id: projectId }} 
-            group={{ id: groupId }} 
-        />
-    </>
+    <CodeLayout 
+        headerContent={headerSlot}
+        editorContent={editorSlot}
+        consoleContent={consoleSlot}
+        onClearConsole={runner.clearConsole}
+        chatContent={chatSlot}
+        chatInputContent={chatInputSlot}
+        plotContent={runner.plotSrc ? <img src={runner.plotSrc} alt="Plot" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: 'white' }} /> : null}
+        inputContent={inputSlot}
+        voiceControls={voiceSlot}
+        drawingControls={drawingSlot}
+        
+        onBack={() => {
+            if (runner.isRunning) { runner.stopCode(); }
+            if (wsRef.current) wsRef.current.close();
+            navigate('/home');
+        }}
+        isConnected={isConnected}
+        connectedUsers={connectedUsers}
+        
+        isLoading={runner.isLoading}
+        isRunning={runner.isRunning}
+        onRun={() => runner.runCode(ytextRef.current ? ytextRef.current.toString() : code)}
+        onStop={runner.stopCode}
+        onDownloadOption={handleDownload}
+    />
   );
 }
