@@ -22,7 +22,12 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # CORS
-CORS_ALLOWED_ORIGINS = [config("ORIGIN"), config("NAKED_ORIGIN")]
+CORS_ALLOWED_ORIGINS = [
+    "https://www.pytogether.org",
+    "https://pytogether.org",
+    "https://api.pytogether.org"
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
