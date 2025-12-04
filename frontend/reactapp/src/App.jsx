@@ -22,15 +22,11 @@ function App() {
           }
             />
         <Route path="/terms" element= {
-          <PublicRoute>
             <TermsOfService/>
-          </PublicRoute>
           }
             />
         <Route path="/privacy" element= {
-          <PublicRoute>
             <PrivacyPolicy/>
-          </PublicRoute>
           }
             />
         <Route path="/home" 
