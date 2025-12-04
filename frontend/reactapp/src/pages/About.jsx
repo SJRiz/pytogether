@@ -305,7 +305,7 @@ export default function About() {
                       <Users className="w-6 h-6 text-blue-400" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">Group Management</h3>
-                    <p className="text-slate-400">Create groups, invite via pass code, and manage projects effortlessly. Built-in voice calls and chat for every project.</p>
+                    <p className="text-slate-400">Create groups, invite via pass code, and manage projects effortlessly. Built-in voice calls and chat for every project. <strong>You can also share snippet and edit links to your friends!</strong></p>
                  </div>
               </div>
 

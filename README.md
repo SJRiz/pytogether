@@ -13,6 +13,7 @@
 - **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
 - **Secure Authentication** - Log in manually or with Google OAuth.  
 - **Groups & Projects** - Organize your work into teams and projects.   
+- **Share Links** - Share your code snippets to others to edit or just run!
 - **Live Drawings** - Draw directly on the IDE to assist with note-taking or teaching.
 - **Live Cursors/Selections** - Google docs-like live selections for smoother collaboration.
 - **Live Chat and Voice Calls** - Real-time messaging, and Discord-like voice chats for each project. 
