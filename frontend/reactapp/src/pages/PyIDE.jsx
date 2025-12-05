@@ -56,7 +56,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [projectName, setProjectName] = useState(propProjectName || location.state?.projectName || "Untitled");
 
   // State
-  const [code, setCode] = useState('print("Hello, PyTogether!")');
+  const [code, setCode] = useState('# Loading code...\n# If this message stays for more than 10 seconds, please refresh the page.');
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
@@ -65,6 +65,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [tempName, setTempName] = useState(projectName);
   const [latency, setLatency] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [editorCrashed, setEditorCrashed] = useState(false);
 
   // Refs
   const ydocRef = useRef(null);
@@ -88,6 +89,92 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const runner = usePyRunner();
   const voice = useVoiceChat(wsRef, myUserId);
   const canvas = useSharedCanvas(ydocRef, isConnected);
+
+  // Global error boundary for CodeMirror crashes
+  useEffect(() => {
+    const handleError = (event) => {
+      const errorMsg = event.error?.message || event.message || '';
+      const errorStack = event.error?.stack || '';
+      
+      // Check if it's a CodeMirror/Y.js related crash
+      if (errorMsg.includes('RangeError') || 
+          errorMsg.includes('Invalid position') || 
+          errorMsg.includes('yCollab') ||
+          errorMsg.includes('awareness') ||
+          errorStack.includes('y-codemirror') ||
+          errorStack.includes('YRemoteSelectionsPluginValue') ||
+          errorStack.includes('PluginInstance') ||
+          errorMsg.toLowerCase().includes('codemirror')) {
+        console.error("CodeMirror plugin crashed:", event.error || event.message);
+        event.preventDefault();
+        setEditorCrashed(true);
+      }
+    };
+
+    const handleRejection = (event) => {
+      handleError({ error: event.reason, message: event.reason?.message });
+    };
+
+    window.addEventListener('error', handleError, true); // Use capture phase
+    window.addEventListener('unhandledrejection', handleRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
+  // Active monitoring - check if yCollab plugin is responding
+  useEffect(() => {
+    if (!isConnected || !editorViewRef.current || !ytextRef.current || !awarenessRef.current) return;
+
+    let lastYtextLength = ytextRef.current.length;
+    let lastCheckFailed = false;
+    let emptyCheckCount = 0;
+
+    const healthCheck = setInterval(() => {
+      if (!editorViewRef.current || !ytextRef.current || editorCrashed) return;
+
+      try {
+        const currentLength = ytextRef.current.length;
+        
+        const editorText = editorViewRef.current.state.doc.toString();
+        const ytextContent = ytextRef.current.toString();
+        
+        // If editor is stuck showing empty/loading message
+        if (editorText.includes('# Loading code...') || editorText === '' || currentLength === 0) {
+          emptyCheckCount++;
+          if (emptyCheckCount > 5) {
+            console.error("Editor stuck in loading state - likely crashed");
+            setEditorCrashed(true);
+          }
+        } else {
+          emptyCheckCount = 0; // Reset if we see real content
+        }
+        
+        if (editorText !== ytextContent && currentLength === lastYtextLength && currentLength > 0) {
+          if (lastCheckFailed) {
+            console.error("CodeMirror yCollab plugin not syncing - detected silent failure");
+            setEditorCrashed(true);
+          } else {
+            lastCheckFailed = true;
+          }
+        } else {
+          lastCheckFailed = false;
+        }
+        
+        lastYtextLength = currentLength;
+
+        // Try a tiny dispatch to test if plugin is responsive
+        editorViewRef.current.dispatch({ effects: [] });
+      } catch (e) {
+        console.error("Health check detected editor crash:", e);
+        setEditorCrashed(true);
+      }
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(healthCheck);
+  }, [isConnected, editorCrashed]);
 
   // WEBSOCKET & YJS SETUP
   useEffect(() => {
@@ -132,33 +219,96 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     const observer = () => setCode(ytext.toString());
     ytext.observe(observer);
 
+    console.log("ydoc initialized:", ytext.toString());
+
     // WebSocket Handlers
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
       ws.send(JSON.stringify({ type: 'request_sync' }));
+
+      // FAKE UPDATE TRIGGER
+      setTimeout(() => {
+      if (!ydocRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+      try {
+        const dummyUpdate = Y.encodeStateAsUpdate(ydocRef.current); // encode full doc as update
+        const updateB64 = btoa(String.fromCharCode(...dummyUpdate));
+        wsRef.current.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
+        console.log("Sent fake Yjs update to trigger editor reload");
+      } catch (e) {
+        console.error("Failed to send fake update", e);
+      }
+    }, 5000); // small delay to make sure doc is initialized
     };
+
+    let isDocInitialized = false;
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
         switch (data.type) {
           case 'update':
-            // Document update (incremental)
-            const update = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
-            Y.applyUpdate(ydoc, update, 'server');
+            if (!isDocInitialized) break;
+            try {
+              const update = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
+              Y.applyUpdate(ydoc, update, 'server');
+              
+              // After each update, verify editor is still synced
+              setTimeout(() => {
+                if (editorViewRef.current && ytextRef.current) {
+                  const ytextContent = ytextRef.current.toString();
+                  const editorContent = editorViewRef.current.state.doc.toString();
+                  
+                  if (ytextContent.length > 0 && editorContent === '') {
+                    console.error("Editor crashed: Y.js updated but editor is empty");
+                    setEditorCrashed(true);
+                  } else if (ytextContent.length > editorContent.length + 50) {
+                    console.error("Editor crashed: Y.js has significantly more content");
+                    setEditorCrashed(true);
+                  }
+                }
+              }, 1000);
+            } catch(e) { console.error("Failed to apply Yjs update", e); }
             break;
 
           case 'sync':
             // Full document sync
             const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
             Y.applyUpdate(ydoc, stateBytes, 'server');
+            //console.log("ydoc made:", ytext.toString());
+            isDocInitialized = true;
+            
+            // Check if editor crashed by comparing ytext to actual editor
+            setTimeout(() => {
+              if (editorViewRef.current && ytextRef.current) {
+                const ytextContent = ytextRef.current.toString();
+                const editorContent = editorViewRef.current.state.doc.toString();
+                
+                if (ytextContent.length > 0 && (editorContent === '' || editorContent.includes('# Loading code...'))) {
+                  console.error("Editor crashed: Y.js has content but editor is empty/loading");
+                  setEditorCrashed(true);
+                } else if (ytextContent.length > editorContent.length + 50) {
+                  console.error("Editor crashed: Y.js has more content than editor");
+                  setEditorCrashed(true);
+                }
+              }
+            }, 3000);
             break;
             
           case 'awareness':
-            const awarenessUpdate = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
-            applyAwarenessUpdate(awareness, awarenessUpdate);
+            setTimeout(() => {
+            if (!isDocInitialized || !ytext.toString()) return;
+            try {
+              if (ytextRef.current.length > 10) {
+                const awarenessUpdate = Uint8Array.from(atob(data.update_b64), c => c.charCodeAt(0));
+                applyAwarenessUpdate(awarenessRef.current, awarenessUpdate);
+              } else {
+                console.warn("Skipping awareness update: document empty");
+              }
+            } catch (e) {
+              console.error("Failed to apply awareness update", e);
+            }}, 400);
             break;
           
           case 'remove_awareness':
@@ -174,12 +324,15 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             break;
 
           case 'initial':
+            console.log("INITIAL")
             // Initial content from db
+            console.log('Received initial content from server');
             ydoc.transact(() => {
               ytext.delete(0, ytext.length);
               ytext.insert(0, data.content || '');
             }, 'server'); 
             codeUndoManager.clear();
+            isDocInitialized = true;
             break;
             
           case 'connection':
@@ -279,7 +432,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       codeUndoManager.destroy();
       awareness.destroy();
     };
-  }, [groupId, projectId, shareToken]); // Added shareToken dependency
+  }, [groupId, projectId]);
+
 
   // ACTIONS
   // Undo/Redo (Global)
@@ -381,62 +535,103 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   const editorSlot = (
     <div ref={canvas.containerRef} className="h-full relative">
-        {isConnected && ytextRef.current && awarenessRef.current ? (
-          <>
-            <CodeMirror
-                //value={code} 
-                height="100%"
-                className="h-full text-sm"
-                theme={oneDark}
-                extensions={[
-                    python(),
-                    yCollab(ytextRef.current, awarenessRef.current, { undoManager: codeUndoManagerRef.current }),
-                    errorLineField
-                ]}
-                onChange={(value) => {
-                    if (!ytextRef.current && !isConnected) setCode(value);
-                }}
-                onCreateEditor={(view) => { editorViewRef.current = view; }}
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: true,
-                  dropCursor: false,
-                  allowMultipleSelections: false,
-                  indentOnInput: true,
-                  bracketMatching: true,
-                  closeBrackets: true,
-                  autocompletion: true,
-                  highlightSelectionMatches: true,
-                  searchKeymap: true,
-                }}
-            />
-            <canvas 
-                ref={canvas.canvasRef}
-                className="absolute top-0 left-0 z-10"
-                style={{ 
-                  pointerEvents: canvas.drawingMode !== 'none' ? 'auto' : 'none',
-                  cursor: canvas.drawingMode !== 'none' ? 'crosshair' : 'default' 
-                }}
-                onMouseDown={canvas.handlers.onMouseDown}
-                onMouseMove={canvas.handlers.onMouseMove}
-                onMouseUp={canvas.handlers.onMouseUp}
-                onMouseLeave={canvas.handlers.onMouseLeave}
-            />
-          </>
-        ) : (
-           <div className="flex-1 flex items-center justify-center bg-gray-900 h-full">
-              <div className="flex flex-col items-center space-y-4">
-                 <div className="relative">
-                    <div className="w-16 h-16 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center"><Wifi className="h-6 w-6 text-blue-500 animate-pulse" /></div>
-                 </div>
-                 <div className="text-center">
-                    <p className="text-gray-300 font-medium">Connecting to '{projectName}'...</p>
-                    <p className="text-gray-500 text-sm mt-1">Establishing secure connection</p>
-                 </div>
-              </div>
-           </div>
-        )}
+      {editorCrashed ? (
+        <div className="flex-1 flex items-center justify-center bg-gray-900 h-full">
+          <div className="flex flex-col items-center space-y-4 p-8 bg-gray-800 rounded-lg max-w-md">
+            <div className="text-red-500 text-6xl">⚠️</div>
+            <div className="text-center">
+              <p className="text-red-400 font-bold text-xl mb-2">Editor Crashed</p>
+              <p className="text-gray-300 mb-4">
+                The code editor encountered a sync error. Please refresh and connect again.
+              </p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : isConnected && ytextRef.current && awarenessRef.current ? (
+        <>
+          <CodeMirror
+            height="100%"
+            className="h-full text-sm"
+            theme={oneDark}
+            extensions={[
+              python(),
+              yCollab(ytextRef.current, awarenessRef.current, { undoManager: codeUndoManagerRef.current }),
+              errorLineField
+            ]}
+            onChange={(value) => {
+              if (!ytextRef.current && !isConnected) setCode(value);
+            }}
+            onCreateEditor={(view) => {
+              // Wrap dispatch IMMEDIATELY before anything else
+              const origDispatch = view.dispatch.bind(view);
+              view.dispatch = (tr) => {
+                try {
+                  origDispatch(tr);
+                } catch (e) {
+                  console.error("CodeMirror plugin crashed during dispatch", e);
+                  // Use a ref to trigger state update outside of React's render cycle
+                  setTimeout(() => setEditorCrashed(true), 0);
+                  throw e; // Re-throw so error handler catches it too
+                }
+              };
+
+              editorViewRef.current = view;
+
+              setTimeout(() => {
+                try {
+                  view.dispatch({ changes: { from: 0, to: 0, insert: "" } });
+                } catch (e) {
+                  console.error("CodeMirror initial dispatch crashed", e);
+                  setEditorCrashed(true);
+                }
+              }, 1000);
+            }}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              dropCursor: false,
+              allowMultipleSelections: false,
+              indentOnInput: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: true,
+              highlightSelectionMatches: true,
+              searchKeymap: true,
+            }}
+          />
+          <canvas 
+            ref={canvas.canvasRef}
+            className="absolute top-0 left-0 z-10"
+            style={{ 
+              pointerEvents: canvas.drawingMode !== 'none' ? 'auto' : 'none',
+              cursor: canvas.drawingMode !== 'none' ? 'crosshair' : 'default' 
+            }}
+            onMouseDown={canvas.handlers.onMouseDown}
+            onMouseMove={canvas.handlers.onMouseMove}
+            onMouseUp={canvas.handlers.onMouseUp}
+            onMouseLeave={canvas.handlers.onMouseLeave}
+          />
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center bg-gray-900 h-full">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center"><Wifi className="h-6 w-6 text-blue-500 animate-pulse" /></div>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-300 font-medium">Connecting to '{projectName}'...</p>
+              <p className="text-gray-500 text-sm mt-1">Establishing secure connection</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

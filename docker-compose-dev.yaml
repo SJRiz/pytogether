@@ -1,5 +1,5 @@
 # docker compose -f docker-compose-dev.yaml up -d
-
+# python manage.py runserver 0.0.0.0:8000
 services:
   # build the image all other services will use
   django-builder:

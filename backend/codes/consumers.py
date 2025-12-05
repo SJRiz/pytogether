@@ -32,7 +32,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             return
 
         is_member = await self._validate_membership(self.user, self.group_id, self.project_id)
-        
+        print(self.group_id, self.project_id, self.user.email, "is_member:", is_member)
         if not is_member:
 
             query_string = self.scope['query_string'].decode()
