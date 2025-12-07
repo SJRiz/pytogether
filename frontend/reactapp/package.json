@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node generate-version.js && vite",
+    "build": "node generate-version.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "docs:dev": "vitepress dev docs",
