@@ -751,6 +751,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             consoleContent={consoleSlot}
             onClearConsole={runner.clearConsole}
             chatContent={chatSlot}
+            chatMessageCount={chatMessages.length}
             chatInputContent={chatInputSlot}
             plotContent={runner.plotSrc ? <img src={runner.plotSrc} alt="Plot" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: 'white' }} /> : null}
             inputContent={inputSlot}

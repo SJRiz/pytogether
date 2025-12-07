@@ -23,6 +23,7 @@ export default function CodeLayout({
   onStop,
   onClearConsole,
   connectedUsers = [],
+  chatMessageCount = 0,
   
   // Download/Menu
   onDownloadOption
@@ -32,10 +33,14 @@ export default function CodeLayout({
   const [showChat, setShowChat] = useState(false);
   const [showPlot, setShowPlot] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   
   const downloadMenuRef = useRef(null);
   const consoleScrollRef = useRef(null);
   const chatScrollRef = useRef(null);
+  const inputContainerRef = useRef(null);
+
+  const prevMessageCount = useRef(chatMessageCount);
 
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
@@ -54,7 +59,6 @@ export default function CodeLayout({
     return () => document.head.removeChild(style);
   }, []);
 
-  // --- AUTO SCROLL LOGIC ---
   useEffect(() => {
     if (consoleScrollRef.current) {
         consoleScrollRef.current.scrollTop = consoleScrollRef.current.scrollHeight;
@@ -62,7 +66,8 @@ export default function CodeLayout({
   }, [consoleContent]);
 
   useEffect(() => {
-    if (showChat && chatScrollRef.current) {
+    if (showChat) {
+        setHasUnread(false);
         setTimeout(() => {
             if (chatScrollRef.current) {
                 chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
@@ -70,6 +75,25 @@ export default function CodeLayout({
         }, 0);
     }
   }, [chatContent, showChat]);
+
+  useEffect(() => {
+    if (chatMessageCount > prevMessageCount.current) {
+        if (!showChat) {
+            setHasUnread(true);
+        }
+    }
+    // Update the ref to the current count for the next render
+    prevMessageCount.current = chatMessageCount;
+  }, [chatMessageCount, showChat]); 
+
+  useEffect(() => {
+    if (inputContent && inputContainerRef.current) {
+        const inputElement = inputContainerRef.current.querySelector('input');
+        if (inputElement) {
+            setTimeout(() => inputElement.focus(), 50);
+        }
+    }
+  }, [inputContent]);
 
   // Resize Logic
   const handleMouseDown = (e) => {
@@ -231,8 +255,11 @@ export default function CodeLayout({
                  {inputContent && <span className="text-xs text-blue-400 animate-pulse">Waiting for input...</span>}
               </div>
               <div className="flex items-center">
-                <button onClick={() => { setShowChat(!showChat); if(!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded ${showChat ? 'text-blue-400' : 'text-gray-400'}`}>
+                <button onClick={() => { setShowChat(!showChat); if(!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded relative ${showChat ? 'text-blue-400' : 'text-gray-400'}`}>
                   <MessageSquare className="h-4 w-4" />
+                  {hasUnread && !showChat && (
+                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border border-gray-800 transform translate-x-1/4 -translate-y-1/4"></span>
+                  )}
                 </button>
                 <button onClick={() => { setShowPlot(!showPlot); if(!showPlot) setShowChat(false); }} className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`}>
                    <Eye className="h-4 w-4" />
@@ -247,7 +274,7 @@ export default function CodeLayout({
                {consoleContent}
             </div>
 
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0" ref={inputContainerRef}>
                 {inputContent}
             </div>
 
@@ -269,11 +296,9 @@ export default function CodeLayout({
                     <div className="flex items-center space-x-2"><MessageSquare className="h-4 w-4 text-gray-400"/><h2 className="text-sm font-medium text-gray-300">Chat</h2></div>
                     <button onClick={() => setShowChat(false)} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400"/></button>
                  </div>
-                 {/* Scrollable Messages */}
                  <div ref={chatScrollRef} className="flex-1 p-3 overflow-y-auto bg-gray-900 text-sm space-y-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
                     {chatContent}
                  </div>
-                 {/* Fixed Input Area */}
                  <div className="flex-shrink-0">
                     {chatInputContent}
                  </div>
