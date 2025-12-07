@@ -22,12 +22,9 @@
 
 ----
 
-<p align="center">
-  <img src="docs/live.gif" alt="Demo" width="600">
-</p>
-<p align="center">
-  <img src="docs/drawinglive.gif" alt="Drawing Demo" width="600">
-</p>
+https://github.com/user-attachments/assets/ed8ba3c1-ceea-41bc-a879-c220acacf4e7
+
+https://github.com/user-attachments/assets/1dc7374b-c9db-4458-baeb-ad5821c553db
 
 ----
 
@@ -91,6 +88,7 @@ You may also adjust the settings in backend/backend/settings/dev.py
 - [GitHub](https://github.com/SJRiz)
   
 *Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
