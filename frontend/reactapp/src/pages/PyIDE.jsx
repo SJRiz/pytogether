@@ -85,6 +85,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // Get shareToken from location state (if joining via link)
   const shareToken = location.state?.shareToken;
 
+  // Update browser title to match project name
+  useEffect(() => {
+    document.title = `${projectName} - PyTogether`;
+    return () => {
+      document.title = "PyTogether"; 
+    };
+  }, [projectName]);
+
   // CUSTOM HOOKS
   const runner = usePyRunner();
   const voice = useVoiceChat(wsRef, myUserId);
