@@ -31,6 +31,7 @@ export default function GroupsAndProjectsPage() {
     const [editGroupName, setEditGroupName] = useState("");
     const [accessCode, setAccessCode] = useState("");
     const [newProjectName, setNewProjectName] = useState("");
+    const [template, setTemplate] = useState("none");
     const [editProjectName, setEditProjectName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [loadingGroups, setIsLoadingGroups] = useState(false);
@@ -156,7 +157,8 @@ export default function GroupsAndProjectsPage() {
         setIsCreating(true);
         try {
         const res = await api.post(`/groups/${selectedGroup.id}/projects/create/`, { 
-            project_name: newProjectName.trim() 
+            project_name: newProjectName.trim(),
+            template: template
         });
         setProjects(prev => [...prev, res.data]);
         setNewProjectName("");
@@ -340,6 +342,8 @@ export default function GroupsAndProjectsPage() {
         isCreating={isCreating}
         onClose={() => setShowCreateProjectModal(false)}
         projectName={newProjectName}
+        template={template}
+        setTemplate={setTemplate}
         onProjectNameChange={(e) => setNewProjectName(e.target.value)}
         onCreate={createProject}
         />

@@ -48,17 +48,15 @@ def create_project(request, group_id):
     group = get_group_or_error(group_id)
     if not group:
         return Response({"error": "Invalid group_id"}, status=400)
+    
     if not check_membership_or_error(request.user, group):
         return Response({"error": "You are not in this group"}, status=403)
 
     serializer = ProjectCreateSerializer(data=request.data, context={"request": request})
+    
     if serializer.is_valid():
-        project = Project.objects.create(
-            project_name=serializer.validated_data["project_name"],
-            group=group
-        )
-        # Create initial code block
-        Code.objects.create(project=project)
+        project = serializer.save(group=group)
+        
         return Response(ProjectDetailSerializer(project).data, status=201)
 
     return Response(serializer.errors, status=400)

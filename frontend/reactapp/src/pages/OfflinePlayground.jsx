@@ -43,7 +43,7 @@ const DEFAULT_CODE = `# Welcome to the Offline Playground!
 # Data is saved to your browser's local storage.
 
 name = input("Whats your name? ")
-print(f"Hello, {name}!")`;
+print(f"Hello from PyTogether, {name}!")`;
 
 export default function OfflinePlayground() {
   const navigate = useNavigate();

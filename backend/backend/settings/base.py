@@ -217,3 +217,69 @@ USER_COLORS = [
   {"color": "#F9A825", "light": "#F9A82533"},
   {"color": "#00ACC1", "light": "#00ACC133"}
 ]
+
+# ------------------ CODE TEMPLATES ---------------------
+
+NONE_TEMPLATE = """name = input("Whats your name? ")
+print(f"Hello from PyTogether, {name}!")"""
+
+PYTEST_TEMPLATE = """# ----------------------------------------------
+# WRITE YOUR SOLUTION HERE
+# ----------------------------------------------
+
+def solve(n):
+  # TODO: Implement this
+  # return 1
+  pass
+
+
+
+
+# ==========================================
+# TEST CASES
+# ==========================================
+
+def test_basic():
+  assert solve(1) == 1
+
+
+
+
+# ==========================================
+# PYTEST RUNNER (do not edit)
+# ==========================================
+
+if __name__ == "__main__":
+  import pytest
+  import sys
+  import os
+  
+  module_name = os.path.splitext(os.path.basename(__file__))[0]
+  
+  if module_name in sys.modules:
+    del sys.modules[module_name]
+  
+  pytest.main(["-v", "-p", "no:cacheprovider", __file__])
+            """
+
+PLT_TEMPLATE = """import matplotlib.pyplot as plt
+import numpy as np
+
+# 1. Generate Data (Sine Wave)
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# 2. Setup Plot
+plt.figure(figsize=(10, 6))
+plt.plot(x, y, label='sin(x)', color='#4CAF50', linewidth=2)
+
+# 3. Styling
+plt.title("Test Plot: Sine Wave")
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude")
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+
+# 4. Render
+plt.show()
+"""
