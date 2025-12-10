@@ -38,7 +38,7 @@ def list_projects(request, group_id):
     if not check_membership_or_error(request.user, group):
         return Response({"error": "You are not in this group"}, status=403)
 
-    projects = Project.objects.filter(group=group)
+    projects = Project.objects.filter(group=group).select_related("code").defer("code__content")
     serializer = ProjectDetailSerializer(projects, many=True)
     return Response(serializer.data, status=200)
 
