@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { Send, Edit2, Check, X, Pencil, Eraser, Highlighter, RotateCcw, RotateCw, Trash2, Eye, EyeOff, FileDown } from "lucide-react";
+import Anser from "anser";
 
 // CodeMirror
 import CodeMirror from "@uiw/react-codemirror";
@@ -253,15 +254,29 @@ export default function OfflinePlayground() {
   );
 
   const consoleSlot = runner.consoleOutput.length === 0 ? (
-    <div className="text-gray-500 italic">Console output will appear here...</div>
+      <div className="text-gray-500 italic">Console output will appear here...</div>
   ) : (
-    runner.consoleOutput.map(e => (
-      <div key={e.id} className="flex items-start space-x-2 py-1">
-        <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">{e.timestamp.toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}</span>
-        <span className="text-xs mt-0.5">{e.type==='error'?'❌':e.type==='input'?'▶️':e.type==='system'?'⚙️':''}</span>
-        <pre className={`flex-1 whitespace-pre-wrap break-words ${e.type === 'error' ? 'text-red-400' : e.type === 'input' ? 'text-blue-400' : e.type === 'system' ? 'text-yellow-400' : 'text-white'}`}>{e.content}</pre>
-      </div>
-    ))
+      runner.consoleOutput.map(e => (
+        <div key={e.id} className="flex items-start space-x-2 py-1">
+            <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
+                {e.timestamp.toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}
+            </span>
+            <span className="text-xs mt-0.5">
+                {e.type==='error'?'❌':e.type==='input'?'▶️':e.type==='system'?'⚙️':''}
+            </span>
+            
+            <div className={`flex-1 whitespace-pre-wrap break-words font-mono text-sm 
+                ${e.type === 'error' ? 'text-red-400' :
+                  e.type === 'input' ? 'text-blue-400' : 
+                  e.type === 'system' ? 'text-yellow-400' : 
+                  'text-gray-100'}`}
+                 
+                 dangerouslySetInnerHTML={{
+                    __html: Anser.ansiToHtml(e.content) 
+                 }}
+            />
+        </div>
+      ))
   );
 
   const inputSlot = runner.waitingForInput && (

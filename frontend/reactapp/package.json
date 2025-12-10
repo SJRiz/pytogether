@@ -18,6 +18,7 @@
     "@codemirror/view": "^6.38.2",
     "@react-oauth/google": "^0.12.2",
     "@uiw/react-codemirror": "^4.25.2",
+    "anser": "^2.3.3",
     "axios": "^1.11.0",
     "buffer": "^6.0.3",
     "comlink": "^4.4.2",

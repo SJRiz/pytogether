@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { Send, Check, X, Edit2, Pencil, Highlighter, Eraser, Eye, EyeOff, Trash2, Phone, PhoneOff, Mic, MicOff, Wifi, Share2, RotateCcw, RotateCw } from "lucide-react";
+import Anser from "anser";
 
 // CodeMirror
 import CodeMirror from "@uiw/react-codemirror";
@@ -648,9 +649,23 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   ) : (
       runner.consoleOutput.map(e => (
         <div key={e.id} className="flex items-start space-x-2 py-1">
-            <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">{e.timestamp.toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}</span>
-            <span className="text-xs mt-0.5">{e.type==='error'?'❌':e.type==='input'?'▶️':e.type==='system'?'⚙️':''}</span>
-            <pre className={`flex-1 whitespace-pre-wrap break-words ${e.type === 'error' ? 'text-red-400' : e.type === 'input' ? 'text-blue-400' : e.type === 'system' ? 'text-yellow-400' : 'text-white'}`}>{e.content}</pre>
+            <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
+                {e.timestamp.toLocaleTimeString([], {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'})}
+            </span>
+            <span className="text-xs mt-0.5">
+                {e.type==='error'?'❌':e.type==='input'?'▶️':e.type==='system'?'⚙️':''}
+            </span>
+            
+            <div className={`flex-1 whitespace-pre-wrap break-words font-mono text-sm 
+                ${e.type === 'error' ? 'text-red-400' :
+                  e.type === 'input' ? 'text-blue-400' : 
+                  e.type === 'system' ? 'text-yellow-400' : 
+                  'text-gray-100'}`}
+                 
+                 dangerouslySetInnerHTML={{
+                    __html: Anser.ansiToHtml(e.content) 
+                 }}
+            />
         </div>
       ))
   );

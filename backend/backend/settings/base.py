@@ -128,8 +128,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'user': '25/minute',
-        'anon': '10/minute',
+        'user': '100/minute',
+        'anon': '20/minute',
     }
 }
 
@@ -258,9 +258,8 @@ if __name__ == "__main__":
   
   if module_name in sys.modules:
     del sys.modules[module_name]
-  
-  pytest.main(["-v", "-p", "no:cacheprovider", __file__])
-            """
+
+  pytest.main(["-v", "-p", "no:cacheprovider", "--tb=short", "--color=yes", __file__])"""
 
 PLT_TEMPLATE = """import matplotlib.pyplot as plt
 import numpy as np
@@ -281,5 +280,4 @@ plt.grid(True, linestyle='--', alpha=0.7)
 plt.legend()
 
 # 4. Render
-plt.show()
-"""
+plt.show()"""

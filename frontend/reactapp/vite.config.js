@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa';
+import path from "path"
 
 // @vitejs/plugin-react
 
@@ -21,6 +22,16 @@ export default defineConfig({
       },
     }),
   ],
+
+  resolve: {
+    alias: {
+      "comlink": path.resolve(__dirname, "node_modules/comlink/dist/esm/comlink.mjs")
+    }
+  },
+
+  optimizeDeps: {
+    exclude: ['pyodide']
+  },
 
   worker: {
     format: 'es',
