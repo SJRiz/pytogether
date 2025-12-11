@@ -36,9 +36,7 @@ function App() {
           } 
         />
         
-        {/* Read-only Snippet Route */}
         <Route path="/snippet/:token" element={<OfflinePlayground />} />
-        {/* Shared Project Join Route */}
         <Route path="/join-shared/:token" 
           element={
             <ProtectedRoute>

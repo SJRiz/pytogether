@@ -151,7 +151,7 @@ export default function Login() {
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
               ) : (
                 <>
-                  <LogIn className="h-5 w-5 mr-2" /> Login
+                  <LogIn className="h-5 w-5 mr-2" /> Sign In
                 </>
               )}
             </button>
