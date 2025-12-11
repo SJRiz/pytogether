@@ -253,7 +253,6 @@ export default function GroupsAndProjectsPage() {
                         className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
                     >
                         <Coffee className="w-4 h-4" />
-                        <span className="hidden lg:inline">Support</span>
                     </a>
 
                     <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">

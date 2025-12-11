@@ -25,15 +25,16 @@ export const GroupsList = ({
         <div className="flex gap-3 pb-3 border-b-0 border-gray-700">
           <button 
             onClick={onCreateGroup}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-800 to-blue-800 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all duration-200 hover:shadow-blue-500/30 font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-700/100 hover:bg-blue-600 text-white rounded-xl transition-all duration-200 font-medium"
             title="Create Group"
           >
             <Plus className="h-4 w-4" />
             <span className="text-sm">Create</span>
           </button>
+          
           <button 
             onClick={onJoinGroup}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-800 to-green-800 text-white rounded-xl hover:from-green-700 hover:to-green-700 transition-all duration-200 hover:shadow-green-500/30 font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 font-medium"
             title="Join Group"
           >
             <Users className="h-4 w-4" />
@@ -45,7 +46,7 @@ export const GroupsList = ({
         <div className="pb-3 border-b border-gray-700">
             <button 
               onClick={() => navigate('/playground')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-800/50 hover:bg-gray-800 text-gray-300 hover:text-white rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-200 font-medium group"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700/10 hover:bg-gray-800 text-gray-300 hover:text-white rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-200 font-medium group"
               title="Go to Offline Playground"
             >
               <Code className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
