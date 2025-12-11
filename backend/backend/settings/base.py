@@ -229,8 +229,7 @@ PYTEST_TEMPLATE = """# ----------------------------------------------
 
 def solve(n):
   # TODO: Implement this
-  # return 1
-  pass
+  return 1
 
 
 
@@ -242,24 +241,24 @@ def solve(n):
 def test_basic():
   assert solve(1) == 1
 
+def test_basic2():
+  assert solve(2) == 2
 
 
+  
 
 # ==========================================
-# PYTEST RUNNER (do not edit)
+# PYTEST RUNNER (do not modify)
 # ==========================================
 
 if __name__ == "__main__":
-  import pytest
-  import sys
-  import os
+  import pytest, sys, os
   
   module_name = os.path.splitext(os.path.basename(__file__))[0]
-  
   if module_name in sys.modules:
     del sys.modules[module_name]
 
-  pytest.main(["-v", "-p", "no:cacheprovider", "--tb=short", "--color=yes", __file__])"""
+  pytest.main(["-s", "-v", "-p", "no:cacheprovider", "--tb=short", "--color=yes", __file__])"""
 
 PLT_TEMPLATE = """import matplotlib.pyplot as plt
 import numpy as np
