@@ -31,6 +31,13 @@ default_runner = PyodideRunner()
 try:
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
+    import colorama
+
+    def fake_init(*args, **kwargs):
+        # do absolutely nothing
+        return None
+
+    colorama.init = fake_init
 
     def custom_plt_show(*args, **kwargs):
         fig = plt.gcf()
@@ -148,6 +155,9 @@ const reloader = new PyodideFatalErrorReloader(async () => {
 
   console.log("Installing python_runner...");
   await micropip.install("python_runner");
+
+  console.log("Installing colorama...");
+  await micropip.install("colorama");
   
   console.log("Installing matplotlib...");
   await micropip.install("matplotlib");
