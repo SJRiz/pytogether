@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { Eye, EyeOff, LogIn, UserPlus, Info, Zap } from "lucide-react";
@@ -12,6 +12,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -28,7 +29,10 @@ export default function Login() {
 
       sessionStorage.setItem("access_token", res.data.access);
       localStorage.removeItem('previousProjectData');
-      navigate('/home');
+      
+      // Get the redirect parameter from URL, default to '/home'
+      const redirectTo = searchParams.get('redirect') || '/home';
+      navigate(redirectTo);
     } catch (err) {
       const data = err.response?.data || {};
       console.error(data);
