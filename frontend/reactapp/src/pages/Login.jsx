@@ -165,7 +165,14 @@ export default function Login() {
           {/* Secondary Actions */}
           <div className="flex gap-3 mt-5">
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => {
+                const redirect = searchParams.get('redirect');
+                if (redirect) {
+                  navigate(`/register?redirect=${encodeURIComponent(redirect)}`);
+                } else {
+                  navigate('/register');
+                }
+              }}
               disabled={isLoading}
               className="flex-1 bg-gray-700/40 text-gray-300 py-3 rounded-xl font-semibold hover:bg-gray-700/60 transition-all duration-300 flex items-center justify-center border border-gray-600/30 hover:border-gray-500/50"
             >

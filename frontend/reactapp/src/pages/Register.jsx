@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../../axiosConfig";
 import { Eye, EyeOff, UserPlus, ArrowLeft, LogIn } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,7 @@ export default function Register() {
   const [showPassword2, setShowPassword2] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -42,8 +43,9 @@ export default function Register() {
       sessionStorage.setItem("access_token", res.data.access);
       localStorage.removeItem('previousProjectData');
       
-      // Redirect user
-      navigate('/home');
+      // Get the redirect parameter from URL, default to '/home'
+      const redirectTo = searchParams.get('redirect') || '/home';
+      navigate(redirectTo);
     } catch (err) {
       console.error(err.response?.data || err.message);
       if (err.response?.data) {
@@ -53,6 +55,16 @@ export default function Register() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLoginRedirect = () => {
+    // Preserve redirect parameter when going to login
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
+    } else {
+      navigate('/login');
     }
   };
 
@@ -169,7 +181,7 @@ export default function Register() {
             <p className="text-gray-400 text-sm text-center">
               Already have an account?{" "}
               <button
-                onClick={() => navigate("/login")}
+                onClick={handleLoginRedirect}
                 className="text-blue-400 hover:text-blue-300 font-medium transition-colors flex items-center justify-center mx-auto mt-2"
               >
                 <LogIn className="h-4 w-4 mr-1" />
