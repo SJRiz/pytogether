@@ -318,6 +318,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         if cur: apply_update(ydoc, cur)
         apply_update(ydoc, update_bytes)
         new_bytes = Y.encode_state_as_update(ydoc)
+
+        if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
+            # Skip update if too large
+            print(f"Skipping update for project {project_id}: size {len(new_bytes)} exceeds {settings.MAX_MESSAGE_SIZE}")
+            return
+        
         await ASYNC_REDIS.set(key, new_bytes)
 
     async def _heartbeat_loop(self):

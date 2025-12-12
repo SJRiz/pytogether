@@ -4,6 +4,7 @@ import redis.asyncio as aioredis
 from y_py import YDoc, apply_update
 
 from django.db import transaction
+from django.conf import settings
 from projects.models import Project
 from .models import Code
 
@@ -37,6 +38,13 @@ def persist_ydoc_to_db(project_id):
         apply_update(ydoc, bytes_val)
         t = ydoc.get_text("codetext")
         text = str(t)
+
+        # measure size in bytes
+        byte_size = len(text.encode("utf-8"))
+        print(f"YDoc size: {byte_size} bytes")
+        if byte_size > settings.MAX_MESSAGE_SIZE:
+            print(f"Skipping save: codetext too thicc ({byte_size} bytes)")
+            return
 
         # Make the db operation atomic just incase
         with transaction.atomic():
