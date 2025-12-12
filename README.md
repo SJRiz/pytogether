@@ -4,7 +4,9 @@
   <em>Google docs for Python. A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
   <br>
   <br>
-  <a href="https://pytogether.org">pytogether.org</a>
+  <a href="https://pytogether.org"><strong>🚀 Launch PyTogether (Live App)</strong></a>
+  <br>
+  <a href="https://pytogether.org">https://pytogether.org</a>
 </p>
 
 (https://pytogether.org/)
@@ -88,6 +90,7 @@ You may also adjust the settings in backend/backend/settings/dev.py
 - [GitHub](https://github.com/SJRiz)
   
 *Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
