@@ -40,7 +40,8 @@ export default function Register() {
 
       // Save access token in sessionStorage
       sessionStorage.setItem("access_token", res.data.access);
-
+      localStorage.removeItem('previousProjectData');
+      
       // Redirect user
       navigate('/home');
     } catch (err) {

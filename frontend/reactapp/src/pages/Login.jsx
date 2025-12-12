@@ -27,6 +27,7 @@ export default function Login() {
       });
 
       sessionStorage.setItem("access_token", res.data.access);
+      localStorage.removeItem('previousProjectData');
       navigate('/home');
     } catch (err) {
       const data = err.response?.data || {};

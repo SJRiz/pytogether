@@ -17,7 +17,23 @@ export function usePyRunner() {
   }, []);
 
   const addConsoleEntry = useCallback((content, type = 'output', timestamp = new Date()) => {
-    setConsoleOutput(prev => [...prev, { id: Date.now() + Math.random(), content, type, timestamp }]);
+    setConsoleOutput(prev => {
+        // handle Carriage Returns (\r) for overwriting lines (like tqdm progress bars)
+        if (content.startsWith('\r') && prev.length > 0) {
+             const lastEntry = prev[prev.length - 1];
+             if (lastEntry.type === type) {
+                 return [
+                     ...prev.slice(0, -1), 
+                     { ...lastEntry, content: content.replace(/^\r+/, ''), timestamp }
+                 ];
+             }
+        }
+    
+        return [
+            ...prev, 
+            { id: Date.now() + Math.random(), content: content.replace(/^\r+/, ''), type, timestamp }
+        ];
+    });
   }, []);
 
   // Initialize Pyodide
@@ -48,14 +64,30 @@ export function usePyRunner() {
           } else if (part.type === 'input_prompt') {
             addConsoleEntry(part.text, "system");
             setWaitingForInput(true);
-          } else if (part.type === 'internal_error') {
-            addConsoleEntry(part.text, "error");
-            const matches = [...part.text.matchAll(/File "\/main\.py", line (\d+)/g)];
-            if (matches.length > 0) {
-                const lastMatch = matches[matches.length - 1];
-                setErrorLine(parseInt(lastMatch[1]));
+          } 
+          // Handle Errors and STDERR
+          else if (part.type === 'internal_error' || part.type === 'stderr') {
+            // lol
+            if (part.text.includes("TqdmMonitorWarning")) return;
+
+            if (!part.text.trim()) return;
+            if (part.text.includes("SystemExit:")) return;
+
+            const isProgressBar = part.text.startsWith('\r');
+            const logType = isProgressBar ? 'output' : 'error';
+
+            addConsoleEntry(part.text, logType);
+            
+            // Only parse line numbers if it's actually an error
+            if (!isProgressBar) {
+                const matches = [...part.text.matchAll(/File "\/main\.py", line (\d+)/g)];
+                if (matches.length > 0) {
+                    const lastMatch = matches[matches.length - 1];
+                    setErrorLine(parseInt(lastMatch[1]));
+                }
             }
           } else {
+            // Standard Output
             addConsoleEntry(part.text, "output");
           }
         });
@@ -83,7 +115,15 @@ export function usePyRunner() {
       );
       if (!waitingForInput) addConsoleEntry(">>> Completed", "system");
     } catch (err) {
-      if (err.type !== "InterruptError") addConsoleEntry(err.toString(), "error");
+      const errStr = err.toString();
+      const isSystemExit = err.type === "SystemExit" || errStr.includes("SystemExit");
+      const isInterrupt = err.type === "InterruptError" || errStr.includes("KeyboardInterrupt");
+
+      if (isSystemExit) {
+        addConsoleEntry(">>> Program exited", "system");
+      } else if (!isInterrupt) {
+        addConsoleEntry(errStr, "error");
+      }
     } finally {
       if (!waitingForInput) setIsRunning(false);
     }
@@ -115,6 +155,7 @@ export function usePyRunner() {
     stopCode,
     submitInput,
     setConsoleOutput,
-    clearConsole
+    clearConsole,
+    setErrorLine
   };
 }
