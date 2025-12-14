@@ -1,15 +1,17 @@
 ﻿<p align="center">
   <img src="https://www.pytogether.org/pytog.png" alt="Logo" width="150"><br>
   <strong style="font-size: 24px;">PyTogether</strong><br>
-  <em>Google docs for Python. A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
+  <em>Google Docs for Python. A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
   <br>
   <br>
   <a href="https://pytogether.org"><strong>🚀 Launch PyTogether (Live App)</strong></a>
   <br>
-  <a href="https://pytogether.org">https://pytogether.org</a>
+  <a href="https://pytogether.org/playground">Try the Offline Demo</a>
 </p>
 
-(https://pytogether.org/)
+----
+
+PyTogether is a live web application. The primary product lives at https://pytogether.org. This repository contains the source code and developer documentation.
 
 ## Features
 - **Real-time Collaboration** - Edit Python code together instantly using Y.js.  
@@ -22,6 +24,8 @@
 - **Code Linting** - Integrated CodeMirror linting for cleaner, error-free code.  
 - **Smart Autosave** - Code is automatically saved every minute and on exit. 
 
+👉 Learn more on the official site: https://pytogether.org
+
 ----
 
 https://github.com/user-attachments/assets/ed8ba3c1-ceea-41bc-a879-c220acacf4e7
@@ -30,10 +34,10 @@ https://github.com/user-attachments/assets/1dc7374b-c9db-4458-baeb-ad5821c553db
 
 ----
 
-## About
+## About PyTogether
 When starting out in programming, many beginners find traditional IDEs overwhelming: full of plugins, extensions, configuration steps, paywalls, and complex UIs. PyTogether removes these barriers by offering a lightweight, distraction-free environment where you can focus on writing Python code right away.  
 
-The platform is designed for **learning, teaching, and pair programming**, making it ideal for classrooms, coding clubs, or quick collaborations.  
+The platform is designed for **learning, teaching, and pair programming**, making it ideal for classrooms, coding clubs, interviews, or quick collaborations.  
 
 > **Note:** PyTogether is intended for educational purposes and beginner use. It is *not* optimized for large-scale production development.
 
@@ -90,6 +94,7 @@ You may also adjust the settings in backend/backend/settings/dev.py
 - [GitHub](https://github.com/SJRiz)
   
 *Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
