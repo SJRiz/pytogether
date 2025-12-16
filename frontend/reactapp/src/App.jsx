@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import PyIDE from "./pages/PyIDE";
 import GroupsAndProjectsPage from './pages/GroupsProjects';
 import Login from "./pages/Login";
@@ -14,6 +15,23 @@ import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
 
 function App() {
   useUmamiHeartbeat();
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then((registration) => {
+          console.log('[App] SW Registered:', registration.scope);
+          
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+        })
+        .catch((err) => {
+          console.error('[App] SW Registration Failed:', err);
+        });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Routes>
