@@ -4,8 +4,8 @@ import { clientsClaim, skipWaiting } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+import { StaleWhileRevalidate, NetworkFirst } from 'workbox-strategies';
 
 addEventListener('fetch', serviceWorkerFetchListener());
 
@@ -16,17 +16,32 @@ precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
 registerRoute(
+  ({ url }) => url.pathname.startsWith('/groups/') || url.pathname.startsWith('/api/'),
+  new NetworkFirst({
+    cacheName: 'live-api-data',
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
+
+registerRoute(
   ({url}) => {
     const urlString = url.toString();
     return (
       urlString.startsWith('https://cdn.jsdelivr.net/') || // Pyodide
       url.pathname.startsWith('/ide/') ||
+      url.pathname.startsWith('/playground/') ||
+      url.pathname.startsWith('/snippet/') ||
       url.hostname.includes('localhost') ||
-      url.hostname.includes('127.0.0.1')
+      url.hostname.includes('127.0.0.1') ||
+      url.hostname.includes('pytogether.org')
     );
   },
   new StaleWhileRevalidate({
-    cacheName: 'everything',
+    cacheName: 'static-assets',
     plugins: [
       new ExpirationPlugin({maxEntries: 30}),
       new CacheableResponsePlugin({statuses: [0, 200]}),
