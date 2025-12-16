@@ -1,39 +1,29 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../axiosConfig";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function GoogleLoginButton() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const redirectUrl = searchParams.get('redirect');
-    if (redirectUrl) {
-      sessionStorage.setItem('login_redirect', redirectUrl);
-    }
-  }, [searchParams]);
-
   const handleSuccess = async (credentialResponse) => {
     setLoading(true);
     try {
+      // Get Google credential (JWT)
       const googleToken = credentialResponse.credential;
 
+      // Send token to Django backend
       const res = await api.post("/api/auth/google/", {
         access_token: googleToken,
       });
 
       sessionStorage.setItem("access_token", res.data.access);
       
-      const storedRedirect = sessionStorage.getItem('login_redirect');
-      const urlRedirect = searchParams.get('redirect');
-      const finalRedirect = storedRedirect || urlRedirect || '/home';
-      
-      // Clean up memory
-      sessionStorage.removeItem('login_redirect');
-      
-      navigate(finalRedirect);
+      // Get the redirect parameter from URL, default to '/home'
+      const redirectTo = searchParams.get('redirect') || '/home';
+      navigate(redirectTo);
     } catch (err) {
       console.error("Google login failed:", err);
       alert("Google login failed");
@@ -42,15 +32,19 @@ export default function GoogleLoginButton() {
     }
   };
 
+  const handleError = () => {
+    console.error("Google Login Failed");
+    alert("Google login failed");
+  };
+
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <div className="flex justify-center items-center">
-          <GoogleLogin 
-            onSuccess={handleSuccess} 
-            onError={() => alert("Login Failed")} 
-            ux_mode="redirect"
-            login_uri={window.location.origin + '/login'} 
-          />
+        {loading ? (
+          <span className="animate-spin border-4 border-white/50 border-t-white h-12 w-12 rounded-full"></span>
+        ) : (
+          <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+        )}
       </div>
     </GoogleOAuthProvider>
   );
