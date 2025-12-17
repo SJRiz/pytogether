@@ -315,8 +315,14 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         key = ydoc_key(project_id)
         cur = await ASYNC_REDIS.get(key)
         ydoc = YDoc()
-        if cur: apply_update(ydoc, cur)
-        apply_update(ydoc, update_bytes)
+
+        try:
+            if cur: apply_update(ydoc, cur)
+            apply_update(ydoc, update_bytes)
+        except Exception as e:
+            print(f"CRDT update failed for project {project_id}: {e}")
+            return  # skip applying this bad update
+        
         new_bytes = Y.encode_state_as_update(ydoc)
 
         if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
