@@ -203,7 +203,7 @@ export default function Login() {
                
                <Zap className="h-5 w-5 mr-2 text-cyan-400 group-hover:text-yellow-300 transition-colors" />
                <span className="bg-gradient-to-r from-teal-100 to-cyan-100 bg-clip-text text-transparent group-hover:text-white transition-all">
-                  Offline Playground
+                  Offline Playground (no account needed)
                </span>
              </button>
           </div>
