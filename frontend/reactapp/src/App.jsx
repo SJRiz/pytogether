@@ -32,6 +32,16 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    document.body.style.overscrollBehaviorY = 'none';
+    document.documentElement.style.overscrollBehaviorY = 'none';
+    
+    return () => {
+      document.body.style.overscrollBehaviorY = '';
+      document.documentElement.style.overscrollBehaviorY = '';
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Routes>
