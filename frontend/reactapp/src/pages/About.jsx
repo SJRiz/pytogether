@@ -3,7 +3,7 @@ import { LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, 
   Linkedin, Coffee, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-
+import GitHubButton from 'react-github-btn'
 import liveVideo from '../assets/live.webm';
 import liveDrawing from '../assets/drawinglive.webm';
 
@@ -91,23 +91,21 @@ export default function About() {
                         </h1>
                     </div>
                 </div>
-            <div className="flex items-center gap-4">
-              <a 
-                href="https://buymeacoffee.com/sjriz" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="hidden md:flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-colors text-sm font-medium mr-3"
+            <div className="flex items-center gap-6">
+              <a
+                href="https://www.buymeacoffee.com/SJRiz"
+                target="_blank"
+                rel="noreferrer"
               >
-                <Coffee className="w-4 h-4" />
-                <span>Donate</span>
+                <img
+                  src="/bmc.png"
+                  alt="Buy Me A Coffee"
+                  className="h-8 w-auto"
+                />
               </a>
-              <a href="https://github.com/SJRiz/pytogether" target="_blank" rel="noreferrer" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium mr-3">
-                <Github className="w-4 h-4" />
-                <span>Star on GitHub</span>
-              </a>
-              <button onClick={handleGetStarted} className="bg-white text-black hover:bg-slate-200 px-4 py-2 rounded-full text-sm font-bold transition-colors">
-                Sign In
-              </button>
+              <div className="scale-120 translate-y-[3px]">
+                <GitHubButton href="https://github.com/SJRiz/PyTogether" data-color-scheme="no-preference: light; light: light; dark: dark;" data-size="large" data-show-count="true" aria-label="Star SJRiz/PyTogether on GitHub">Star</GitHubButton>
+              </div>
             </div>
           </div>
         </nav>
@@ -400,7 +398,7 @@ export default function About() {
           <div className="relative max-w-3xl mx-auto bg-slate-900/80 backdrop-blur-xl border border-slate-700 p-12 rounded-3xl shadow-2xl">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Ready to start coding?</h2>
             <p className="text-slate-300 mb-8 text-lg">
-              Start using PyTogether today.
+              Join thousands of users today.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4">
