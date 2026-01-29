@@ -190,7 +190,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   useEffect(() => {
     if (!groupId || !projectId) {
       console.error('Missing groupId or projectId');
-      alert("Could not connect to the project. Redirecting back to groups.");
+      //alert("Could not connect to the project. Redirecting back to groups.");
       navigate("/home");
       return;
     }
