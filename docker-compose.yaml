@@ -5,6 +5,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    restart: unless-stopped
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
     env_file:
@@ -25,6 +26,7 @@ services:
   celery:
     image: pytogether-backend:latest
     command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every minute (and the task does not take longer than a minute yet)
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     depends_on:
@@ -35,6 +37,7 @@ services:
   celery-beat:
     image: pytogether-backend:latest
     command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     depends_on:
@@ -60,15 +63,23 @@ services:
 
   # Certbot for SSL
   certbot:
-    image: certbot/certbot
+    image: certbot/certbot:latest
+    container_name: pytogether-certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    depends_on:
+      - nginx
     entrypoint: >
-      /bin/sh -c "trap exit TERM;
+      /bin/sh -c "
+      trap exit TERM;
       while :; do
-        sleep 12h & wait $${!};
+        echo '=== Running certbot renew ===';
         certbot renew --webroot -w /var/www/certbot;
+        echo '=== Reloading Nginx ===';
+        docker exec pytogether-nginx-1 nginx -s reload;
+        echo '=== Sleeping 12h ===';
+        sleep 12h;
       done"
     networks:
       - backend
