@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_color_key, user_profile_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
 
@@ -71,17 +71,13 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_send(self.room, {"type": "users_changed"})
 
         # Send Initial YJS Sync
-        ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
-        if ydoc_bytes:
-            await self.send_json({
-                "type": "sync",
-                "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
-            })
-        else:
-            code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
-            text = code_obj.content if code_obj else ""
-            await self.send_json({"type": "initial", "content": text})
-
+        ydoc_bytes = await self._get_or_create_ydoc_bytes()
+        
+        await self.send_json({
+            "type": "sync",
+            "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
+        })
+        
         await self._send_voice_room_update()
         self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
@@ -109,7 +105,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             if self.user and self.user.is_authenticated:
                 await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
                 await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
-                await ASYNC_REDIS.delete(user_color_key(str(self.user.pk)))
                 
                 await self.channel_layer.group_send(self.room, {"type": "users_changed"})
                 await self.channel_layer.group_send(self.room, {"type": "voice_room_update"})
@@ -198,16 +193,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 })
 
             elif mtype == "request_sync":
-                ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
-                if ydoc_bytes:
-                    await self.send_json({
-                        "type": "sync",
-                        "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
-                    })
-                else:
-                    code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
-                    text = code_obj.content if code_obj else ""
-                    await self.send_json({"type": "initial", "content": text})
+                ydoc_bytes = await self._get_or_create_ydoc_bytes()
+                
+                await self.send_json({
+                    "type": "sync",
+                    "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
+                })
 
             elif mtype == "awareness":
                 update_b64 = msg.get("update_b64")
@@ -385,3 +376,30 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         except asyncio.CancelledError:
             return
+    
+    async def _get_or_create_ydoc_bytes(self):
+        """Fetches the YDoc from Redis, or initializes it securely from the DB."""
+        ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
+        
+        if ydoc_bytes:
+            return ydoc_bytes
+            
+        # Redis is empty. Fetch the raw text from the database
+        code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
+        text = code_obj.content if code_obj else ""
+        
+        # Initialize a brand new Yjs Document on the server
+        new_ydoc = YDoc()
+        ytext = new_ydoc.get_text('codetext')
+        
+        # Safely insert the database text into the server's CRDT
+        with new_ydoc.begin_transaction() as txn:
+            ytext.extend(txn, text)
+            
+        # Convert to binary update
+        new_bytes = Y.encode_state_as_update(new_ydoc)
+        
+        # Save to Redis immediately so it is permanently synchronized
+        await ASYNC_REDIS.set(ydoc_key(self.project_id), new_bytes)
+        
+        return new_bytes

@@ -68,6 +68,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [showShareModal, setShowShareModal] = useState(false);
   const [editorCrashed, setEditorCrashed] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
+  const [isSynced, setIsSynced] = useState(false);
 
   // Refs
   const ydocRef = useRef(null);
@@ -231,7 +232,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
-      ws.send(JSON.stringify({ type: 'request_sync' }));
+      //ws.send(JSON.stringify({ type: 'request_sync' }));
     };
 
     let isDocInitialized = false;
@@ -265,27 +266,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             break;
 
           case 'sync':
-            // Full document sync
             const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
             Y.applyUpdate(ydoc, stateBytes, 'server');
-            //console.log("ydoc made:", ytext.toString());
             isDocInitialized = true;
-            
-            // Check if editor crashed by comparing ytext to actual editor
-            setTimeout(() => {
-              if (editorViewRef.current && ytextRef.current) {
-                const ytextContent = ytextRef.current.toString();
-                const editorContent = editorViewRef.current.state.doc.toString();
-                
-                if (ytextContent.length > 0 && (editorContent === '' || editorContent.includes('# Loading code...'))) {
-                  console.error("Editor crashed: Y.js has content but editor is empty/loading");
-                  setEditorCrashed(true);
-                } else if (ytextContent.length > editorContent.length + 50) {
-                  console.error("Editor crashed: Y.js has more content than editor");
-                  setEditorCrashed(true);
-                }
-              }
-            }, 3000);
+            setIsSynced(true);
             break;
             
           case 'awareness':
@@ -313,18 +297,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 awareness.states = new Map([...awareness.getStates()].filter(([id]) => !clientsToRemove.includes(id)));
                 awareness.emit('change', [{ added: [], updated: [], removed: clientsToRemove }, 'remote']);
             }
-            break;
-
-          case 'initial':
-            console.log("INITIAL")
-            // Initial content from db
-            console.log('Received initial content from server');
-            ydoc.transact(() => {
-              ytext.delete(0, ytext.length);
-              ytext.insert(0, data.content || '');
-            }, 'server'); 
-            codeUndoManager.clear();
-            isDocInitialized = true;
             break;
             
           case 'connection':
@@ -578,11 +550,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             </div>
           </div>
         </div>
-      ) : isConnected && ytextRef.current && awarenessRef.current ? (
+      ) : isConnected && isSynced && ytextRef.current && awarenessRef.current ? (
         <>
           <CodeMirror
             height="100%"
             className="h-full text-sm"
+            value={ytextRef.current.toString()}
             theme={oneDark}
             extensions={[
               python(),
@@ -593,27 +566,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               if (!ytextRef.current && !isConnected) setCode(value);
             }}
             onCreateEditor={(view) => {
-              const origDispatch = view.dispatch.bind(view);
-              view.dispatch = (tr) => {
-                try {
-                  origDispatch(tr);
-                } catch (e) {
-                  console.error("CodeMirror plugin crashed during dispatch", e);
-                  setTimeout(() => setEditorCrashed(true), 0);
-                  throw e;
-                }
-              };
-
               editorViewRef.current = view;
-
-              setTimeout(() => {
-                try {
-                  view.dispatch({ changes: { from: 0, to: 0, insert: "" } });
-                } catch (e) {
-                  console.error("CodeMirror initial dispatch crashed", e);
-                  setEditorCrashed(true);
-                }
-              }, 1000);
             }}
             basicSetup={{
               lineNumbers: true,

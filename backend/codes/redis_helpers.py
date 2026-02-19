@@ -23,9 +23,6 @@ def active_set_key(project_id):
 def voice_room_key(project_id):
     return f"voice_room:{project_id}"       # voice chat participants
 
-def user_color_key(user_id):
-    return f"user_color:{user_id}"          # colors for each user
-
 def user_profile_key(user_id):
     return f"user_profile:{user_id}"        # email and color for that user
 
