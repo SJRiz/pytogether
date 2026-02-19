@@ -271,9 +271,9 @@ export default function OfflinePlayground() {
                   e.type === 'system' ? 'text-yellow-400' : 
                   'text-gray-100'}`}
                  
-                 dangerouslySetInnerHTML={{
-                    __html: Anser.ansiToHtml(e.content) 
-                 }}
+              dangerouslySetInnerHTML={{
+                  __html: Anser.ansiToHtml(e.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")) 
+              }}
             />
         </div>
       ))
