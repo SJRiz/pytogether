@@ -225,10 +225,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
-    // Sync 'code' state with Y.js
-    const observer = () => setCode(ytext.toString());
-    ytext.observe(observer);
-
     console.log("ydoc initialized:", ytext.toString());
 
     // WebSocket Handlers
@@ -236,20 +232,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       console.log('WebSocket connected');
       setIsConnected(true);
       ws.send(JSON.stringify({ type: 'request_sync' }));
-
-      // FAKE UPDATE TRIGGER
-      setTimeout(() => {
-      if (!ydocRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
-      try {
-        const dummyUpdate = Y.encodeStateAsUpdate(ydocRef.current); // encode full doc as update
-        const updateB64 = btoa(String.fromCharCode(...dummyUpdate));
-        wsRef.current.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
-        console.log("Sent fake Yjs update to trigger editor reload");
-      } catch (e) {
-        console.error("Failed to send fake update", e);
-      }
-    }, 5000); // small delay to make sure doc is initialized
     };
 
     let isDocInitialized = false;
@@ -436,6 +418,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     return () => {
       ydoc.off('update', updateHandler);
       awareness.off('update', throttledAwarenessHandler);
+      throttledAwarenessHandler.cancel();
       ydoc.destroy();
       ws.close();
       clearInterval(pinger);
@@ -610,16 +593,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               if (!ytextRef.current && !isConnected) setCode(value);
             }}
             onCreateEditor={(view) => {
-              // Wrap dispatch IMMEDIATELY before anything else
               const origDispatch = view.dispatch.bind(view);
               view.dispatch = (tr) => {
                 try {
                   origDispatch(tr);
                 } catch (e) {
                   console.error("CodeMirror plugin crashed during dispatch", e);
-                  // Use a ref to trigger state update outside of React's render cycle
                   setTimeout(() => setEditorCrashed(true), 0);
-                  throw e; // Re-throw so error handler catches it too
+                  throw e;
                 }
               };
 
@@ -735,7 +716,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 const displayName = msg.isMe ? 'You' : (displayEmail ? displayEmail.split('@')[0] : 'Anon');
 
                 return (
-                <div key={msg.id} className="flex flex-col space-y-1">
+                <div key={`${msg.timestamp.getTime()}-${msg.user_id || msg.userId}`} className="flex flex-col space-y-1">
                     <div className="flex items-baseline space-x-2">
                         <span className="text-xs font-semibold truncate max-w-[120px]" style={{color: msg.color}} title={displayEmail}>
                             {displayName}
