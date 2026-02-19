@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_color_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_color_key, user_profile_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
 
@@ -55,6 +55,17 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await ASYNC_REDIS.sadd(active_set_key(self.project_id), str(self.user.pk))
         await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         await ASYNC_REDIS.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
+
+        # Create the user profile in the redis cache if not exists
+        if not await ASYNC_REDIS.exists(user_profile_key(str(self.user.pk))):
+                color = random.choice(settings.USER_COLORS)
+                await ASYNC_REDIS.hset(user_profile_key(str(self.user.pk)), mapping={
+                    "email": self.user.email,
+                    "color": color["color"],
+                    "colorLight": color["light"]
+                })
+                # Set it to expire after 24 hours (86400 seconds)
+                await ASYNC_REDIS.expire(user_profile_key(str(self.user.pk)), 86400)
 
         # Notify others
         await self.channel_layer.group_send(self.room, {"type": "users_changed"})
@@ -143,24 +154,18 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
             for uid_bytes in active_user_ids:
                 uid = int(uid_bytes)
-                try:
-                    user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
-                    
-                    color_data = await ASYNC_REDIS.get(user_color_key(uid))
-                    if color_data:
-                        color = json.loads(color_data)
-                    else:
-                        color = random.choice(settings.USER_COLORS)
-                        await ASYNC_REDIS.set(user_color_key(uid), json.dumps(color))
+                
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(str(uid)))
+                
+                if not user_data:
+                    continue 
 
-                    active_users.append({
-                        "id": str(user_obj.pk),
-                        "email": user_obj.email,
-                        "color": color["color"],
-                        "colorLight": color["light"]
-                    })
-                except User.DoesNotExist:
-                    continue
+                active_users.append({
+                    "id": str(uid),
+                    "email": user_data[b'email'].decode('utf-8'),
+                    "color": user_data[b'color'].decode('utf-8'),
+                    "colorLight": user_data[b'colorLight'].decode('utf-8')
+                })
 
             await self.send_json({"type": "connection", "users": active_users})
         except Exception as e:
@@ -217,16 +222,22 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 message = msg.get("message", "").strip()
                 if not message or len(message) > 1000: return
                 
-                user_obj = await database_sync_to_async(User.objects.get)(pk=self.user.pk)
-                color_data = await ASYNC_REDIS.get(f"user_color:{self.user.pk}")
-                color = json.loads(color_data) if color_data else {"color": "#30bced", "light": "#30bced33"}
+                # Fetch everything from the local cache instead of DB
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(str(self.user.pk)))
                 
+                if user_data:
+                    email = user_data[b'email'].decode('utf-8')
+                    color = user_data[b'color'].decode('utf-8')
+                else:
+                    email = "Unknown"
+                    color = "#30bced"
+
                 await self.channel_layer.group_send(self.room, {
                     "type": "broadcast.chat_message",
                     "message": message,
                     "user_id": str(self.user.pk),
-                    "user_email": user_obj.email,
-                    "color": color["color"],
+                    "user_email": email,
+                    "color": color,
                     "timestamp": asyncio.get_event_loop().time()
                 })
 
@@ -291,12 +302,14 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             voice_user_ids = await ASYNC_REDIS.smembers(voice_room_key(self.project_id))
             voice_users = []
             for uid_bytes in voice_user_ids:
-                uid = int(uid_bytes)
-                try:
-                    user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
-                    voice_users.append({"id": str(user_obj.pk), "email": user_obj.email})
-                except User.DoesNotExist:
-                    continue
+                uid = str(int(uid_bytes))
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(uid))
+                if user_data:
+                    voice_users.append({
+                        "id": uid, 
+                        "email": user_data[b'email'].decode('utf-8')
+                    })
+                    
             await self.send_json({"type": "voice_room_update", "participants": voice_users})
         except Exception as e:
             print(f"Error sending voice room update: {e}")

@@ -26,6 +26,9 @@ def voice_room_key(project_id):
 def user_color_key(user_id):
     return f"user_color:{user_id}"          # colors for each user
 
+def user_profile_key(user_id):
+    return f"user_profile:{user_id}"        # email and color for that user
+
 def persist_ydoc_to_db(project_id):
     """Saves the code to the database"""
     try:
