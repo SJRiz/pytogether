@@ -324,7 +324,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             async with ASYNC_REDIS.lock(lock_key, timeout=5, blocking_timeout=5):
                 cur = await ASYNC_REDIS.get(key)
                 ydoc = YDoc()
-                print("starting lock")
 
                 try:
                     # Apply base state
@@ -334,27 +333,13 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     apply_update(ydoc, update_bytes)
 
                 except Exception as e:
-                    print(f"CRITICAL: CRDT corrupted for project {project_id}: {e}.")
-                    
-                    # Fetch the last known good state from the database
-                    code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=project_id), "code", None))()
-                    text = code_obj.content if code_obj else ""
-
-                    # Rebuild a completely clean YDoc from the database text
-                    clean_ydoc = YDoc()
-                    clean_text = clean_ydoc.get_text('codetext')
-                    clean_ydoc.transact(lambda: clean_text.insert(0, text))
-                    clean_bytes = Y.encode_state_as_update(clean_ydoc)
-
-                    # Overwrite corrupted Redis state
-                    await ASYNC_REDIS.set(key, clean_bytes)
-
-                    # Boot everyone in the room
+                    print(f"Poison update rejected for project {project_id}: {e}")
+                    # Boot the offending user so they resync from the healthy Redis state
                     await self.channel_layer.group_send(
                         self.room,
                         {"type": "force_disconnect"}
                     )
-                    return # Halt processing of this bad update
+                    return
                 
                 new_bytes = Y.encode_state_as_update(ydoc)
 
@@ -364,7 +349,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Atomically save the perfectly merged state back to Redis
                 await ASYNC_REDIS.set(key, new_bytes)
-                print("lock complete")
         except Exception as e:
             print(f"Failed to acquire lock or write to Redis for project {project_id}: {e}")
 
