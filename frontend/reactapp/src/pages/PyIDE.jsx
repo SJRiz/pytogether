@@ -68,6 +68,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [showShareModal, setShowShareModal] = useState(false);
   const [editorCrashed, setEditorCrashed] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
+  const [isSynced, setIsSynced] = useState(false);
 
   // Refs
   const ydocRef = useRef(null);
@@ -225,31 +226,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
-    // Sync 'code' state with Y.js
-    const observer = () => setCode(ytext.toString());
-    ytext.observe(observer);
-
     console.log("ydoc initialized:", ytext.toString());
 
     // WebSocket Handlers
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
-      ws.send(JSON.stringify({ type: 'request_sync' }));
-
-      // FAKE UPDATE TRIGGER
-      setTimeout(() => {
-      if (!ydocRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
-      try {
-        const dummyUpdate = Y.encodeStateAsUpdate(ydocRef.current); // encode full doc as update
-        const updateB64 = btoa(String.fromCharCode(...dummyUpdate));
-        wsRef.current.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
-        console.log("Sent fake Yjs update to trigger editor reload");
-      } catch (e) {
-        console.error("Failed to send fake update", e);
-      }
-    }, 5000); // small delay to make sure doc is initialized
+      //ws.send(JSON.stringify({ type: 'request_sync' }));
     };
 
     let isDocInitialized = false;
@@ -283,27 +266,10 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             break;
 
           case 'sync':
-            // Full document sync
             const stateBytes = Uint8Array.from(atob(data.ydoc_b64), c => c.charCodeAt(0));
             Y.applyUpdate(ydoc, stateBytes, 'server');
-            //console.log("ydoc made:", ytext.toString());
             isDocInitialized = true;
-            
-            // Check if editor crashed by comparing ytext to actual editor
-            setTimeout(() => {
-              if (editorViewRef.current && ytextRef.current) {
-                const ytextContent = ytextRef.current.toString();
-                const editorContent = editorViewRef.current.state.doc.toString();
-                
-                if (ytextContent.length > 0 && (editorContent === '' || editorContent.includes('# Loading code...'))) {
-                  console.error("Editor crashed: Y.js has content but editor is empty/loading");
-                  setEditorCrashed(true);
-                } else if (ytextContent.length > editorContent.length + 50) {
-                  console.error("Editor crashed: Y.js has more content than editor");
-                  setEditorCrashed(true);
-                }
-              }
-            }, 3000);
+            setIsSynced(true);
             break;
             
           case 'awareness':
@@ -331,18 +297,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 awareness.states = new Map([...awareness.getStates()].filter(([id]) => !clientsToRemove.includes(id)));
                 awareness.emit('change', [{ added: [], updated: [], removed: clientsToRemove }, 'remote']);
             }
-            break;
-
-          case 'initial':
-            console.log("INITIAL")
-            // Initial content from db
-            console.log('Received initial content from server');
-            ydoc.transact(() => {
-              ytext.delete(0, ytext.length);
-              ytext.insert(0, data.content || '');
-            }, 'server'); 
-            codeUndoManager.clear();
-            isDocInitialized = true;
             break;
             
           case 'connection':
@@ -436,6 +390,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     return () => {
       ydoc.off('update', updateHandler);
       awareness.off('update', throttledAwarenessHandler);
+      throttledAwarenessHandler.cancel();
       ydoc.destroy();
       ws.close();
       clearInterval(pinger);
@@ -595,11 +550,12 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             </div>
           </div>
         </div>
-      ) : isConnected && ytextRef.current && awarenessRef.current ? (
+      ) : isConnected && isSynced && ytextRef.current && awarenessRef.current ? (
         <>
           <CodeMirror
             height="100%"
             className="h-full text-sm"
+            value={ytextRef.current.toString()}
             theme={oneDark}
             extensions={[
               python(),
@@ -610,29 +566,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               if (!ytextRef.current && !isConnected) setCode(value);
             }}
             onCreateEditor={(view) => {
-              // Wrap dispatch IMMEDIATELY before anything else
-              const origDispatch = view.dispatch.bind(view);
-              view.dispatch = (tr) => {
-                try {
-                  origDispatch(tr);
-                } catch (e) {
-                  console.error("CodeMirror plugin crashed during dispatch", e);
-                  // Use a ref to trigger state update outside of React's render cycle
-                  setTimeout(() => setEditorCrashed(true), 0);
-                  throw e; // Re-throw so error handler catches it too
-                }
-              };
-
               editorViewRef.current = view;
-
-              setTimeout(() => {
-                try {
-                  view.dispatch({ changes: { from: 0, to: 0, insert: "" } });
-                } catch (e) {
-                  console.error("CodeMirror initial dispatch crashed", e);
-                  setEditorCrashed(true);
-                }
-              }, 1000);
             }}
             basicSetup={{
               lineNumbers: true,
@@ -735,7 +669,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                 const displayName = msg.isMe ? 'You' : (displayEmail ? displayEmail.split('@')[0] : 'Anon');
 
                 return (
-                <div key={msg.id} className="flex flex-col space-y-1">
+                <div key={`${msg.timestamp.getTime()}-${msg.user_id || msg.userId}`} className="flex flex-col space-y-1">
                     <div className="flex items-baseline space-x-2">
                         <span className="text-xs font-semibold truncate max-w-[120px]" style={{color: msg.color}} title={displayEmail}>
                             {displayName}

@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_color_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
 
@@ -56,21 +56,28 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         await ASYNC_REDIS.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
 
+        # Create the user profile in the redis cache if not exists
+        if not await ASYNC_REDIS.exists(user_profile_key(str(self.user.pk))):
+                color = random.choice(settings.USER_COLORS)
+                await ASYNC_REDIS.hset(user_profile_key(str(self.user.pk)), mapping={
+                    "email": self.user.email,
+                    "color": color["color"],
+                    "colorLight": color["light"]
+                })
+                # Set it to expire after 24 hours (86400 seconds)
+                await ASYNC_REDIS.expire(user_profile_key(str(self.user.pk)), 86400)
+
         # Notify others
         await self.channel_layer.group_send(self.room, {"type": "users_changed"})
 
         # Send Initial YJS Sync
-        ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
-        if ydoc_bytes:
-            await self.send_json({
-                "type": "sync",
-                "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
-            })
-        else:
-            code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
-            text = code_obj.content if code_obj else ""
-            await self.send_json({"type": "initial", "content": text})
-
+        ydoc_bytes = await self._get_or_create_ydoc_bytes()
+        
+        await self.send_json({
+            "type": "sync",
+            "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
+        })
+        
         await self._send_voice_room_update()
         self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
@@ -98,7 +105,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             if self.user and self.user.is_authenticated:
                 await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
                 await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
-                await ASYNC_REDIS.delete(user_color_key(str(self.user.pk)))
                 
                 await self.channel_layer.group_send(self.room, {"type": "users_changed"})
                 await self.channel_layer.group_send(self.room, {"type": "voice_room_update"})
@@ -143,24 +149,18 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
             for uid_bytes in active_user_ids:
                 uid = int(uid_bytes)
-                try:
-                    user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
-                    
-                    color_data = await ASYNC_REDIS.get(user_color_key(uid))
-                    if color_data:
-                        color = json.loads(color_data)
-                    else:
-                        color = random.choice(settings.USER_COLORS)
-                        await ASYNC_REDIS.set(user_color_key(uid), json.dumps(color))
+                
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(str(uid)))
+                
+                if not user_data:
+                    continue 
 
-                    active_users.append({
-                        "id": str(user_obj.pk),
-                        "email": user_obj.email,
-                        "color": color["color"],
-                        "colorLight": color["light"]
-                    })
-                except User.DoesNotExist:
-                    continue
+                active_users.append({
+                    "id": str(uid),
+                    "email": user_data[b'email'].decode('utf-8'),
+                    "color": user_data[b'color'].decode('utf-8'),
+                    "colorLight": user_data[b'colorLight'].decode('utf-8')
+                })
 
             await self.send_json({"type": "connection", "users": active_users})
         except Exception as e:
@@ -193,16 +193,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 })
 
             elif mtype == "request_sync":
-                ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
-                if ydoc_bytes:
-                    await self.send_json({
-                        "type": "sync",
-                        "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
-                    })
-                else:
-                    code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
-                    text = code_obj.content if code_obj else ""
-                    await self.send_json({"type": "initial", "content": text})
+                ydoc_bytes = await self._get_or_create_ydoc_bytes()
+                
+                await self.send_json({
+                    "type": "sync",
+                    "ydoc_b64": base64.b64encode(ydoc_bytes).decode()
+                })
 
             elif mtype == "awareness":
                 update_b64 = msg.get("update_b64")
@@ -217,16 +213,22 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 message = msg.get("message", "").strip()
                 if not message or len(message) > 1000: return
                 
-                user_obj = await database_sync_to_async(User.objects.get)(pk=self.user.pk)
-                color_data = await ASYNC_REDIS.get(f"user_color:{self.user.pk}")
-                color = json.loads(color_data) if color_data else {"color": "#30bced", "light": "#30bced33"}
+                # Fetch everything from the local cache instead of DB
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(str(self.user.pk)))
                 
+                if user_data:
+                    email = user_data[b'email'].decode('utf-8')
+                    color = user_data[b'color'].decode('utf-8')
+                else:
+                    email = "Unknown"
+                    color = "#30bced"
+
                 await self.channel_layer.group_send(self.room, {
                     "type": "broadcast.chat_message",
                     "message": message,
                     "user_id": str(self.user.pk),
-                    "user_email": user_obj.email,
-                    "color": color["color"],
+                    "user_email": email,
+                    "color": color,
                     "timestamp": asyncio.get_event_loop().time()
                 })
 
@@ -291,12 +293,14 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             voice_user_ids = await ASYNC_REDIS.smembers(voice_room_key(self.project_id))
             voice_users = []
             for uid_bytes in voice_user_ids:
-                uid = int(uid_bytes)
-                try:
-                    user_obj = await database_sync_to_async(User.objects.get)(pk=uid)
-                    voice_users.append({"id": str(user_obj.pk), "email": user_obj.email})
-                except User.DoesNotExist:
-                    continue
+                uid = str(int(uid_bytes))
+                user_data = await ASYNC_REDIS.hgetall(user_profile_key(uid))
+                if user_data:
+                    voice_users.append({
+                        "id": uid, 
+                        "email": user_data[b'email'].decode('utf-8')
+                    })
+                    
             await self.send_json({"type": "voice_room_update", "participants": voice_users})
         except Exception as e:
             print(f"Error sending voice room update: {e}")
@@ -313,24 +317,40 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
     async def _apply_update_to_redis_ydoc(self, project_id, update_bytes: bytes):
         key = ydoc_key(project_id)
-        cur = await ASYNC_REDIS.get(key)
-        ydoc = YDoc()
+        lock_key = f"{key}:lock"
 
+        # Acquire a Redis lock specific to this project
         try:
-            if cur: apply_update(ydoc, cur)
-            apply_update(ydoc, update_bytes)
-        except Exception as e:
-            print(f"CRDT update failed for project {project_id}: {e}")
-            return  # skip applying this bad update
-        
-        new_bytes = Y.encode_state_as_update(ydoc)
+            async with ASYNC_REDIS.lock(lock_key, timeout=5, blocking_timeout=5):
+                cur = await ASYNC_REDIS.get(key)
+                ydoc = YDoc()
 
-        if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
-            # Skip update if too large
-            print(f"Skipping update for project {project_id}: size {len(new_bytes)} exceeds {settings.MAX_MESSAGE_SIZE}")
-            return
-        
-        await ASYNC_REDIS.set(key, new_bytes)
+                try:
+                    # Apply base state
+                    if cur: 
+                        apply_update(ydoc, cur)
+                    # Apply new delta
+                    apply_update(ydoc, update_bytes)
+
+                except Exception as e:
+                    print(f"Poison update rejected for project {project_id}: {e}")
+                    # Boot the offending user so they resync from the healthy Redis state
+                    await self.channel_layer.group_send(
+                        self.room,
+                        {"type": "force_disconnect"}
+                    )
+                    return
+                
+                new_bytes = Y.encode_state_as_update(ydoc)
+
+                if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
+                    print(f"Skipping update for project {project_id}: size exceeds limit")
+                    return
+                
+                # Atomically save the perfectly merged state back to Redis
+                await ASYNC_REDIS.set(key, new_bytes)
+        except Exception as e:
+            print(f"Failed to acquire lock or write to Redis for project {project_id}: {e}")
 
     async def _heartbeat_loop(self):
         try:
@@ -340,3 +360,30 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         except asyncio.CancelledError:
             return
+    
+    async def _get_or_create_ydoc_bytes(self):
+        """Fetches the YDoc from Redis, or initializes it securely from the DB."""
+        ydoc_bytes = await ASYNC_REDIS.get(ydoc_key(self.project_id))
+        
+        if ydoc_bytes:
+            return ydoc_bytes
+            
+        # Redis is empty. Fetch the raw text from the database
+        code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=self.project_id), "code", None))()
+        text = code_obj.content if code_obj else ""
+        
+        # Initialize a brand new Yjs Document on the server
+        new_ydoc = YDoc()
+        ytext = new_ydoc.get_text('codetext')
+        
+        # Safely insert the database text into the server's CRDT
+        with new_ydoc.begin_transaction() as txn:
+            ytext.extend(txn, text)
+            
+        # Convert to binary update
+        new_bytes = Y.encode_state_as_update(new_ydoc)
+        
+        # Save to Redis immediately so it is permanently synchronized
+        await ASYNC_REDIS.set(ydoc_key(self.project_id), new_bytes)
+        
+        return new_bytes

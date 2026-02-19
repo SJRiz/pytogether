@@ -23,11 +23,11 @@ def active_set_key(project_id):
 def voice_room_key(project_id):
     return f"voice_room:{project_id}"       # voice chat participants
 
-def user_color_key(user_id):
-    return f"user_color:{user_id}"          # colors for each user
+def user_profile_key(user_id):
+    return f"user_profile:{user_id}"        # email and color for that user
 
 def persist_ydoc_to_db(project_id):
-    """Saves the code to the database"""
+    """Saves the Yjs CRDT code from Redis to the PostgreSQL database."""
     try:
         # Django ORM is sync, so we need to use redis synchronously too
         bytes_val = SYNC_REDIS.get(ydoc_key(project_id))
@@ -39,31 +39,36 @@ def persist_ydoc_to_db(project_id):
         t = ydoc.get_text("codetext")
         text = str(t)
 
-        # measure size in bytes
+        # Measure size in bytes
         byte_size = len(text.encode("utf-8"))
         print(f"YDoc size: {byte_size} bytes")
         if byte_size > settings.MAX_MESSAGE_SIZE:
             print(f"Skipping save: codetext too thicc ({byte_size} bytes)")
             return
 
-        # Make the db operation atomic just incase
+        # Make the DB operation atomic to prevent race conditions
         with transaction.atomic():
             project = Project.objects.select_for_update().get(id=project_id)
             code, _ = Code.objects.get_or_create(project=project)
 
-            # Don't save if no changes made
-            if code.content == text:
-                return
-            code.content = text
-            code.save()
+            # Only execute a database write if changes were actually made
+            if code.content != text:
+                code.content = text
+                code.save()
+                print(f"Saved {len(text)} chars to DB")
+            else:
+                print("Skipped DB save: No changes detected")
 
-        print(f"Saved {len(text)} chars to DB")
+        # Let the document stay warm in RAM for 24 hours, then auto-delete.
+        # This prevents the memory leak without breaking active/returning sessions.
+        SYNC_REDIS.expire(ydoc_key(project_id), 86400)
 
     except Project.DoesNotExist:
-        # project removed; cleanup redis keys
+        # Project was permanently removed; do a hard cleanup of Redis keys
+        print(f"Project {project_id} not found. Cleaning up Redis keys.")
         SYNC_REDIS.delete(ydoc_key(project_id))
         SYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(project_id))
         SYNC_REDIS.delete(active_set_key(project_id))
 
     except Exception as e:
-        print(f"Error persisting YDoc to DB: {e}")
+        print(f"Error persisting YDoc to DB for project {project_id}: {e}")
