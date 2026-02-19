@@ -326,24 +326,56 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
     async def _apply_update_to_redis_ydoc(self, project_id, update_bytes: bytes):
         key = ydoc_key(project_id)
-        cur = await ASYNC_REDIS.get(key)
-        ydoc = YDoc()
+        lock_key = f"{key}:lock"
 
+        # Acquire a Redis lock specific to this project
         try:
-            if cur: apply_update(ydoc, cur)
-            apply_update(ydoc, update_bytes)
-        except Exception as e:
-            print(f"CRDT update failed for project {project_id}: {e}")
-            return  # skip applying this bad update
-        
-        new_bytes = Y.encode_state_as_update(ydoc)
+            async with ASYNC_REDIS.lock(lock_key, timeout=5, blocking_timeout=5):
+                cur = await ASYNC_REDIS.get(key)
+                ydoc = YDoc()
+                print("starting lock")
 
-        if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
-            # Skip update if too large
-            print(f"Skipping update for project {project_id}: size {len(new_bytes)} exceeds {settings.MAX_MESSAGE_SIZE}")
-            return
-        
-        await ASYNC_REDIS.set(key, new_bytes)
+                try:
+                    # Apply base state
+                    if cur: 
+                        apply_update(ydoc, cur)
+                    # Apply new delta
+                    apply_update(ydoc, update_bytes)
+
+                except Exception as e:
+                    print(f"CRITICAL: CRDT corrupted for project {project_id}: {e}.")
+                    
+                    # Fetch the last known good state from the database
+                    code_obj = await database_sync_to_async(lambda: getattr(Project.objects.get(id=project_id), "code", None))()
+                    text = code_obj.content if code_obj else ""
+
+                    # Rebuild a completely clean YDoc from the database text
+                    clean_ydoc = YDoc()
+                    clean_text = clean_ydoc.get_text('codetext')
+                    clean_ydoc.transact(lambda: clean_text.insert(0, text))
+                    clean_bytes = Y.encode_state_as_update(clean_ydoc)
+
+                    # Overwrite corrupted Redis state
+                    await ASYNC_REDIS.set(key, clean_bytes)
+
+                    # Boot everyone in the room
+                    await self.channel_layer.group_send(
+                        self.room,
+                        {"type": "force_disconnect"}
+                    )
+                    return # Halt processing of this bad update
+                
+                new_bytes = Y.encode_state_as_update(ydoc)
+
+                if len(new_bytes) > settings.MAX_MESSAGE_SIZE:
+                    print(f"Skipping update for project {project_id}: size exceeds limit")
+                    return
+                
+                # Atomically save the perfectly merged state back to Redis
+                await ASYNC_REDIS.set(key, new_bytes)
+                print("lock complete")
+        except Exception as e:
+            print(f"Failed to acquire lock or write to Redis for project {project_id}: {e}")
 
     async def _heartbeat_loop(self):
         try:
