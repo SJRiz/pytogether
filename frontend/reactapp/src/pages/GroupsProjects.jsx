@@ -205,8 +205,8 @@ export default function GroupsAndProjectsPage() {
 
         localStorage.setItem('previousProjectData', JSON.stringify(projectData));
 
-        navigate("/ide", {
-            state: projectData,
+        navigate(`/groups/${selectedGroup.id}/projects/${project.id}`, {
+            state: { projectName: project.project_name },
         });
     };
 

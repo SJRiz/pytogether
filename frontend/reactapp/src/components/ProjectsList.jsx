@@ -91,7 +91,9 @@ export const ProjectsList = ({
 
   const handleContinueSession = () => {
     if (lastSession) {
-      navigate("/ide", { state: lastSession });
+      navigate(`/groups/${lastSession.groupId}/projects/${lastSession.projectId}`, { 
+        state: { projectName: lastSession.projectName } 
+      });
     }
   };
 

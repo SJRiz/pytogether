@@ -28,7 +28,6 @@ def check_membership_or_error(user, group):
     return group.group_members.filter(id=user.id).exists()
 
 # Standard CRUD Routes
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_projects(request, group_id):
@@ -40,6 +39,24 @@ def list_projects(request, group_id):
 
     projects = Project.objects.filter(group=group)
     serializer = ProjectDetailSerializer(projects, many=True)
+    return Response(serializer.data, status=200)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_project(request, group_id, project_id):
+    group = get_group_or_error(group_id)
+    project = get_project_or_error(project_id)
+
+    if not group or not project: 
+        return Response({"error": "Not found"}, status=404)
+        
+    if project.group != group:
+        return Response({"error": "Project does not belong to this group"}, status=400)
+
+    if not check_membership_or_error(request.user, group):
+        return Response({"error": "Not authorized"}, status=403)
+
+    serializer = ProjectDetailSerializer(project)
     return Response(serializer.data, status=200)
 
 @api_view(["POST"])
