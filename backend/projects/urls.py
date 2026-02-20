@@ -10,6 +10,7 @@ urlpatterns = [
     # Operations on a specific project
     path("<int:project_id>/edit/", views.edit_project, name="edit_project"),
     path("<int:project_id>/delete/", views.delete_project, name="delete_project"),
+    path("<int:project_id>/", views.get_project, name="get_project"),
 
     # SHARE GENERATION (Relative paths)
     # These generate the links. You must be in the group to click these.

@@ -80,7 +80,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route path="/ide" 
+        <Route path="/groups/:groupId/projects/:projectId"
           element={
             <ProtectedRoute>
               <PyIDE />

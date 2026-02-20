@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { saveAs } from 'file-saver';
 import { jsPDF } from "jspdf";
@@ -50,11 +50,12 @@ const errorLineField = StateField.define({
 export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, projectName: propProjectName }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { groupId: urlGroupId, projectId: urlProjectId } = useParams();
 
   // Params
-  const groupId = propGroupId || location.state?.groupId;
-  const projectId = propProjectId || location.state?.projectId;
-  const [projectName, setProjectName] = useState(propProjectName || location.state?.projectName || "Untitled");
+  const groupId = urlGroupId || propGroupId || location.state?.groupId;
+  const projectId = urlProjectId || propProjectId || location.state?.projectId;
+  const [projectName, setProjectName] = useState(propProjectName || location.state?.projectName || "Loading...");
 
   // State
   const [code, setCode] = useState('# Loading code...\n# If this message stays for more than 10 seconds, please refresh the page.');
@@ -78,15 +79,47 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const wsRef = useRef(null);
   
   const editorViewRef = useRef(null);
-  const chatRef = useRef(null);
   const lastPingRef = useRef(null);
   
   // User ID
   const token = sessionStorage.getItem("access_token");
   const myUserId = token ? jwtDecode(token).user_id : "anon";
   
-  // Get shareToken from location state (if joining via link)
-  const shareToken = location.state?.shareToken;
+  // Grab the query string from the URL
+  const searchParams = new URLSearchParams(location.search);
+  
+  // Look for the token in the URL first. Fallback to state just in case.
+  const shareToken = searchParams.get("shareToken") || location.state?.shareToken;
+
+  // Save session for "Welcome back"
+  useEffect(() => {
+    if (groupId && projectId) {
+      const projectData = {
+        groupId,
+        projectId,
+        projectName,
+        shareToken: shareToken || "" 
+      };
+
+      localStorage.setItem('previousProjectData', JSON.stringify(projectData));
+    }
+  }, [groupId, projectId, projectName, shareToken]);
+
+  useEffect(() => {
+    if (!location.state?.projectName && groupId && projectId) {
+      api.get(`/groups/${groupId}/projects/${projectId}/`)
+        .then(response => {
+          // Update both the display name and the edit-input name
+          setProjectName(response.data.project_name || "Untitled Project");
+          setTempName(response.data.project_name || "Untitled Project");
+        })
+        .catch(err => {
+          console.error("Failed to fetch project details", err);
+          setProjectName("Unknown Project");
+          setTempName("Unknown Project");
+        });
+    }
+  }, [groupId, projectId, location.state]);
 
   // Update browser title to match project name
   useEffect(() => {

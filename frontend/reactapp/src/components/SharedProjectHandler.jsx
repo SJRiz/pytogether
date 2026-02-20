@@ -12,13 +12,11 @@ export default function SharedProjectHandler() {
         const res = await api.post('/api/validate-share-link/', { token });
         
         if (res.data.valid) {
-            // Redirect to the IDE with the necessary state
-            // PyIDE will read 'shareToken' from state and attach it to the WebSocket connection
-            navigate('/ide', {
-                state: {
-                    groupId: res.data.group_id,
-                    projectId: res.data.project_id,
-                    projectName: res.data.project_name,
+            const { group_id, project_id, project_name } = res.data;
+            
+            navigate(`/groups/${group_id}/projects/${project_id}?shareToken=${token}`, {
+                state: { 
+                    projectName: project_name,
                     shareToken: token 
                 },
                 replace: true
