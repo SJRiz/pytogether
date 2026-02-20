@@ -324,7 +324,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             return False
         if project.group.id != group_id:
             return False
-        return user in project.group.group_members.all()
+        return project.group.group_members.filter(id=user.id).exists()
 
     async def _apply_update_to_redis_ydoc(self, project_id, update_bytes: bytes):
         key = ydoc_key(project_id)
