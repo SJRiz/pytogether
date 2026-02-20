@@ -91,8 +91,17 @@ export const ProjectsList = ({
 
   const handleContinueSession = () => {
     if (lastSession) {
-      navigate(`/groups/${lastSession.groupId}/projects/${lastSession.projectId}`, { 
-        state: { projectName: lastSession.projectName } 
+      const { groupId, projectId, projectName, shareToken } = lastSession;
+      
+      let path = `/groups/${groupId}/projects/${projectId}`;
+      
+      // Append the shareToken as a query param if the user was a guest
+      if (shareToken) {
+        path += `?shareToken=${shareToken}`;
+      }
+
+      navigate(path, { 
+        state: { projectName: projectName, shareToken: shareToken } 
       });
     }
   };

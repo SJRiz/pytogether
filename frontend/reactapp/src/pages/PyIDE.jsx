@@ -79,15 +79,31 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const wsRef = useRef(null);
   
   const editorViewRef = useRef(null);
-  const chatRef = useRef(null);
   const lastPingRef = useRef(null);
   
   // User ID
   const token = sessionStorage.getItem("access_token");
   const myUserId = token ? jwtDecode(token).user_id : "anon";
   
-  // Get shareToken from location state (if joining via link)
-  const shareToken = location.state?.shareToken;
+  // Grab the query string from the URL
+  const searchParams = new URLSearchParams(location.search);
+  
+  // Look for the token in the URL first. Fallback to state just in case.
+  const shareToken = searchParams.get("shareToken") || location.state?.shareToken;
+
+  // Save session for "Welcome back"
+  useEffect(() => {
+    if (groupId && projectId) {
+      const projectData = {
+        groupId,
+        projectId,
+        projectName,
+        shareToken: shareToken || "" 
+      };
+
+      localStorage.setItem('previousProjectData', JSON.stringify(projectData));
+    }
+  }, [groupId, projectId, projectName, shareToken]);
 
   useEffect(() => {
     if (!location.state?.projectName && groupId && projectId) {
