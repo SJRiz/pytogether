@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import * as Y from 'yjs';
 
-export function useSharedCanvas(ydocRef, isConnected) {
+export function useSharedCanvas(ydocRef, isConnected, isSynced) {
   const [drawingMode, setDrawingMode] = useState('none');
   const [drawColor, setDrawColor] = useState('#EF4444');
   const [showDrawings, setShowDrawings] = useState(true);
@@ -75,6 +75,21 @@ export function useSharedCanvas(ydocRef, isConnected) {
     // Reset composite operation
     ctx.globalCompositeOperation = 'source-over';
   }, [drawings, showDrawings]);
+
+  useEffect(() => {
+  if (!isSynced) return;
+  const canvas = canvasRef.current;
+  const container = containerRef.current;
+  if (!canvas || !container) return;
+
+  // Force the ResizeObserver to pick up the real dimensions
+  const { width, height } = container.getBoundingClientRect();
+  if (width > 0 && height > 0) {
+    canvas.width = width;
+    canvas.height = height;
+    redrawAll();
+  }
+}, [isSynced]);
 
   // Attach Resize & Scroll Listeners
   useEffect(() => {
