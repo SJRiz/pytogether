@@ -15,7 +15,8 @@ def snapshot_active_projects():
             continue
 
         # Check if anyone is actually in the room right now
-        active_count = SYNC_REDIS.scard(active_set_key(pid))
+        active_count = SYNC_REDIS.hlen(active_set_key(pid))
+        
         if active_count == 0:
             SYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(pid))
             cleaned_ghosts.append(pid)

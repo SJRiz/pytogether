@@ -51,8 +51,10 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add("global_connection_group", self.channel_name)
         await self.accept()
 
-        # Mark user active
-        await ASYNC_REDIS.sadd(active_set_key(self.project_id), str(self.user.pk))
+        # Mark user active with HINCRBY (adds 1 to their tab count)
+        current_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), 1)
+        
+        # 60 second TTL
         await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
         await ASYNC_REDIS.sadd(ACTIVE_PROJECTS_SET, str(self.project_id))
 
@@ -64,11 +66,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                     "color": color["color"],
                     "colorLight": color["light"]
                 })
-                # Set it to expire after 24 hours (86400 seconds)
+                # Set it to expire after 24 hours
                 await ASYNC_REDIS.expire(user_profile_key(str(self.user.pk)), 86400)
 
-        # Notify others
-        await self.channel_layer.group_send(self.room, {"type": "users_changed"})
+        # notify others if this is their first tab opening
+        if current_connections == 1:
+            await self.channel_layer.group_send(self.room, {"type": "users_changed"})
 
         # Send Initial YJS Sync
         ydoc_bytes = await self._get_or_create_ydoc_bytes()
@@ -103,23 +106,31 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, close_code):
         try:
             if self.user and self.user.is_authenticated:
-                await ASYNC_REDIS.srem(active_set_key(self.project_id), str(self.user.pk))
+                # Always remove from voice room
                 await ASYNC_REDIS.srem(voice_room_key(self.project_id), str(self.user.pk))
-                
-                await self.channel_layer.group_send(self.room, {"type": "users_changed"})
                 await self.channel_layer.group_send(self.room, {"type": "voice_room_update"})
                 
-                await self.channel_layer.group_send(
-                    self.room,
-                    {
-                        "type": "broadcast.remove_awareness",
-                        "user_id": str(self.user.pk),
-                        "sender": self.channel_name
-                    }
-                )
+                # Subtract 1 from their tab count
+                remaining_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), -1)
+                
+                # broadcast disconnect if their last tab closed
+                if remaining_connections <= 0:
+                    # Clean them out of the hash entirely
+                    await ASYNC_REDIS.hdel(active_set_key(self.project_id), str(self.user.pk))
+                    
+                    await self.channel_layer.group_send(self.room, {"type": "users_changed"})
+                    await self.channel_layer.group_send(
+                        self.room,
+                        {
+                            "type": "broadcast.remove_awareness",
+                            "user_id": str(self.user.pk),
+                            "sender": self.channel_name
+                        }
+                    )
 
-                remaining = await ASYNC_REDIS.scard(active_set_key(self.project_id))
-                if remaining == 0:
+                # Check if room is completely empty using HLEN (Hash Length)
+                remaining_users = await ASYNC_REDIS.hlen(active_set_key(self.project_id))
+                if remaining_users == 0:
                     await ASYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(self.project_id))
                     if not self.forced_disconnect:
                         await database_sync_to_async(persist_ydoc_to_db)(self.project_id)
@@ -144,7 +155,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
     async def users_changed(self, event):
         try:
-            active_user_ids = await ASYNC_REDIS.smembers(active_set_key(self.project_id))
+            active_user_ids = await ASYNC_REDIS.hkeys(active_set_key(self.project_id))
             active_users = []
 
             for uid_bytes in active_user_ids:
@@ -357,7 +368,9 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
             while True:
                 await asyncio.sleep(settings.HEARTBEAT_INTERVAL)
                 if self.user and self.user.is_authenticated:
+                    # Extend the TTL for another 60 seconds
                     await ASYNC_REDIS.expire(active_set_key(self.project_id), 60)
+                    await ASYNC_REDIS.expire(voice_room_key(self.project_id), 60)
         except asyncio.CancelledError:
             return
     
