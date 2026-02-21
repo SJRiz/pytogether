@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create Axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 });
 
@@ -36,7 +36,6 @@ api.interceptors.response.use(
     // Don't retry if this is already a refresh request
     if (error.config?.url?.includes('/auth/token/refresh/')) {
       sessionStorage.removeItem("access_token");
-      // DON'T redirect here - let route guards handle it
       return Promise.reject(error);
     }
 
@@ -69,7 +68,6 @@ api.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
 
-        // Clear tokens but DON'T redirect - let route guards handle it
         sessionStorage.removeItem("access_token");
         delete api.defaults.headers.common['Authorization'];
 

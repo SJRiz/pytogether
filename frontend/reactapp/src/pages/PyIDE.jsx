@@ -246,16 +246,17 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     codeUndoManagerRef.current = codeUndoManager;
     awarenessRef.current = awareness;
 
-    // Setup WebSocket
-    const wsBase = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8000";
+    const isDev = import.meta.env.DEV;
+
+    const wsProtocol = isDev ? 'ws:' : (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+    const wsHost = isDev ? 'localhost:8000' : window.location.host;
     
-    // Logic to include share_token if present
     let tokenParam = token ? `?token=${token}` : "?";
     if (shareToken) {
         tokenParam += `&share_token=${shareToken}`;
     }
 
-    const wsUrl = `${wsBase}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
+    const wsUrl = `${wsProtocol}//${wsHost}/ws/groups/${groupId}/projects/${projectId}/code/${tokenParam}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
