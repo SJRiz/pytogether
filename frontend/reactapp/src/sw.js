@@ -45,7 +45,8 @@ registerRoute(
       url.pathname.startsWith('/snippet/') ||
       (url.hostname.includes('pytogether.org') && !url.pathname.startsWith('/api/')) || 
       url.hostname.includes('localhost') ||
-      url.hostname.includes('127.0.0.1')
+      url.hostname.includes('127.0.0.1') ||
+      url.hostnaame.includes(import.meta.env.VITE_DOMAIN)
     );
   },
   new StaleWhileRevalidate({
