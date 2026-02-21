@@ -38,6 +38,7 @@ services:
 
   django:
     image: pytogether-backend:latest
+    restart: unless-stopped
     command: >
       sh -c "
         echo 'Django: Waiting for Postgres...'
@@ -67,6 +68,7 @@ services:
 
   db:
     image: postgres:15
+    restart: unless-stopped
     env_file: ./backend/.env.dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -77,6 +79,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -85,6 +88,7 @@ services:
 
   celery:
     image: pytogether-backend:latest
+    restart: unless-stopped
     command: celery -A backend worker --concurrency=1 -l info
     env_file:
       - ./backend/.env.dev
@@ -102,6 +106,7 @@ services:
 
   celery-beat:
     image: pytogether-backend:latest
+    restart: unless-stopped
     command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
       - ./backend/.env.dev

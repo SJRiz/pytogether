@@ -132,7 +132,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   // CUSTOM HOOKS
   const runner = usePyRunner();
   const voice = useVoiceChat(wsRef, myUserId);
-  const canvas = useSharedCanvas(ydocRef, isConnected);
+  const canvas = useSharedCanvas(ydocRef, isConnected, isSynced);
 
   // Global error boundary for CodeMirror crashes
   useEffect(() => {

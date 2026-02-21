@@ -16,23 +16,42 @@ export function usePyRunner() {
     setConsoleOutput([]);
   }, []);
 
-  const addConsoleEntry = useCallback((content, type = 'output', timestamp = new Date()) => {
+const addConsoleEntry = useCallback((content, type = 'output', timestamp = new Date()) => {
     setConsoleOutput(prev => {
-        // handle Carriage Returns (\r) for overwriting lines (like tqdm progress bars)
-        if (content.startsWith('\r') && prev.length > 0) {
-             const lastEntry = prev[prev.length - 1];
-             if (lastEntry.type === type) {
-                 return [
-                     ...prev.slice(0, -1), 
-                     { ...lastEntry, content: content.replace(/^\r+/, ''), timestamp }
-                 ];
-             }
-        }
-    
+      const strippedContent = content.replace(/^\r+/, '');
+
+      // If the chunk is literally just empty spaces or stray newlines, append it normally
+      if (content.startsWith('\r') && strippedContent.trim() === '') {
         return [
-            ...prev, 
-            { id: Date.now() + Math.random(), content: content.replace(/^\r+/, ''), type, timestamp }
+          ...prev,
+          { id: Date.now() + Math.random(), content: strippedContent, type, timestamp }
         ];
+      }
+
+      if (content.startsWith('\r') && prev.length > 0) {
+        const lastEntry = prev[prev.length - 1];
+
+        if (lastEntry.content.endsWith('\n')) {
+          return [
+            ...prev,
+            { id: Date.now() + Math.random(), content: strippedContent, type, timestamp }
+          ];
+        }
+
+        // Otherwise, overwrite the previous entry (this is the actual tqdm frame update)
+        if (lastEntry.type === type) {
+          return [
+            ...prev.slice(0, -1),
+            { ...lastEntry, content: strippedContent, timestamp }
+          ];
+        }
+      }
+
+      // Standard append for regular output
+      return [
+        ...prev,
+        { id: Date.now() + Math.random(), content: strippedContent, type, timestamp }
+      ];
     });
   }, []);
 
