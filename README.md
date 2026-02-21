@@ -89,6 +89,8 @@ You may also adjust the settings in backend/backend/settings/dev.py
 
 ## Self-Hosting
 
+Self-hosting is an ideal solution for educators, institutions, and independent tutors who need strict compliance with student data privacy laws. By deploying your own instance, you retain 100% ownership over all collaborative sessions, student code, and user data, ensuring sensitive information never leaves your private servers.
+
 You can easily self-host PyTogether using Docker. Follow the steps below to configure and deploy:
 
 **1. Clone the repository**
