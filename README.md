@@ -108,7 +108,7 @@ USE_HTTPS=False  # Change to True if you are setting up SSL
 ```
 Navigate to `frontend/reactapp/.env.production` and update the following variables to match your setup:
 ```env
-VITE_DOMAIN=your_ip_address
+VITE_DOMAIN="your_ip_address"
 ```
 
 **3. Build the frontend**
@@ -137,6 +137,7 @@ The instance is now up and running. You can access it in your browser by navigat
 - [GitHub](https://github.com/SJRiz)
   
 *Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
