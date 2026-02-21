@@ -123,6 +123,7 @@ docker compose up -d --build
 ```
 
 The instance is now up and running. You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
+**⚠️ Note:** Google Login does not work when self-hosting.
 
 ## Author
 **Jawad Rizvi**
