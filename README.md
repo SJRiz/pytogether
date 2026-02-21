@@ -66,7 +66,7 @@ Unlike production-grade IDEs, PyTogether prioritizes **ease of use and collabora
 ## Contributing & Local Setup
 - Requirements: Docker, Node
 
-Running PyTogether locally is a simple two-step process. Run the following commands from the project root:
+Running PyTogether locally is a simple two-step process. Run the following commands from the project root after cloning:
 ```bash
 # 1. Install all dependencies (automatically does it for root and frontend)
 npm install
@@ -86,6 +86,41 @@ The frontend will be live on http://localhost:5173. You can do CTRL+C to stop th
 > Both have the password `testtest`. You can log in with them on the frontend.
 
 You may also adjust the settings in backend/backend/settings/dev.py
+
+## Self-Hosting
+
+You can easily self-host PyTogether using Docker. Follow the steps below to configure and deploy:
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/SJRiz/pytogether.git
+cd pytogether
+```
+
+**2. Configure environment variables**
+Navigate to `backend/.env.dev` and update the following variables to match your setup:
+```env
+PROD=selfhost
+DOMAIN=your_ip_address
+USE_HTTPS=False  # Change to True if you are setting up SSL
+```
+
+**3. Build the frontend**
+Next, you need to generate the production build for the React app (make sure you have npm installed):
+```bash
+cd frontend/reactapp
+npm install
+npm run build
+```
+
+**4. Spin up the containers**
+Finally, navigate to the self-hosting directory and start the Docker containers (make sure docker is running):
+```bash
+cd ../../self-hosting
+docker compose up -d --build
+```
+
+The instance is now up and running. You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
 
 ## Author
 **Jawad Rizvi**
