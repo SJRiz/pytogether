@@ -126,7 +126,7 @@ cd ../../self-hosting
 docker compose up -d --build
 ```
 
-The instance is now up and running. You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
+The instance is now up and running (may take a couple of minutes on initial launch). You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
 
 **⚠️ Note:** Google Login does not work when self-hosting. Also, the input() function does not work over HTTP (as service workers do not work over http)
 
@@ -137,6 +137,7 @@ The instance is now up and running. You can access it in your browser by navigat
 - [GitHub](https://github.com/SJRiz)
   
 *Applied Mathematics & Computer Engineering student at Queen's University.*
+
 
 
 
