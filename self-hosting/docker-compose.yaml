@@ -1,0 +1,133 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    env_file: ../backend/.env.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - backend
+
+  django-builder:
+    image: pytogether-backend:latest
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: "true"
+
+  django-init:
+    image: pytogether-backend:latest
+    command: >
+      sh -c "
+        echo 'Django-Init: Waiting for Postgres...'
+        until pg_isready -h $$POSTGRES_HOST -p $$POSTGRES_PORT; do
+          sleep 1
+        done
+        echo 'Django-Init: Postgres is ready! Running migrations...'
+        python manage.py migrate
+        echo 'Django-Init: Creating superusers...'
+        python manage.py shell -c \"from users.models import User;User.objects.filter(email='test1@gmail.com').exists() or User.objects.create_superuser('test1@gmail.com', 'testtest');User.objects.filter(email='test2@gmail.com').exists() or User.objects.create_superuser('test2@gmail.com', 'testtest')\"
+        echo 'Django-Init: Complete.'
+      "
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    env_file:
+      - ../backend/.env.dev
+    networks:
+      - backend
+    depends_on:
+      - db
+      - django-builder
+
+  django:
+    image: pytogether-backend:latest
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Django: Waiting for Postgres...'
+        until pg_isready -h $$POSTGRES_HOST -p $$POSTGRES_PORT; do
+          sleep 1
+        done
+        echo 'Django: Starting Daphne ASGI server...'
+        daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+      "
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    env_file:
+      - ../backend/.env.dev
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+
+  celery:
+    image: pytogether-backend:latest
+    restart: unless-stopped
+    command: celery -A backend worker --concurrency=1 -l info
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    env_file:
+      - ../backend/.env.dev
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+
+  celery-beat:
+    image: pytogether-backend:latest
+    restart: unless-stopped
+    command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    env_file:
+      - ../backend/.env.dev
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      django-init:
+        condition: service_completed_successfully
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../frontend/reactapp/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - django
+    networks:
+      - backend
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  backend:
+    driver: bridge
