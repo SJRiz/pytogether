@@ -8,6 +8,7 @@ from .serializers import RegisterSerializer, UserSerializer
 from .tokens import EmailTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+from django.conf import settings
 
 User = get_user_model()
 
@@ -44,7 +45,7 @@ def google_login(request):
         key="refresh_token",
         value=str(refresh),
         httponly=True,
-        secure=True,
+        secure=settings.SESSION_COOKIE_SECURE,
         samesite="Lax",
         max_age=30*24*60*60,  # 30 days
         path="/"

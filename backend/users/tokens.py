@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework import status
 from django.utils import timezone
+from django.conf import settings
 
 class CookieTokenRefreshView(TokenRefreshView):
     """
@@ -34,7 +35,7 @@ class CookieTokenRefreshView(TokenRefreshView):
                     key="refresh_token",
                     value=response.data['refresh'],
                     httponly=True,
-                    secure=True,
+                    secure=settings.SESSION_COOKIE_SECURE,
                     samesite="Lax",
                     max_age=30*24*60*60,  # 30 days
                     path="/"
