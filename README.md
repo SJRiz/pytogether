@@ -104,7 +104,7 @@ Navigate to `backend/.env.dev` and update the following variables to match your 
 ```env
 PROD=selfhost
 DOMAIN=your_ip_address
-USE_HTTPS=False  # Change to True if you are setting up SSL
+USE_HTTPS=False  # Change to True if using reverse proxy
 ```
 Navigate to `frontend/reactapp/.env.production` and update the following variables to match your setup:
 ```env
@@ -128,7 +128,10 @@ docker compose up -d --build
 
 The instance is now up and running (may take a couple of minutes on initial launch). You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
 
-**⚠️ Note:** Google Login does not work when self-hosting. Also, the input() function does not work over HTTP (as service workers do not work over http)
+**⚠️ Note:** 
+- Google Login does not work when self-hosting.  
+- The `input()` function does not work over HTTP (as service workers do not run over HTTP).  
+- If you want HTTPS, you need to set up a reverse proxy (like NGINX, Traefik, or Caddy) in front of the Docker containers. PyTogether itself will still run over HTTP inside Docker, but the proxy can handle encryption and serve it via HTTPS. Make sure the proxy sets the `X-Forwarded-Proto: https` header so Django handles cookies and CSRF correctly.
 
 ## Author
 **Jawad Rizvi**
