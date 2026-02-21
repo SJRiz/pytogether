@@ -248,9 +248,20 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     const isDev = import.meta.env.DEV;
 
-    const wsProtocol = isDev ? 'ws:' : (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
-    const wsHost = isDev ? 'localhost:8000' : window.location.host;
-    
+    const isOfficialProd = window.location.hostname === 'pytogether.org' || window.location.hostname === 'www.pytogether.org';
+
+    let wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let wsHost = window.location.host; 
+
+    if (isDev) {
+        wsProtocol = 'ws:';
+        wsHost = 'localhost:8000';
+    } 
+    else if (isOfficialProd) {
+        wsProtocol = 'wss:';
+        wsHost = 'api.pytogether.org';
+    }
+
     let tokenParam = token ? `?token=${token}` : "?";
     if (shareToken) {
         tokenParam += `&share_token=${shareToken}`;
