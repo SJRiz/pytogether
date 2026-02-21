@@ -106,6 +106,10 @@ PROD=selfhost
 DOMAIN=your_ip_address
 USE_HTTPS=False  # Change to True if you are setting up SSL
 ```
+Navigate to `frontend/reactapp/.env.production` and update the following variables to match your setup:
+```env
+VITE_DOMAIN=your_ip_address
+```
 
 **3. Build the frontend**
 Next, you need to generate the production build for the React app (make sure you have npm installed):
@@ -124,7 +128,7 @@ docker compose up -d --build
 
 The instance is now up and running. You can access it in your browser by navigating to the IP address you specified in your `DOMAIN` variable.
 
-**⚠️ Note:** Google Login does not work when self-hosting.
+**⚠️ Note:** Google Login does not work when self-hosting. Also, the input() function does not work over HTTP (as service workers do not work over http)
 
 ## Author
 **Jawad Rizvi**
