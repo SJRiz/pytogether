@@ -2,13 +2,17 @@
 # This makes my life so much easier when trying to develop new features locally and not having to toy with the settings everytime
 # Putting this in an __init__ script assures that this is ran first.
 
-import os   # i alternate between config and os a lot, i should probably stick to only one      <-- nobody cares shut the fuck up
+import os
 
-ENV = os.getenv("PROD", "False").lower() in ("true", "1", "yes")
+# Get the value and clean it up
+ENV_MODE = os.getenv("PROD", "development").lower()
 
-if ENV:
-    print("PRODUCTION ENV DETECTED")
+if ENV_MODE == "true":
+    print("--- PRODUCTION (VPS) MODE DETECTED ---")
     from .prod import *
+elif ENV_MODE == "selfhost":
+    print("--- SELF-HOSTING MODE DETECTED ---")
+    from .selfhost import *
 else:
-    print("setting up development env")
+    print("--- DEVELOPMENT MODE DETECTED ---")
     from .dev import *

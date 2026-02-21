@@ -34,8 +34,6 @@ services:
         done
         echo 'Django-Init: Postgres is ready! Running migrations...'
         python manage.py migrate
-        echo 'Django-Init: Creating superusers...'
-        python manage.py shell -c \"from users.models import User;User.objects.filter(email='test1@gmail.com').exists() or User.objects.create_superuser('test1@gmail.com', 'testtest');User.objects.filter(email='test2@gmail.com').exists() or User.objects.create_superuser('test2@gmail.com', 'testtest')\"
         echo 'Django-Init: Complete.'
       "
     environment:
