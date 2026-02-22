@@ -15,7 +15,12 @@ app.autodiscover_tasks()
 # define beat schedule
 app.conf.beat_schedule = {
     "snapshot-codes-per-minutes": {
-        "task": "codes.tasks.snapshot_active_projects",
+        "task": "codes.tasks.snapshot_dirty_projects",
         "schedule": settings.AUTO_SAVE_INTERVAL,
     },
+    "cleanup-ghosts-every-10-mins": {
+        'task': 'codes.tasks.cleanup_ghost_projects',
+        'schedule': settings.GHOST_CLEAN_INTERVAL,
+    },
 }
+

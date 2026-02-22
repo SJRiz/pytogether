@@ -13,7 +13,6 @@ ASYNC_REDIS = aioredis.from_url(REDIS_URL)
 SYNC_REDIS = redis.from_url(REDIS_URL)
 
 ACTIVE_PROJECTS_SET = "projects:active"     # set of all active projects (projects with at least one active editor)
-
 DIRTY_PROJECTS_SET = "projects:dirty"       # set of all projects that have been edited after the autosave
 
 def ydoc_key(project_id):
