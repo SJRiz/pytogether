@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, ASYNC_REDIS
+from .redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, DIRTY_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
 
@@ -360,6 +360,10 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Atomically save the perfectly merged state back to Redis
                 await ASYNC_REDIS.set(key, new_bytes)
+
+                # Mark as dirty so celery picks up
+                await ASYNC_REDIS.sadd(DIRTY_PROJECTS_SET, str(project_id))
+
         except Exception as e:
             print(f"Failed to acquire lock or write to Redis for project {project_id}: {e}")
 
