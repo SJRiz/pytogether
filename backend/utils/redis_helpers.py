@@ -6,7 +6,7 @@ from y_py import YDoc, apply_update
 from django.db import transaction
 from django.conf import settings
 from projects.models import Project
-from .models import Code
+from codes.models import Code
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 ASYNC_REDIS = aioredis.from_url(REDIS_URL)

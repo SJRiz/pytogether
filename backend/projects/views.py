@@ -10,6 +10,7 @@ from .models import Project
 from usergroups.models import Group
 from codes.models import Code
 from .serializers import ProjectDetailSerializer, ProjectCreateSerializer, ProjectUpdateSerializer
+from utils.redis_helpers import active_set_key, SYNC_REDIS
 
 # Helper functions
 def get_group_or_error(group_id):
@@ -39,6 +40,20 @@ def list_projects(request, group_id):
 
     projects = Project.objects.filter(group=group)
     serializer = ProjectDetailSerializer(projects, many=True)
+
+    project_data = serializer.data
+    
+    # inject active users in serializer
+    if project_data:
+        pipeline = SYNC_REDIS.pipeline()
+        for p in project_data:
+            pipeline.hlen(active_set_key(p['id']))
+        
+        counts = pipeline.execute()
+        
+        for idx, p in enumerate(project_data):
+            p['active_users'] = counts[idx]
+
     return Response(serializer.data, status=200)
 
 @api_view(["GET"])
@@ -107,6 +122,13 @@ def delete_project(request, group_id, project_id):
     if not group or not project: return Response({"error": "Not found"}, status=404)
     if not check_membership_or_error(request.user, group):
         return Response({"error": "Not authorized"}, status=403)
+
+    # make sure nobody is editing the project
+    active_users = SYNC_REDIS.hlen(active_set_key(project.id))
+    if active_users > 0:
+        return Response({
+            "error": f"Cannot delete project while {active_users} user(s) are actively editing it."
+        }, status=400)
 
     if hasattr(project, 'code'):
         project.code.delete()

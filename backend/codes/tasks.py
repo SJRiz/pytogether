@@ -1,5 +1,5 @@
 from celery import shared_task
-from .redis_helpers import persist_ydoc_to_db, active_set_key, SYNC_REDIS, DIRTY_PROJECTS_SET, ACTIVE_PROJECTS_SET
+from utils.redis_helpers import persist_ydoc_to_db, active_set_key, SYNC_REDIS, DIRTY_PROJECTS_SET, ACTIVE_PROJECTS_SET
 
 @shared_task
 def snapshot_dirty_projects():

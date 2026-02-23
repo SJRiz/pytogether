@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from codes.tasks import snapshot_active_projects
-from codes.redis_helpers import SYNC_REDIS
+from backend.utils.redis_helpers import SYNC_REDIS
 
 class Command(BaseCommand):
     help = "Snapshot all active projects, disconnect all websockets, and flush Redis"

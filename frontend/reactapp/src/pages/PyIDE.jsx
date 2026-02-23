@@ -779,7 +779,7 @@ const sizeWarningToast = showSizeWarning && (
       <div className="flex-1">
         <p className="text-sm text-yellow-200 font-semibold mb-1">Code Size Warning</p>
         <p className="text-xs text-yellow-100">
-          Your code is approaching the 500 KB limit. Changes beyond this point may not be saved properly.
+          Your code is approaching the 200 KB limit. Changes beyond this point may not be saved properly.
         </p>
       </div>
       <button

@@ -1,64 +1,77 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History } from "lucide-react";
+import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users } from "lucide-react";
 
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
+  const activeCount = project.active_users || 0;
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    if (activeCount > 0) {
+      alert(`Cannot delete "${project.project_name}" while ${activeCount} users are active.`);
+      return;
+    }
+    onDelete(project);
+  };
+
   return (
     <li 
-      className="h-[140px] overflow-hidden bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-2 border-gray-600/30 
+      className="h-[140px] w-full bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-2 border-gray-600/30 
                  hover:border-gray-500/50 hover:from-gray-700/60 hover:to-gray-800/60 rounded-xl p-4 
-                 transition-all duration-200 cursor-pointer group animate-fadeIn shadow-lg hover:shadow-xl"
+                 transition-all duration-200 cursor-pointer group animate-fadeIn shadow-lg hover:shadow-xl 
+                 relative flex flex-col justify-between overflow-hidden"
       onClick={() => onOpen(project)}
     >
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex-shrink-0">
-            <Folder className="h-4 w-4 text-white" />
-          </div>
-          <h3 className="text-white font-semibold truncate">{project.project_name}</h3>
+      <div className="flex gap-3 items-start min-w-0">
+        <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex-shrink-0 mt-0.5">
+          <Folder className="h-4 w-4 text-white" />
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+        <div className="flex flex-col min-w-0 flex-1"> 
+          <h3 className="text-white font-semibold leading-tight line-clamp-2 break-all pr-10">
+            {project.project_name}
+          </h3>
+          
+          {activeCount > 0 ? (
+            <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold uppercase tracking-wider text-green-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              <span>{activeCount} Live</span>
+            </div>
+          ) : (
+            <div className="h-4" /> 
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3 bg-gray-900/80 backdrop-blur-md rounded-lg p-1 border border-gray-500/20">
           <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onEdit(project);
-            }}
-            className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-all"
-            title="Edit Project"
+            onClick={(e) => { e.stopPropagation(); onEdit(project); }}
+            className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-md"
           >
-            <Edit2 className="h-4 w-4" />
+            <Edit2 className="h-3.5 w-3.5" />
           </button>
+          
           <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onOpen(project); 
-            }}
-            className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded-lg transition-all"
-            title="Open in IDE"
+            onClick={handleDeleteClick}
+            disabled={activeCount > 0}
+            className={`p-1.5 rounded-md transition-all ${
+              activeCount > 0 
+                ? "text-gray-600 cursor-not-allowed" 
+                : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
+            }`}
+            title={activeCount > 0 ? "Cannot delete active project" : "Delete Project"}
           >
-            <Code2 className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onDelete(project);
-            }}
-            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all"
-            title="Delete Project"
-          >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
       
-      <div className="text-xs text-gray-400 space-y-1">
-        <div className="flex items-center gap-1 pt-2">
-          <span className="text-gray-500">Modified:</span>
-          <span>{new Date(project.updated_at).toLocaleDateString()}</span>
-        </div>
-        <div className="flex items-center gap-1 pt-1">
-          <span className="text-gray-500">Created:</span>
-          <span>{new Date(project.created_at).toLocaleDateString()}</span>
+      <div className="flex justify-between items-end border-t border-gray-600/20 pt-2">
+        <div className="text-[10px] text-gray-500 flex flex-col uppercase tracking-tighter">
+          <span>Mod: {new Date(project.updated_at).toLocaleDateString()}</span>
         </div>
       </div>
     </li>
@@ -199,7 +212,7 @@ export const ProjectsList = ({
             <p className="text-sm text-gray-600">Create one to get started!</p>
           </div>
         ) : (
-          <ul className="grid grid-cols-3 auto-rows-[160px] gap-4 min-w-max">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {projects.map(project => (
               <ProjectItem
                 key={project.id}
