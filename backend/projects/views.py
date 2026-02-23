@@ -221,7 +221,16 @@ def generate_snippet_link(request, group_id, project_id):
     }
     token = signer.sign_object(snippet_payload)
     
-    base_url = config('NAKED_ORIGIN', default='http://localhost:5173')
+    naked_origin = config('NAKED_ORIGIN', default=None)
+    domain = config('DOMAIN', default=None)
+
+    if naked_origin:
+        base_url = naked_origin
+    elif domain:
+        base_url = f"http://{domain}"
+    else:
+        base_url = "http://localhost:5173"
+
     return Response({
         "snippet_url": f"{base_url}/snippet/{token}"
     })
