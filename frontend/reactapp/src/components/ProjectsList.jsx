@@ -45,8 +45,7 @@ const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3 bg-gray-900/80 backdrop-blur-md rounded-lg p-1 border border-gray-500/20">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3 bg-gray-900/80 backdrop-blur-md rounded-lg p-1 border border-gray-500/20 z-20">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(project); }}
             className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-md"
@@ -62,17 +61,26 @@ const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
                 ? "text-gray-600 cursor-not-allowed" 
                 : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
             }`}
-            title={activeCount > 0 ? "Cannot delete active project" : "Delete Project"}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
       
-      <div className="flex justify-between items-end border-t border-gray-600/20 pt-2">
-        <div className="text-[10px] text-gray-500 flex flex-col uppercase tracking-tighter">
-          <span>Mod: {new Date(project.updated_at).toLocaleDateString()}</span>
+      <div className="flex justify-between items-end border-t border-gray-600/20 pt-2 mt-auto">
+        <div className="text-[9px] text-gray-500 flex flex-col uppercase tracking-tighter gap-0.5">
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600 font-bold">Modified:</span>
+            <span>{new Date(project.updated_at).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600 font-bold">Created:</span>
+            <span>{new Date(project.created_at).toLocaleDateString()}</span>
+          </div>
         </div>
+        {activeCount === 0 && (
+          <Users className="h-3 w-3 text-gray-700" />
+        )}
       </div>
     </li>
   );
@@ -89,6 +97,10 @@ export const ProjectsList = ({
 }) => {
   const navigate = useNavigate();
   const [lastSession, setLastSession] = useState(null);
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    return new Date(b.updated_at) - new Date(a.updated_at);
+  });
 
   // Check local storage on mount
   useEffect(() => {
@@ -205,7 +217,7 @@ export const ProjectsList = ({
               <div className="absolute inset-0 animate-ping border-4 border-blue-500/30 h-12 w-12 rounded-full"></div>
             </div>
           </div>
-        ) : projects.length === 0 ? (
+        ) : sortedProjects.length === 0 ? (
           <div className="flex flex-1 flex-col justify-center items-center h-full text-gray-500 space-y-4">
             <FolderPlus className="h-16 w-16 opacity-50" />
             <p className="text-lg font-medium">No projects yet</p>
@@ -213,7 +225,7 @@ export const ProjectsList = ({
           </div>
         ) : (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {projects.map(project => (
+            {sortedProjects.map(project => (
               <ProjectItem
                 key={project.id}
                 project={project}
