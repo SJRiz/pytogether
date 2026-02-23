@@ -197,8 +197,8 @@ export default function CodeLayout({
     <div className="h-screen bg-slate-850 text-gray-100 flex flex-col overflow-hidden">
 
       {/* HEADER */}
-      <div className="border-b border-gray-700 bg-gray-850 flex-shrink-0">
-        <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
+      <div className="border-b border-gray-700 bg-gray-850 flex-shrink-0 flex flex-col">
+        <div className="flex items-center justify-between px-3 md:px-6 py-2 md:py-4 gap-2">
 
           {/* LEFT */}
           <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
@@ -295,6 +295,19 @@ export default function CodeLayout({
             )}
           </div>
         </div>
+
+        {/* MOBILE SECOND ROW */}
+        {isMobile && (headerContent || drawingControls || voiceControls) && (
+          <div className="md:hidden flex items-center justify-between px-3 pb-2 gap-3 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+              {headerContent}
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+              {drawingControls}
+              {voiceControls}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MAIN BODY */}
