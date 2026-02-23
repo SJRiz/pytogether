@@ -29,8 +29,15 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    window.dispatchEvent(new Event('backendUp'));
+    return response;
+  },
   async (error) => {
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      window.dispatchEvent(new Event('backendDown'));
+    }
+
     const originalRequest = error.config;
 
     // Don't retry if this is already a refresh request
@@ -60,7 +67,7 @@ api.interceptors.response.use(
 
         sessionStorage.setItem("access_token", newAccess);
         api.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`;
-        
+
         processQueue(null, newAccess);
 
         originalRequest.headers.Authorization = `Bearer ${newAccess}`;

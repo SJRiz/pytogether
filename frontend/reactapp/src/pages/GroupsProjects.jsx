@@ -213,7 +213,7 @@ export default function GroupsAndProjectsPage() {
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col">
         {/* Header */}
-        <div className="border-b border-slate-800 bg-[#0B0F17]/80 px-6 py-2 shadow-lg">
+        <div className="border-b border-gray-800 bg-[#0e1421] px-6 py-2 shadow-lg">
             <div className="flex items-center justify-between">
                 
                 <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export default function GroupsAndProjectsPage() {
         </div>
 
         {/* Footer Section */}
-        <footer className="w-full border-t border-slate-800 bg-[#0B0F17] py-6 mt-auto">
+        <footer className="w-full border-t border-gray-800 bg-[#0e1421] py-6 mt-auto">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
                 <p className="text-gray-500 text-sm">
                     &copy; {new Date().getFullYear()} PyTogether. All rights reserved.
