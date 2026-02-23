@@ -12,7 +12,7 @@ export default function CodeLayout({
   inputContent,
   voiceControls,
   drawingControls,
-  
+
   // Logic Props
   onBack,
   isConnected,
@@ -24,19 +24,24 @@ export default function CodeLayout({
   onClearConsole,
   connectedUsers = [],
   chatMessageCount = 0,
-  
+
   // Download/Menu
-  onDownloadOption
+  onDownloadOption,
+
+  // Custom logic
+  onClearPlot
 }) {
   const [consoleWidth, setConsoleWidth] = useState(384);
+  const [bottomPaneHeight, setBottomPaneHeight] = useState(400);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingVertical, setIsDraggingVertical] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showPlot, setShowPlot] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showConsole, setShowConsole] = useState(false);
-  
+  const [showConsole, setShowConsole] = useState(true);
+
   const downloadMenuRef = useRef(null);
   const consoleScrollRef = useRef(null);
   const chatScrollRef = useRef(null);
@@ -46,6 +51,8 @@ export default function CodeLayout({
 
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(0);
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -71,38 +78,47 @@ export default function CodeLayout({
 
   useEffect(() => {
     if (consoleScrollRef.current) {
-        consoleScrollRef.current.scrollTop = consoleScrollRef.current.scrollHeight;
+      consoleScrollRef.current.scrollTop = consoleScrollRef.current.scrollHeight;
     }
   }, [consoleContent]);
 
   useEffect(() => {
     if (showChat) {
-        setHasUnread(false);
-        setTimeout(() => {
-            if (chatScrollRef.current) {
-                chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-            }
-        }, 0);
+      setHasUnread(false);
+      setTimeout(() => {
+        if (chatScrollRef.current) {
+          chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+        }
+      }, 0);
     }
   }, [chatContent, showChat]);
 
   useEffect(() => {
     if (chatMessageCount > prevMessageCount.current) {
-        if (!showChat) {
-            setHasUnread(true);
-        }
+      if (!showChat) {
+        setHasUnread(true);
+      }
     }
     prevMessageCount.current = chatMessageCount;
-  }, [chatMessageCount, showChat]); 
+  }, [chatMessageCount, showChat]);
 
   useEffect(() => {
     if (inputContent && inputContainerRef.current) {
-        const inputElement = inputContainerRef.current.querySelector('input');
-        if (inputElement) {
-            setTimeout(() => inputElement.focus(), 50);
-        }
+      const inputElement = inputContainerRef.current.querySelector('input');
+      if (inputElement) {
+        setTimeout(() => inputElement.focus(), 50);
+      }
     }
   }, [inputContent]);
+
+  useEffect(() => {
+    if (plotContent) {
+      setShowPlot(true);
+      setShowChat(false);
+    } else {
+      setShowPlot(false);
+    }
+  }, [!!plotContent]);
 
   // Resize Logic
   const handleMouseDown = (e) => {
@@ -120,7 +136,7 @@ export default function CodeLayout({
       setConsoleWidth(newWidth);
     };
     const handleMouseUp = () => setIsDragging(false);
-    
+
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -135,6 +151,37 @@ export default function CodeLayout({
     };
   }, [isDragging]);
 
+  // Vertical Resize Logic
+  const handleVerticalMouseDown = (e) => {
+    setIsDraggingVertical(true);
+    dragStartY.current = e.clientY;
+    dragStartHeight.current = bottomPaneHeight;
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDraggingVertical) return;
+      const deltaY = dragStartY.current - e.clientY;
+      const newHeight = Math.max(100, Math.min(800, dragStartHeight.current + deltaY));
+      setBottomPaneHeight(newHeight);
+    };
+    const handleMouseUp = () => setIsDraggingVertical(false);
+
+    if (isDraggingVertical) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingVertical]);
+
   // Click outside download menu
   useEffect(() => {
     const handleClick = (e) => {
@@ -148,21 +195,21 @@ export default function CodeLayout({
 
   return (
     <div className="h-screen bg-slate-850 text-gray-100 flex flex-col overflow-hidden">
-      
+
       {/* HEADER */}
       <div className="border-b border-gray-700 bg-gray-850 flex-shrink-0">
         <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
-          
+
           {/* LEFT */}
           <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <button onClick={onBack} className="p-1.5 md:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300">
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </button>
             <div className="flex items-center gap-2 md:gap-3">
-               <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1.5 md:p-2 rounded-xl border border-gray-700/50">
-                  <img src="/pytog.png" alt="Icon" className="h-6 w-6 md:h-8 md:w-8" />
-               </div>
-               <h1 className="text-lg md:text-2xl font-bold pl-1 md:pl-2 bg-clip-text hidden sm:block">PyTogether</h1>
+              <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1.5 md:p-2 rounded-xl border border-gray-700/50">
+                <img src="/pytog.png" alt="Icon" className="h-6 w-6 md:h-8 md:w-8" />
+              </div>
+              <h1 className="text-lg md:text-2xl font-bold pl-1 md:pl-2 bg-clip-text hidden sm:block">PyTogether</h1>
             </div>
             <div className="hidden sm:flex items-center space-x-2 pl-2">
               {isConnected ? (
@@ -187,8 +234,8 @@ export default function CodeLayout({
               <div className="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-lg shadow-xl z-50">
                 <ul className="py-1">
                   {['.py', '.txt', '.docx', '.pdf'].map(ext => (
-                    <li key={ext} onClick={() => { onDownloadOption(ext); setShowDownloadMenu(false); }} 
-                        className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">
+                    <li key={ext} onClick={() => { onDownloadOption(ext); setShowDownloadMenu(false); }}
+                      className="px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer">
                       Download as {ext}
                     </li>
                   ))}
@@ -200,18 +247,18 @@ export default function CodeLayout({
           {/* RIGHT */}
           <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
             <div className="hidden md:flex items-center space-x-3">
-              {drawingControls} 
+              {drawingControls}
               {voiceControls}
             </div>
-            
+
             {connectedUsers.length > 0 && (
               <div className="hidden sm:flex items-center gap-2 md:gap-3 border-r border-gray-600 pr-2 md:pr-4 mr-1 md:mr-2">
                 <div className="flex -space-x-2 overflow-hidden">
                   {connectedUsers.slice(0, isMobile ? 2 : connectedUsers.length).map((u) => (
-                    <div 
-                      key={u.id} 
-                      className="inline-flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-full ring-2 ring-gray-800 text-xs font-bold text-gray-900" 
-                      style={{backgroundColor: u.color || '#888'}} 
+                    <div
+                      key={u.id}
+                      className="inline-flex h-6 w-6 md:h-8 md:w-8 items-center justify-center rounded-full ring-2 ring-gray-800 text-xs font-bold text-gray-900"
+                      style={{ backgroundColor: u.color || '#888' }}
                       title={u.email}
                     >
                       {u.email ? u.email[0].toUpperCase() : '?'}
@@ -222,25 +269,29 @@ export default function CodeLayout({
               </div>
             )}
 
-            {isMobile && (
-              <button 
-                onClick={() => setShowConsole(!showConsole)} 
-                className={`p-1.5 rounded-lg ${showConsole ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-gray-600 text-gray-300 md:hidden`}
-                title={showConsole ? 'Hide Console' : 'Show Console'}
-              >
-                <Terminal className="h-4 w-4" />
-              </button>
-            )}
+            <button
+              onClick={() => setShowConsole(!showConsole)}
+              className={`p-1.5 rounded-lg ${showConsole ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-gray-600 text-gray-300`}
+              title={showConsole ? 'Hide Console' : 'Show Console'}
+            >
+              <Terminal className="h-4 w-4" />
+            </button>
 
             {isLoading ? (
               <div className="flex items-center space-x-2 text-yellow-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
-                  <span className="text-xs md:text-sm hidden sm:inline">Loading...</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
+                <span className="text-xs md:text-sm hidden sm:inline">Loading...</span>
               </div>
             ) : isRunning ? (
-               <button onClick={onStop} className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"><X className="h-4 w-4" /><span className="hidden sm:inline">Stop</span></button>
+              <button onClick={onStop} className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"><X className="h-4 w-4" /><span className="hidden sm:inline">Stop</span></button>
             ) : (
-               <button onClick={onRun} className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"><Play className="h-4 w-4" /><span className="hidden sm:inline">Run</span></button>
+              <button
+                onClick={() => { setShowConsole(true); onRun(); }}
+                className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
+              >
+                <Play className="h-4 w-4" />
+                <span className="hidden sm:inline">Run</span>
+              </button>
             )}
           </div>
         </div>
@@ -248,24 +299,24 @@ export default function CodeLayout({
 
       {/* MAIN BODY */}
       <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} flex-1 min-h-0`}>
-        
+
         {/* EDITOR AREA */}
         <div className={`flex ${isMobile ? 'flex-1 min-h-0' : 'flex-1'} flex-col ${isMobile ? 'border-b' : 'border-r'} border-gray-700 min-w-0 relative`}>
           <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between z-20 flex-shrink-0">
             <h2 className="text-xs md:text-sm font-medium text-gray-300">main.py</h2>
             <div className="flex items-center space-x-2">
-               <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-orange-400'}`}></div>
-               <span className="text-xs text-gray-500">{isConnected ? 'Synced' : 'Modified'}</span>
+              <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-orange-400'}`}></div>
+              <span className="text-xs text-gray-500">{isConnected ? 'Synced' : 'Modified'}</span>
             </div>
           </div>
-          
+
           <div className="flex-1 overflow-auto custom-scrollbar relative min-h-0">
-             {editorContent}
+            {editorContent}
           </div>
         </div>
 
         {/* CONSOLE AREA */}
-        <div className={`${isMobile && !showConsole ? 'hidden' : 'flex'} ${isMobile ? 'w-full flex-1 min-h-0' : 'flex-shrink-0'}`}>
+        <div className={`${!showConsole ? 'hidden' : 'flex'} ${isMobile ? 'w-full flex-1 min-h-0' : 'flex-shrink-0'}`}>
           {!isMobile && (
             <div className={`w-1 bg-gray-700 hover:bg-blue-500 cursor-ew-resize flex items-center justify-center group transition-colors duration-200 ${isDragging ? 'bg-blue-500' : ''}`} onMouseDown={handleMouseDown}>
               <GripVertical className="h-4 w-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -275,58 +326,70 @@ export default function CodeLayout({
           <div className="flex flex-col bg-gray-850 h-full" style={{ width: isMobile ? '100%' : `${consoleWidth}px` }}>
             <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-2">
-                 <Terminal className="h-4 w-4 text-gray-400" />
-                 <h2 className="text-xs md:text-sm font-medium text-gray-300">Console</h2>
-                 {inputContent && <span className="text-xs text-blue-400 animate-pulse">Waiting...</span>}
+                <Terminal className="h-4 w-4 text-gray-400" />
+                <h2 className="text-xs md:text-sm font-medium text-gray-300">Console</h2>
+                {inputContent && <span className="text-xs text-blue-400 animate-pulse">Waiting...</span>}
               </div>
               <div className="flex items-center">
-                <button onClick={() => { setShowChat(!showChat); if(!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded relative ${showChat ? 'text-blue-400' : 'text-gray-400'}`}>
+                <button onClick={() => { setShowChat(!showChat); if (!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded relative ${showChat ? 'text-blue-400' : 'text-gray-400'}`}>
                   <MessageSquare className="h-4 w-4" />
                   {hasUnread && !showChat && (
                     <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border border-gray-800 transform translate-x-1/4 -translate-y-1/4"></span>
                   )}
                 </button>
-                <button onClick={() => { setShowPlot(!showPlot); if(!showPlot) setShowChat(false); }} className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`}>
-                   <Eye className="h-4 w-4" />
+                <button onClick={() => { setShowPlot(!showPlot); if (!showPlot) setShowChat(false); }} className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`}>
+                  <Eye className="h-4 w-4" />
                 </button>
                 <button onClick={onClearConsole} className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-red-400" title="Clear Console">
-                    <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
             <div ref={consoleScrollRef} className="flex-1 p-3 md:p-4 overflow-y-auto bg-gray-900 font-mono text-xs md:text-sm space-y-1 scrollbar-hide min-h-0" style={{ scrollbarWidth: 'none' }}>
-               {consoleContent}
+              {consoleContent}
             </div>
 
             <div className="flex-shrink-0" ref={inputContainerRef}>
-                {inputContent}
+              {inputContent}
             </div>
 
-            {(showPlot || (!showChat && plotContent)) && (
-              <div className="border-t border-gray-700 flex-col flex-shrink-0" style={{ height: isMobile ? '300px' : '400px', display: 'flex' }}>
-                 <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between">
-                    <div className="flex items-center space-x-2"><Eye className="h-4 w-4 text-gray-400"/><h2 className="text-xs md:text-sm font-medium text-gray-300">Plot</h2></div>
-                    <button onClick={() => setShowPlot(false)} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400"/></button>
-                 </div>
-                 <div className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 flex items-center justify-center">
-                    {plotContent || <div className="text-gray-500 italic text-xs">Plots will appear here...</div>}
-                 </div>
+            {showPlot && (
+              <div className="border-t border-gray-700 flex-col flex-shrink-0 relative group" style={{ height: isMobile ? '300px' : `${bottomPaneHeight}px`, display: 'flex' }}>
+                {!isMobile && (
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-1 -mt-0.5 bg-gray-700 hover:bg-blue-500 cursor-ns-resize z-50 transition-colors duration-200 ${isDraggingVertical ? 'bg-blue-500' : ''}`}
+                    onMouseDown={handleVerticalMouseDown}
+                  />
+                )}
+                <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+                  <div className="flex items-center space-x-2"><Eye className="h-4 w-4 text-gray-400" /><h2 className="text-xs md:text-sm font-medium text-gray-300">Plot</h2></div>
+                  <button onClick={() => { setShowPlot(false); if (onClearPlot) onClearPlot(); }} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400" /></button>
+                </div>
+                <div className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 flex items-center justify-center">
+                  {plotContent || <div className="text-gray-500 italic text-xs">Plots will appear here...</div>}
+                </div>
               </div>
             )}
 
             {showChat && (
-              <div className="border-t border-gray-700 flex flex-col flex-shrink-0" style={{ height: isMobile ? '300px' : '400px', display: 'flex' }}>
+              <div className="border-t border-gray-700 flex flex-col flex-shrink-0 relative group" style={{ height: isMobile ? '300px' : `${bottomPaneHeight}px`, display: 'flex' }}>
+                {!isMobile && (
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-1 -mt-0.5 bg-gray-700 hover:bg-blue-500 cursor-ns-resize z-50 transition-colors duration-200 ${isDraggingVertical ? 'bg-blue-500' : ''}`}
+                    onMouseDown={handleVerticalMouseDown}
+                  />
+                )}
                 <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center space-x-2"><MessageSquare className="h-4 w-4 text-gray-400"/><h2 className="text-xs md:text-sm font-medium text-gray-300">Chat</h2></div>
-                    <button onClick={() => setShowChat(false)} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400"/></button>
-                 </div>
-                 <div ref={chatScrollRef} className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 text-xs md:text-sm space-y-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-                    {chatContent}
-                 </div>
-                 <div className="flex-shrink-0">
-                    {chatInputContent}
-                 </div>
+                  <div className="flex items-center space-x-2"><MessageSquare className="h-4 w-4 text-gray-400" /><h2 className="text-xs md:text-sm font-medium text-gray-300">Chat</h2></div>
+                  <button onClick={() => setShowChat(false)} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400" /></button>
+                </div>
+                <div ref={chatScrollRef} className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 text-xs md:text-sm space-y-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                  {chatContent}
+                </div>
+                <div className="flex-shrink-0">
+                  {chatInputContent}
+                </div>
               </div>
             )}
           </div>
