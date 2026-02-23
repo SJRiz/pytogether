@@ -70,11 +70,11 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
     depends_on:
       - nginx
     entrypoint: >
       /bin/sh -c "
+      apk add --no-cache docker-cli;
       trap exit TERM;
       while :; do
         echo '=== Running certbot renew ===';
