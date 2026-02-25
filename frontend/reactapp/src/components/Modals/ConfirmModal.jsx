@@ -43,7 +43,7 @@ export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => 
             onClick={onConfirm}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 font-medium transition-all shadow-lg shadow-red-900/20 active:scale-95"
           >
-            Confirm Deletion
+            Confirm
           </button>
         </div>
       </div>

@@ -63,7 +63,7 @@ function App() {
         <ServerCrash className="w-16 h-16 text-red-500 mb-6" />
         <h1 className="text-3xl font-bold mb-2 text-center">System Offline</h1>
         <p className="text-gray-400 text-center max-w-md mb-8">
-          We cannot reach the backend server right now. It might be down for maintenance, updating, or experiencing connection issues. Please try again in a few moments.
+          Cannot reach the server. It might be down for maintenance, updating, or you made an improper request. Please try again in a few moments.
         </p>
         <button
           onClick={() => window.location.reload()}
