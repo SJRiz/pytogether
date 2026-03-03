@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+celery-beat-schedule
+celery-beat-schedule-shm
+celery-beat-schedule-wal
+
 # Distribution / packaging
 .Python
 build/
