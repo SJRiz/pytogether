@@ -57,8 +57,8 @@ const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
             onClick={handleDeleteClick}
             disabled={activeCount > 0}
             className={`p-1.5 rounded-md transition-all ${activeCount > 0
-                ? "text-gray-600 cursor-not-allowed"
-                : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
+              ? "text-gray-600 cursor-not-allowed"
+              : "text-red-400 hover:text-red-300 hover:bg-red-500/20"
               }`}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -92,10 +92,13 @@ export const ProjectsList = ({
   onEditProject,
   onDeleteProject,
   onOpenProject,
-  onCreateProject
+  onCreateProject,
+  groups,
+  onSelectGroup
 }) => {
   const navigate = useNavigate();
   const [lastSession, setLastSession] = useState(null);
+  const [lastGroup, setLastGroup] = useState(null);
 
   const sortedProjects = [...projects].sort((a, b) => {
     return new Date(b.updated_at) - new Date(a.updated_at);
@@ -103,12 +106,21 @@ export const ProjectsList = ({
 
   // Check local storage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('previousProjectData');
-    if (stored) {
+    const storedProject = localStorage.getItem('previousProjectData');
+    if (storedProject) {
       try {
-        setLastSession(JSON.parse(stored));
+        setLastSession(JSON.parse(storedProject));
       } catch (e) {
         console.error("Failed to parse project data", e);
+      }
+    }
+
+    const storedGroup = localStorage.getItem('previousGroupData');
+    if (storedGroup) {
+      try {
+        setLastGroup(JSON.parse(storedGroup));
+      } catch (e) {
+        console.error("Failed to parse group data", e);
       }
     }
   }, []);
@@ -130,6 +142,17 @@ export const ProjectsList = ({
     }
   };
 
+  const handleContinueGroup = () => {
+    if (lastGroup && onSelectGroup) {
+      const fullGroup = groups?.find(g => g.id === lastGroup.groupId);
+      if (fullGroup) {
+        onSelectGroup(fullGroup);
+      } else {
+        onSelectGroup({ id: lastGroup.groupId, group_name: lastGroup.groupName });
+      }
+    }
+  };
+
   if (!selectedGroup) {
     return (
       <div className="flex-1 p-6 flex flex-col bg-gray-900 relative">
@@ -142,33 +165,63 @@ export const ProjectsList = ({
 
         <div className="flex-1 flex flex-col items-center justify-center relative z-10">
 
-          {lastSession ? (
+          {lastSession || lastGroup ? (
             <div className="w-full max-w-md animate-fadeIn">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">Welcome Back!</h3>
                 <p className="text-gray-400">Ready to continue where you left off?</p>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                    <History className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-medium text-lg break-words">{lastSession.projectName}</h4>
-                    <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full border border-blue-400/20">
-                      Last Active Session
-                    </span>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                {lastSession && (
+                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <History className="h-6 w-6 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-medium text-lg break-words">{lastSession.projectName}</h4>
+                        <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-1 rounded-full border border-blue-400/20">
+                          Last Active Session
+                        </span>
+                      </div>
+                    </div>
 
-                <button
-                  onClick={handleContinueSession}
-                  className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
-                >
-                  <span>Continue Coding</span>
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                    <button
+                      onClick={handleContinueSession}
+                      className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
+                    >
+                      <span>Continue Coding</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                )}
+
+                {lastSession && lastGroup && (
+                  <div className="flex items-center gap-4 py-2">
+                    <div className="flex-1 h-px bg-gray-700/50"></div>
+                    <span className="text-xs text-gray-500 font-medium">or</span>
+                    <div className="flex-1 h-px bg-gray-700/50"></div>
+                  </div>
+                )}
+
+                {lastGroup && (
+                  <div
+                    onClick={handleContinueGroup}
+                    className="bg-gray-700/40 hover:bg-gray-700/60 border-2 border-gray-600/30 hover:border-gray-500/50 rounded-xl p-4 transition-all duration-200 cursor-pointer group flex justify-between items-center"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-semibold text-gray-200 group-hover:text-white transition-colors text-base truncate">
+                        {lastGroup.groupName}
+                      </span>
+                      <span className="flex-shrink-0 text-[10px] text-gray-400 bg-gray-800/50 px-2 py-0.5 rounded border border-gray-600/30 uppercase tracking-wider font-medium">
+                        Last Active Group
+                      </span>
+                    </div>
+
+                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0 ml-3" />
+                  </div>
+                )}
               </div>
 
               <p className="text-center text-gray-600 text-sm mt-8">

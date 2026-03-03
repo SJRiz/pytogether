@@ -21,6 +21,16 @@ export const MainContent = ({
   setShowCreateProjectModal,
   openProject
 }) => {
+  const handleSelectGroup = (group) => {
+    setSelectedGroup(group);
+    if (group) {
+      localStorage.setItem('previousGroupData', JSON.stringify({
+        groupId: group.id,
+        groupName: group.group_name
+      }));
+    }
+  };
+
   const handleViewMembers = (group) => {
     setMembersVisible(prev => prev === group.id ? null : group.id);
   };
@@ -31,10 +41,10 @@ export const MainContent = ({
   };
 
   const handleLeaveGroup = (group) => {
-    setShowConfirmModal({ 
-      show: true, 
-      type: 'leaveGroup', 
-      data: group 
+    setShowConfirmModal({
+      show: true,
+      type: 'leaveGroup',
+      data: group
     });
   };
 
@@ -44,10 +54,10 @@ export const MainContent = ({
   };
 
   const handleDeleteProject = (project) => {
-    setShowConfirmModal({ 
-      show: true, 
-      type: 'deleteProject', 
-      data: project 
+    setShowConfirmModal({
+      show: true,
+      type: 'deleteProject',
+      data: project
     });
   };
 
@@ -56,7 +66,7 @@ export const MainContent = ({
       <GroupsList
         groups={groups}
         selectedGroup={selectedGroup}
-        onSelectGroup={setSelectedGroup}
+        onSelectGroup={handleSelectGroup}
         loading={loadingGroups}
         membersVisible={membersVisible}
         onViewMembers={handleViewMembers}
@@ -75,6 +85,8 @@ export const MainContent = ({
         onDeleteProject={handleDeleteProject}
         onOpenProject={openProject}
         onCreateProject={() => setShowCreateProjectModal(true)}
+        groups={groups}
+        onSelectGroup={handleSelectGroup}
       />
     </div>
   );
