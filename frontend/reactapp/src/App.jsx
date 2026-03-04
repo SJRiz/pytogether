@@ -65,12 +65,20 @@ function App() {
         <p className="text-gray-400 text-center max-w-md mb-8">
           Cannot reach the server. It might be down for maintenance, updating, or you made an improper request. Please try again in a few moments.
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-blue-600 hover:bg-blue-700 font-medium px-6 py-2 rounded-lg transition-colors border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-        >
-          Refresh Page
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 font-medium px-6 py-2 rounded-lg transition-colors border border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+          >
+            Refresh Page
+          </button>
+          <button
+            onClick={() => window.location.href = '/home'}
+            className="bg-gray-700 hover:bg-gray-600 font-medium px-6 py-2 rounded-lg transition-colors border border-gray-600"
+          >
+            Back to Home
+          </button>
+        </div>
       </div>
     );
   }

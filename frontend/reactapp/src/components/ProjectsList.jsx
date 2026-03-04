@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users } from "lucide-react";
+import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users, X } from "lucide-react";
 
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
   const activeCount = project.active_users || 0;
@@ -153,6 +153,18 @@ export const ProjectsList = ({
     }
   };
 
+  const handleClearSession = (e) => {
+    e.stopPropagation();
+    localStorage.removeItem('previousProjectData');
+    setLastSession(null);
+  };
+
+  const handleClearGroup = (e) => {
+    e.stopPropagation();
+    localStorage.removeItem('previousGroupData');
+    setLastGroup(null);
+  };
+
   if (!selectedGroup) {
     return (
       <div className="flex-1 p-6 flex flex-col bg-gray-900 relative">
@@ -174,7 +186,14 @@ export const ProjectsList = ({
 
               <div className="space-y-4">
                 {lastSession && (
-                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative">
+                    <button
+                      onClick={handleClearSession}
+                      className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                      title="Clear history"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                     <div className="flex items-center gap-4 mb-6">
                       <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                         <History className="h-6 w-6 text-blue-400" />
@@ -206,20 +225,29 @@ export const ProjectsList = ({
                 )}
 
                 {lastGroup && (
-                  <div
-                    onClick={handleContinueGroup}
-                    className="bg-gray-700/40 hover:bg-gray-700/60 border-2 border-gray-600/30 hover:border-gray-500/50 rounded-xl p-4 transition-all duration-200 cursor-pointer group flex justify-between items-center"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="font-semibold text-gray-200 group-hover:text-white transition-colors text-base truncate">
-                        {lastGroup.groupName}
-                      </span>
-                      <span className="flex-shrink-0 text-[10px] text-gray-400 bg-gray-800/50 px-2 py-0.5 rounded border border-gray-600/30 uppercase tracking-wider font-medium">
-                        Last Active Group
-                      </span>
-                    </div>
+                  <div className="relative group/wrapper">
+                    <div
+                      onClick={handleContinueGroup}
+                      className="bg-gray-700/40 hover:bg-gray-700/60 border-2 border-gray-600/30 hover:border-gray-500/50 rounded-xl p-4 transition-all duration-200 cursor-pointer group flex justify-between items-center pr-12"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="font-semibold text-gray-200 group-hover:text-white transition-colors text-base truncate">
+                          {lastGroup.groupName}
+                        </span>
+                        <span className="flex-shrink-0 text-[10px] text-gray-400 bg-gray-800/50 px-2 py-0.5 rounded border border-gray-600/30 uppercase tracking-wider font-medium">
+                          Last Active Group
+                        </span>
+                      </div>
 
-                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0 ml-3" />
+                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0 ml-3" />
+                    </div>
+                    <button
+                      onClick={handleClearGroup}
+                      className="absolute top-1/2 -translate-y-1/2 right-3 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors z-10"
+                      title="Clear history"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
               </div>
