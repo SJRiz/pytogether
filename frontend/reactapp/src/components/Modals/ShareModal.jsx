@@ -94,8 +94,8 @@ export const ShareModal = ({ isOpen, onClose, group, project }) => {
               onClick={() => generateLink(activeTab)}
               disabled={loading}
               className={`w-full py-2.5 rounded-lg text-sm font-bold text-white transition-all ${activeTab === "edit"
-                  ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20"
-                  : "bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20"
+                ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20"
+                : "bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20"
                 }`}
             >
               {loading ? "Generating..." : "Generate Link"}
@@ -130,7 +130,7 @@ export const ShareModal = ({ isOpen, onClose, group, project }) => {
                       className="flex-1 bg-transparent text-sm text-gray-300 px-2 focus:outline-none font-mono truncate"
                     />
                     <button
-                      onClick={() => handleCopy(`<iframe src="${generatedLink.replace('/snippet/', '/embed/')}" width="100%" height="450px" frameborder="0"></iframe>`, 'embed')}
+                      onClick={() => handleCopy(`<iframe src="${generatedLink.replace('/snippet/', '/embed/')}" width="100%" height="500px" frameborder="0"></iframe>`, 'embed')}
                       className={`p-2 rounded-md transition-all ${copiedItem === 'embed' ? "bg-green-500/20 text-green-400" : "bg-gray-700 hover:bg-gray-600 text-white"
                         }`}
                     >
