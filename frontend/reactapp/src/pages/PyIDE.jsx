@@ -534,7 +534,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       const sizeInKB = sizeInBytes / 1024;
 
 
-      if (sizeInKB >= 190) {
+      if (sizeInKB >= 60) {
         setShowSizeWarning(true);
       } else {
         setShowSizeWarning(false);
@@ -783,7 +783,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         <div className="flex-1">
           <p className="text-sm text-yellow-200 font-semibold mb-1">Code Size Warning</p>
           <p className="text-xs text-yellow-100">
-            Your code is approaching the 200 KB limit. Changes beyond this point may not be saved properly.
+            Your code is approaching the 70 KB limit. Changes beyond this point may not be saved properly.
           </p>
         </div>
         <button
