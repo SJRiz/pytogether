@@ -86,10 +86,57 @@ def email_token_obtain_pair(request):
 @permission_classes([AllowAny])
 def register(request):
     """ Register with email + password. Returns created user (without password). """
+    email = request.data.get("email")
+    password = request.data.get("password")
+    
+    if email:
+        user = User.objects.filter(email=email).first()
+        if user:
+            # reset password
+            if user.password == "" or not user.password:
+                if not password or len(password) < 8:
+                    return Response({"password": ["Ensure this field has at least 8 characters."]}, status=status.HTTP_400_BAD_REQUEST)
+                
+                user.set_password(password)
+                user.save()
+                
+                refresh = RefreshToken.for_user(user)
+                response_data = RegisterSerializer(user).data
+                response_data["access"] = str(refresh.access_token)
+                
+                response = Response(response_data, status=status.HTTP_200_OK)
+                response.set_cookie(
+                    key="refresh_token",
+                    value=str(refresh),
+                    httponly=True,
+                    secure=True,
+                    samesite='Lax',
+                    max_age=30*24*60*60,
+                    path="/",
+                )
+                return response
+            else:
+                return Response({"email": ["A user with this email already exists."]}, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        return Response(RegisterSerializer(user).data, status=status.HTTP_201_CREATED)
+        
+        refresh = RefreshToken.for_user(user)
+        response_data = RegisterSerializer(user).data
+        response_data["access"] = str(refresh.access_token)
+        
+        response = Response(response_data, status=status.HTTP_201_CREATED)
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=30*24*60*60,
+            path="/",
+        )
+        return response
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
