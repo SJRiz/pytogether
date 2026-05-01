@@ -11,6 +11,7 @@ import About from './pages/About';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import OfflinePlayground from './pages/OfflinePlayground';
+import EmbedPlayground from './pages/EmbedPlayground';
 import SharedProjectHandler from './components/SharedProjectHandler';
 import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
 
@@ -106,6 +107,7 @@ function App() {
         />
 
         <Route path="/snippet/:token" element={<OfflinePlayground />} />
+        <Route path="/embed/:token" element={<EmbedPlayground />} />
         <Route path="/join-shared/:token"
           element={
             <ProtectedRoute>
