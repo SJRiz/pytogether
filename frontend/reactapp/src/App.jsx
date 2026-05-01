@@ -13,10 +13,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import OfflinePlayground from './pages/OfflinePlayground';
 import EmbedPlayground from './pages/EmbedPlayground';
 import SharedProjectHandler from './components/SharedProjectHandler';
-import useUmamiHeartbeat from './hooks/useUmamiHeartbeat';
+
 
 function App() {
-  useUmamiHeartbeat();
   const [isBackendDown, setIsBackendDown] = useState(false);
 
   useEffect(() => {
