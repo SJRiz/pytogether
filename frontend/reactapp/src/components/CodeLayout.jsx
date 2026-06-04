@@ -102,14 +102,15 @@ export default function CodeLayout({
     prevMessageCount.current = chatMessageCount;
   }, [chatMessageCount, showChat]);
 
+  const hasInputContent = !!inputContent;
   useEffect(() => {
-    if (inputContent && inputContainerRef.current) {
+    if (hasInputContent && inputContainerRef.current) {
       const inputElement = inputContainerRef.current.querySelector('input');
       if (inputElement) {
         setTimeout(() => inputElement.focus(), 50);
       }
     }
-  }, [inputContent]);
+  }, [hasInputContent]);
 
   useEffect(() => {
     if (plotContent) {
