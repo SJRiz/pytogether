@@ -13,7 +13,7 @@ from channels.db import database_sync_to_async
 from y_py import YDoc, apply_update
 
 from projects.models import Project
-from utils.redis_helpers import persist_ydoc_to_db, ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, DIRTY_PROJECTS_SET, ASYNC_REDIS
+from utils.redis_helpers import ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, DIRTY_PROJECTS_SET, ASYNC_REDIS
 
 User = get_user_model()
 
@@ -132,8 +132,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 remaining_users = await ASYNC_REDIS.hlen(active_set_key(self.project_id))
                 if remaining_users == 0:
                     await ASYNC_REDIS.srem(ACTIVE_PROJECTS_SET, str(self.project_id))
-                    if not self.forced_disconnect:
-                        await database_sync_to_async(persist_ydoc_to_db)(self.project_id)
 
         except Exception as e:
             print(f"Error during disconnect cleanup: {e}")
