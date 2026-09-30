@@ -401,12 +401,33 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     };
 
     // Outgoing Updates (Client -> Server)
+    // Batch updates over a 200ms window to reduce server lock contention.
+    // Y.mergeUpdates combines multiple CRDT deltas into one compact update.
+    let pendingUpdates = [];
+    let flushTimer = null;
+
+    const flushUpdates = () => {
+      if (pendingUpdates.length === 0 || ws.readyState !== WebSocket.OPEN) return;
+      const merged = pendingUpdates.length === 1
+        ? pendingUpdates[0]
+        : Y.mergeUpdates(pendingUpdates);
+      const updateB64 = btoa(String.fromCharCode.apply(null, merged));
+      ws.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
+      pendingUpdates = [];
+    };
+
     const updateHandler = (update, origin) => {
       // Don't send updates that came from the server
-      if (origin !== 'server' && ws.readyState === WebSocket.OPEN) {
-         if (origin !== 'remote') runner.errorLine && runner.setErrorLine(null); // Clear error on typing
-         const updateB64 = btoa(String.fromCharCode.apply(null, update));
-         ws.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
+      if (origin === 'server') return;
+
+      if (origin !== 'remote') runner.errorLine && runner.setErrorLine(null); // Clear error on typing
+
+      pendingUpdates.push(update);
+      if (!flushTimer) {
+        flushTimer = setTimeout(() => {
+          flushTimer = null;
+          flushUpdates();
+        }, 200);
       }
     };
     ydoc.on('update', updateHandler);
@@ -436,6 +457,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ydoc.off('update', updateHandler);
       awareness.off('update', throttledAwarenessHandler);
       throttledAwarenessHandler.cancel();
+      // Flush any pending batched updates before closing
+      if (flushTimer) clearTimeout(flushTimer);
+      flushUpdates();
       ydoc.destroy();
       ws.close();
       clearInterval(pinger);
