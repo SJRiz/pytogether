@@ -402,7 +402,6 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
     // Outgoing Updates (Client -> Server)
     // Batch updates over a 200ms window to reduce server lock contention.
-    // Y.mergeUpdates combines multiple CRDT deltas into one compact update.
     let pendingUpdates = [];
     let flushTimer = null;
 
