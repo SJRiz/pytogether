@@ -2,10 +2,10 @@
 import * as Comlink from 'comlink';
 import { loadPyodide } from "pyodide";
 import {
-  initPyodide,
-  makeRunnerCallback,
-  pyodideExpose,
-  PyodideFatalErrorReloader
+initPyodide,
+makeRunnerCallback,
+pyodideExpose,
+PyodideFatalErrorReloader
 } from "pyodide-worker-runner";
 
 
@@ -142,105 +142,95 @@ def check_entry(entry, callback):
 // TEST FUNCTION: import matplotlib.pyplot as plt; import numpy as np; x = np.linspace(0, 10, 100); plt.plot(x, np.sin(x)); plt.show()
 
 const reloader = new PyodideFatalErrorReloader(async () => {
-  console.log("Loading Pyodide from jsDelivr CDN...");
-  const pyodide = await loadPyodide({
+console.log("Loading Pyodide from jsDelivr CDN...");
+const pyodide = await loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.0/full/"
-  });
+});
 
-  await initPyodide(pyodide);
+await initPyodide(pyodide);
 
-  console.log("Loading micropip...");
-  await pyodide.loadPackage("micropip");
-  const micropip = pyodide.pyimport("micropip");
+console.log("Loading micropip...");
+await pyodide.loadPackage("micropip");
+const micropip = pyodide.pyimport("micropip");
 
-  console.log("Installing python_runner...");
-  await micropip.install("python_runner");
+console.log("Installing python_runner...");
+await micropip.install("python_runner");
 
-  console.log("Installing colorama...");
-  await micropip.install("colorama");
-  
-  console.log("Installing matplotlib...");
-  await micropip.install("matplotlib");
+console.log("Installing colorama...");
+await micropip.install("colorama");
 
-  console.log("Installing Pillow for GIF support...");
-  await micropip.install("Pillow");
+console.log("Installing matplotlib...");
+await micropip.install("matplotlib");
 
-  console.log("Setting Matplotlib backend to 'Agg'...");
-  pyodide.runPython(`
+console.log("Installing Pillow for GIF support...");
+await micropip.install("Pillow");
+
+console.log("Setting Matplotlib backend to 'Agg'...");
+pyodide.runPython(`
     import matplotlib
     matplotlib.use('Agg')
-  `);
-  console.log("Patching urllib with whitelist...");
+`);
+console.log("Patching urllib with whitelist...");
 
-  console.log("Installing pandas...");
-  await micropip.install("pandas");
+console.log("Installing pandas...");
+await micropip.install("pandas");
 
-  console.log("Installing scipy...");
-  await micropip.install("scipy");
+console.log("Installing scipy...");
+await micropip.install("scipy");
 
-  console.log("Installing numpy...");
-  await micropip.install("numpy");
+console.log("Installing numpy...");
+await micropip.install("numpy");
 
-  await pyodide.runPythonAsync(`
-import urllib.request, urllib.parse, sys, types
+console.log("Installing pyodide-http...");
+await micropip.install("pyodide-http");
 
-ALLOWED_DOMAINS = {"pypi.org", "files.pythonhosted.org", "cdn.jsdelivr.net"}
+pyodide.runPython(`
+    import pyodide_http
+    pyodide_http.patch_all()
+`);
 
-_real_urlopen = urllib.request.urlopen
+pyodide.runPython(PYTHON_RUNNER_WRAPPER);
 
-def _safe_urlopen(url, *args, **kwargs):
-    from urllib.parse import urlparse
-    u = url if isinstance(url, str) else getattr(url, "get_full_url", lambda: str(url))()
-    host = urlparse(u).netloc.split(":")[0].lower()
-    if host not in ALLOWED_DOMAINS:
-        raise PermissionError(f"Network access to '{host}' not allowed.")
-    return _real_urlopen(url, *args, **kwargs)
-
-urllib.request.urlopen = _safe_urlopen
-  `);
-
-  pyodide.runPython(PYTHON_RUNNER_WRAPPER);
-  
-  console.log("Installation complete.");
-  return pyodide;
+console.log("Installation complete.");
+return pyodide;
 });
 
 async function init() {
-  await reloader.withPyodide(async (pyodide) => {
+await reloader.withPyodide(async (pyodide) => {
     console.log("Pyodide worker initialized.");
-  });
+});
 }
 
 
 const runCode = pyodideExpose(
-  async function (extras, entry, outputCallback, inputCallback) {
+async function (extras, entry, outputCallback, inputCallback) {
     let outputPromise;
     const callback = makeRunnerCallback(extras, {
-      input: () => inputCallback(),
-      output: (parts) => {
+    input: () => inputCallback(),
+    output: (parts) => {
         outputPromise = outputCallback(parts);
-      },
+    },
     });
 
     return await reloader.withPyodide(async (pyodide) => {
-      const pyodide_worker_runner = pyodide.pyimport("pyodide_worker_runner");
-      try {
+    const pyodide_worker_runner = pyodide.pyimport("pyodide_worker_runner");
+    try {
         await pyodide_worker_runner.install_imports(entry.input);
-      } catch (e) {
+    } catch (e) {
         console.error("Failed to install imports:", e);
-      }
+    }
 
-      const check_entry = pyodide.globals.get("check_entry");
-      
-      const result = check_entry(entry, callback);
+    const check_entry = pyodide.globals.get("check_entry");
+    
+    const result = check_entry(entry, callback);
 
-      await outputPromise;
-      if (result && typeof result.toJs === 'function') {
+    await outputPromise;
+    if (result && typeof result.toJs === 'function') {
         return result.toJs({ dict_converter: Object.fromEntries });
-      }
-      return result;
+    }
+    return result;
     });
-  },
+},
 );
 
 Comlink.expose({ init, runCode });

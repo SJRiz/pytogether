@@ -107,7 +107,7 @@ services:
   celery-beat:
     image: pytogether-backend:latest
     restart: unless-stopped
-    command: celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: celery -A backend beat -l info
     env_file:
       - ./backend/.env.dev
     depends_on:

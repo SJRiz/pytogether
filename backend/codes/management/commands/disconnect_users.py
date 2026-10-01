@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from codes.tasks import snapshot_active_projects
-from backend.utils.redis_helpers import SYNC_REDIS
+from codes.tasks import snapshot_dirty_projects
+from utils.redis_helpers import SYNC_REDIS
 
 class Command(BaseCommand):
     help = "Snapshot all active projects, disconnect all websockets, and flush Redis"
@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         # Snapshot all currently active projects
         self.stdout.write("Snapshotting active projects...")
-        snapshot_active_projects()
+        snapshot_dirty_projects()
         self.stdout.write(self.style.SUCCESS("Snapshot complete"))
 
         # Force disconnect all active websockets

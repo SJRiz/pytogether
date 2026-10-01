@@ -193,8 +193,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # App specific settings
-MAX_MESSAGE_SIZE = 200 * 1024    # ~0.20MB
-HEARTBEAT_INTERVAL = 10         # how long we wait till we check if the user is still alive
+MAX_MESSAGE_SIZE = 70 * 1024    # ~0.07MB
+HEARTBEAT_INTERVAL = 30         # how long we wait till we check if the user is still alive
 USER_COLORS = [
   {"color": "#F06292", "light": "#F0629233"},
   {"color": "#BA68C8", "light": "#BA68C833"},

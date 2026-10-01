@@ -48,7 +48,7 @@ export const GroupsList = ({
           />
         )}
 
-        <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#0B0F17] border-r border-slate-800 z-40 transform transition-transform duration-300 ease-in-out md:hidden ${
+        <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#0e1421] border-r border-gray-800 z-40 transform transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
           <div className="flex flex-col h-full">
@@ -121,7 +121,7 @@ export const GroupsList = ({
   }
 
   return (
-    <div className="w-1/4 bg-[#0B0F17]/70 border-r border-slate-800 p-6 flex flex-col">
+    <div className="w-1/4 bg-[#0e1421]/70 border-r border-gray-800 p-6 flex flex-col">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
         

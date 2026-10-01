@@ -8,7 +8,7 @@ export function usePyRunner() {
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [plotSrc, setPlotSrc] = useState(null);
   const [errorLine, setErrorLine] = useState(null);
-  
+
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
 
@@ -16,7 +16,7 @@ export function usePyRunner() {
     setConsoleOutput([]);
   }, []);
 
-const addConsoleEntry = useCallback((content, type = 'output', timestamp = new Date()) => {
+  const addConsoleEntry = useCallback((content, type = 'output', timestamp = new Date()) => {
     setConsoleOutput(prev => {
       const strippedContent = content.replace(/^\r+/, '');
 
@@ -83,7 +83,7 @@ const addConsoleEntry = useCallback((content, type = 'output', timestamp = new D
           } else if (part.type === 'input_prompt') {
             addConsoleEntry(part.text, "system");
             setWaitingForInput(true);
-          } 
+          }
           // Handle Errors and STDERR
           else if (part.type === 'internal_error' || part.type === 'stderr') {
             // lol
@@ -96,14 +96,14 @@ const addConsoleEntry = useCallback((content, type = 'output', timestamp = new D
             const logType = isProgressBar ? 'output' : 'error';
 
             addConsoleEntry(part.text, logType);
-            
+
             // Only parse line numbers if it's actually an error
             if (!isProgressBar) {
-                const matches = [...part.text.matchAll(/File "\/main\.py", line (\d+)/g)];
-                if (matches.length > 0) {
-                    const lastMatch = matches[matches.length - 1];
-                    setErrorLine(parseInt(lastMatch[1]));
-                }
+              const matches = [...part.text.matchAll(/File "\/main\.py", line (\d+)/g)];
+              if (matches.length > 0) {
+                const lastMatch = matches[matches.length - 1];
+                setErrorLine(parseInt(lastMatch[1]));
+              }
             }
           } else {
             // Standard Output
@@ -125,7 +125,7 @@ const addConsoleEntry = useCallback((content, type = 'output', timestamp = new D
     setErrorLine(null);
     setPlotSrc(null);
     addConsoleEntry(">>> Running...", "input");
-    
+
     try {
       await runCodeTask(
         { input: codeString },
@@ -175,6 +175,7 @@ const addConsoleEntry = useCallback((content, type = 'output', timestamp = new D
     submitInput,
     setConsoleOutput,
     clearConsole,
-    setErrorLine
+    setErrorLine,
+    setPlotSrc
   };
 }
