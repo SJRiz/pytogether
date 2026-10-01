@@ -14,6 +14,7 @@ import {
   AccessCodeModal,
   ConfirmModal
 } from "../components/Modals";
+import FeedbackModal from "../components/FeedbackModal";
 
 export default function GroupsAndProjectsPage() {
     const [groups, setGroups] = useState([]);
@@ -26,6 +27,7 @@ export default function GroupsAndProjectsPage() {
     const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
     const [showEditProjectModal, setShowEditProjectModal] = useState(null);
     const [showAccessCodeModal, setShowAccessCodeModal] = useState(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState({ show: false, type: '', data: null });
     const [newGroupName, setNewGroupName] = useState("");
     const [editGroupName, setEditGroupName] = useState("");
@@ -80,6 +82,28 @@ export default function GroupsAndProjectsPage() {
 
     useEffect(() => {
         fetchGroups();
+    }, []);
+
+    // Random feedback popup logic
+    useEffect(() => {
+        const hasSubmitted = localStorage.getItem('pytogether_feedback_submitted');
+        
+        let visits = parseInt(localStorage.getItem('pytogether_dashboard_visits') || '0', 10);
+        visits += 1;
+        localStorage.setItem('pytogether_dashboard_visits', visits.toString());
+
+        const hasBeenPrompted = sessionStorage.getItem('pytogether_feedback_prompted');
+
+        // Only consider prompting if they've visited > 2 times, haven't submitted, and haven't been prompted this session
+        if (visits > 2 && !hasSubmitted && !hasBeenPrompted) {
+            sessionStorage.setItem('pytogether_feedback_prompted', 'true');
+            if (Math.random() < 0.4) {
+                const timer = setTimeout(() => {
+                    setShowFeedbackModal(true);
+                }, 2000);
+                return () => clearTimeout(timer);
+            }
+        }
     }, []);
 
     useEffect(() => {
@@ -234,14 +258,14 @@ export default function GroupsAndProjectsPage() {
                     </div>
 
                     <div className="hidden md:flex items-center ml-4 pl-4 border-l border-gray-700 h-8">
-                        <a 
-                            href="mailto:contact@pytogether.org" 
+                        <button 
+                            onClick={() => setShowFeedbackModal(true)}
                             className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors text-sm font-medium"
                             title="Send Feedback"
                         >
                             <Mail className="w-4 h-4" />
                             <span className="hidden lg:inline">Feedback</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -382,6 +406,11 @@ export default function GroupsAndProjectsPage() {
             ? "Are you sure you want to leave this group? This action cannot be undone."
             : "Are you sure you want to delete this project? This action cannot be undone."
         }
+        />
+
+        <FeedbackModal 
+          isOpen={showFeedbackModal} 
+          onClose={() => setShowFeedbackModal(false)} 
         />
 
         {/* Animation styles */}

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register, me, google_login, logout
+from .views import register, me, google_login, logout, feedback
 from .tokens import CookieTokenRefreshView
 from users.views import email_token_obtain_pair
 from projects import views as project_views 
@@ -21,4 +21,5 @@ urlpatterns = [
     # others
     path("auth/register/", register, name="register"),
     path("me/", me, name="me"),
+    path("feedback/", feedback, name="feedback"),
 ]

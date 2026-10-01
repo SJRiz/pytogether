@@ -113,3 +113,31 @@ def me(request):
     """ Protected endpoint returning current user's data. """
     return Response(UserSerializer(request.user).data)
 
+from .models import Feedback
+from .serializers import FeedbackSerializer
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def feedback(request):
+    """ Handle user feedback (star rating and message) """
+    if request.method == "GET":
+        try:
+            feedback_obj = Feedback.objects.get(user=request.user)
+            return Response(FeedbackSerializer(feedback_obj).data)
+        except Feedback.DoesNotExist:
+            return Response({"rating": 0, "message": ""})
+            
+    if request.method == "POST":
+        rating = request.data.get("rating")
+        message = request.data.get("message", "")
+        
+        if not rating or not (1 <= int(rating) <= 5):
+            return Response({"error": "Valid rating (1-5) is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        feedback_obj, created = Feedback.objects.update_or_create(
+            user=request.user,
+            defaults={"rating": int(rating), "message": message}
+        )
+        
+        return Response(FeedbackSerializer(feedback_obj).data)
+
