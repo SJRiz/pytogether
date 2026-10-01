@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [password1, setPassword1] = useState("");
   const [password2, setPassword2] = useState("");
   const [errors, setErrors] = useState({});
@@ -18,6 +19,13 @@ export default function Register() {
     e.preventDefault();
     setErrors({}); // reset errors
     setIsLoading(true);
+
+    // frontend check for matching emails
+    if (email !== confirmEmail) {
+      setErrors({ confirmEmail: ["Emails do not match."] });
+      setIsLoading(false);
+      return;
+    }
 
     // frontend check for matching passwords
     if (password1 !== password2) {
@@ -115,6 +123,23 @@ export default function Register() {
               />
               {errors.email && (
                 <p className="text-red-400 text-sm mt-2">{errors.email[0]}</p>
+              )}
+            </div>
+
+            {/* Confirm Email field */}
+            <div>
+              <input
+                type="email"
+                placeholder="Confirm Email"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 ${
+                  'bg-gray-700/50 border-gray-600/30 text-white'
+                }`}
+                disabled={isLoading}
+              />
+              {errors.confirmEmail && (
+                <p className="text-red-400 text-sm mt-2">{errors.confirmEmail[0]}</p>
               )}
             </div>
 
