@@ -12,7 +12,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       // Fetch existing feedback if any
-      api.get("/users/feedback/")
+      api.get("/api/feedback/")
         .then(res => {
           if (res.data.rating) {
             setRating(res.data.rating);
@@ -29,7 +29,7 @@ export default function FeedbackModal({ isOpen, onClose }) {
     
     setIsSubmitting(true);
     try {
-      await api.post("/users/feedback/", { rating, message });
+      await api.post("/api/feedback/", { rating, message });
       setSuccess(true);
       localStorage.setItem('pytogether_feedback_submitted', 'true');
       setTimeout(() => {
