@@ -75,24 +75,24 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const deletionWarningFilter = EditorState.transactionFilter.of(tr => {
     const userEvent = tr.annotation(Transaction.userEvent);
     if (userEvent === "confirmed_large_deletion") return tr;
-    
-    const isTriggerEvent = userEvent === "delete.backward" || 
-                           userEvent === "delete.forward" || 
-                           userEvent === "delete.selection" || 
-                           userEvent === "delete.cut" || 
-                           userEvent === "input.type" || 
-                           userEvent === "input.paste";
+
+    const isTriggerEvent = userEvent === "delete.backward" ||
+      userEvent === "delete.forward" ||
+      userEvent === "delete.selection" ||
+      userEvent === "delete.cut" ||
+      userEvent === "input.type" ||
+      userEvent === "input.paste";
 
     if (!isTriggerEvent) return tr;
-    
+
     let deletedChars = 0;
     tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
       deletedChars += (toA - fromA);
     });
-    
+
     if (deletedChars > 4000) {
       setTimeout(() => setPendingDeletion(tr), 0);
-      return []; 
+      return [];
     }
     return tr;
   });
@@ -816,16 +816,16 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   );
 
   const drawingSlot = (
-      <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
-          <div className={`flex items-center space-x-1 ${!canvas.showDrawings ? 'opacity-40 pointer-events-none' : ''}`}>
-            <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
-            <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4"/></button>
-            <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4"/></button>
-            <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4"/></button>
-            <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4"/></button>
-          </div>
-          <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
+    <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
+      <div className={`flex items-center space-x-1 ${!canvas.showDrawings ? 'opacity-40 pointer-events-none' : ''}`}>
+        <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
+        <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4" /></button>
+        <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4" /></button>
       </div>
+      <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+    </div>
   );
 
   const sizeWarningToast = showSizeWarning && (
@@ -889,7 +889,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         project={{ id: projectId }}
         group={{ id: groupId }}
       />
-      
+
       {pendingDeletion && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full border border-gray-700 shadow-2xl">
@@ -901,13 +901,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               Note: You can still press Ctrl+Z to undo this, but exiting the page means you won't be able to undo this anymore.
             </p>
             <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setPendingDeletion(null)} 
+              <button
+                onClick={() => setPendingDeletion(null)}
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => {
                   if (editorViewRef.current) {
                     editorViewRef.current.dispatch({
@@ -916,7 +916,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                     });
                   }
                   setPendingDeletion(null);
-                }} 
+                }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors font-medium"
               >
                 Delete Anyway

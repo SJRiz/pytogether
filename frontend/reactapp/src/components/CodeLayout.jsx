@@ -207,7 +207,7 @@ export default function CodeLayout({
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </button>
             <div className="flex items-center gap-2 md:gap-3">
-              <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1.5 md:p-2 rounded-xl border border-gray-700/50">
+              <div className="relative bg-gray-800 p-1.5 md:p-2 rounded-xl border border-gray-700/50">
                 <img src="/pytog.png" alt="Icon" className="h-6 w-6 md:h-8 md:w-8" />
               </div>
               <h1 className="text-lg md:text-2xl font-bold pl-1 md:pl-2 bg-clip-text hidden sm:block">PyTogether</h1>
@@ -251,6 +251,8 @@ export default function CodeLayout({
               {drawingControls}
               {voiceControls}
             </div>
+
+            
 
             {connectedUsers.length > 0 && (
               <div className="hidden sm:flex items-center gap-2 md:gap-3 border-r border-gray-600 pr-2 md:pr-4 mr-1 md:mr-2">

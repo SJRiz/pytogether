@@ -35,8 +35,7 @@ const errorLineField = StateField.define({
 });
 
 export default function EmbedPlayground() {
-    const { token } = useParams();
-    const [code, setCode] = useState("# Loading snippet...");
+    const { token } = useParams();    const [code, setCode] = useState("# Loading snippet...");
     const [projectName, setProjectName] = useState("Loading...");
     const [isLoadingSnippet, setIsLoadingSnippet] = useState(true);
     const [showConsole, setShowConsole] = useState(true);
@@ -190,15 +189,15 @@ export default function EmbedPlayground() {
     }, [isDragging]);
 
     return (
-        <div className="h-screen bg-slate-850 text-gray-100 flex flex-col overflow-hidden">
+        <div className={`h-screen flex flex-col overflow-hidden ${'bg-slate-850 text-gray-100'}`}>
 
             {/* HEADER */}
-            <div className="border-b border-gray-700 bg-gray-850 flex-shrink-0">
+            <div className={`border-b flex-shrink-0 ${'border-gray-700 bg-gray-850'}`}>
                 <div className="flex items-center justify-between px-3 py-2 gap-2">
 
                     <div className="flex items-center space-x-2 flex-shrink-0">
                         <div className="flex items-center gap-2 md:gap-3">
-                            <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-1.5 rounded-xl border border-gray-700/50">
+                            <div className={`relative p-1.5 rounded-xl border ${'bg-gray-800 border-gray-700/50'}`}>
                                 <img src="/pytog.png" alt="Icon" className="h-5 w-5 md:h-6 md:w-6" />
                             </div>
                             <h1 className="text-base md:text-lg font-bold bg-clip-text hidden sm:block">PyTogether</h1>
@@ -221,9 +220,11 @@ export default function EmbedPlayground() {
                             <button onClick={canvas.clearDrawings} className="p-1.5 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
                         </div>
 
+                        
+
                         <button
                             onClick={() => setShowConsole(!showConsole)}
-                            className={`p-1.5 rounded-lg ${showConsole ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-gray-600 text-gray-300`}
+                            className={`p-1.5 rounded-lg transition-colors ${showConsole ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
                             title={showConsole ? 'Hide Console' : 'Show Console'}
                         >
                             <Terminal className="h-4 w-4" />
@@ -239,7 +240,7 @@ export default function EmbedPlayground() {
                                     runner.setPlotSrc(null);
                                     runner.setErrorLine(null);
                                 }}
-                                className="p-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+                                className={`p-1.5 rounded-lg transition-colors ${'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
                                 title="Restart — reset to original snippet"
                             >
                                 <RefreshCw className="h-4 w-4" />
@@ -270,19 +271,19 @@ export default function EmbedPlayground() {
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} flex-1 min-h-0`}>
 
                 {/* EDITOR AREA */}
-                <div className={`flex ${isMobile ? 'flex-1 min-h-0' : 'flex-1'} flex-col ${isMobile ? 'border-b' : 'border-r'} border-gray-700 min-w-0 relative`}>
-                    <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between z-20 flex-shrink-0">
-                        <h2 className="text-xs md:text-sm font-medium text-gray-300">main.py</h2>
-                        <span className="text-sm font-medium text-gray-400 truncate max-w-[200px]">{projectName}</span>
+                <div className={`flex flex-col relative min-w-0 ${isMobile ? 'flex-1 min-h-0 border-b' : 'flex-1 border-r'} ${'border-gray-700'}`}>
+                    <div className={`px-3 md:px-4 py-2 border-b flex items-center justify-between z-20 flex-shrink-0 ${'bg-gray-800 border-gray-700'}`}>
+                        <h2 className={`text-xs md:text-sm font-medium ${'text-gray-300'}`}>main.py</h2>
+                        <span className={`text-sm font-medium truncate max-w-[200px] ${'text-gray-400'}`}>{projectName}</span>
                     </div>
 
                     <div className="flex-1 overflow-auto scrollbar-hide relative min-h-0" ref={canvas.containerRef}>
                         {/* Loading Overlay */}
                         {isLoadingSnippet && (
-                            <div className="absolute inset-0 z-50 bg-gray-900 flex items-center justify-center">
+                            <div className={`absolute inset-0 z-50 flex items-center justify-center ${'bg-gray-900'}`}>
                                 <div className="flex flex-col items-center">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-                                    <p className="text-gray-400 text-sm">Loading Snippet...</p>
+                                    <p className={`text-sm ${'text-gray-400'}`}>Loading Snippet...</p>
                                 </div>
                             </div>
                         )}
@@ -325,11 +326,11 @@ export default function EmbedPlayground() {
                         </div>
                     )}
 
-                    <div className="flex flex-col bg-gray-850 h-full" style={{ width: isMobile ? '100%' : `${consoleWidth}px` }}>
-                        <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
+                    <div className={`flex flex-col h-full ${'bg-gray-850'}`} style={{ width: isMobile ? '100%' : `${consoleWidth}px` }}>
+                        <div className={`px-3 md:px-4 py-2 border-b flex items-center justify-between flex-shrink-0 ${'bg-gray-800 border-gray-700'}`}>
                             <div className="flex items-center space-x-2">
-                                <Terminal className="h-4 w-4 text-gray-400" />
-                                <h2 className="text-xs md:text-sm font-medium text-gray-300">Console</h2>
+                                <Terminal className={`h-4 w-4 ${'text-gray-400'}`} />
+                                <h2 className={`text-xs md:text-sm font-medium ${'text-gray-300'}`}>Console</h2>
                                 {runner.waitingForInput && <span className="text-xs text-blue-400 animate-pulse">Waiting...</span>}
                             </div>
                             <div className="flex items-center">
@@ -339,7 +340,7 @@ export default function EmbedPlayground() {
                             </div>
                         </div>
 
-                        <div ref={consoleScrollRef} className="flex-1 p-3 md:p-4 overflow-y-auto bg-gray-900 font-mono text-xs md:text-sm space-y-1 scrollbar-hide min-h-0" style={{ scrollbarWidth: 'none' }}>
+                        <div ref={consoleScrollRef} className={`flex-1 p-3 md:p-4 overflow-y-auto font-mono text-xs md:text-sm space-y-1 scrollbar-hide min-h-0 ${'bg-gray-900'}`} style={{ scrollbarWidth: 'none' }}>
                             {runner.plotSrc && (
                                 <div className="mb-3">
                                     <img
@@ -377,12 +378,12 @@ export default function EmbedPlayground() {
 
                         <div className="flex-shrink-0" ref={inputContainerRef}>
                             {runner.waitingForInput && (
-                                <div className="border-t border-gray-700 bg-gray-800 p-3">
+                                <div className={`border-t p-3 ${'border-gray-700 bg-gray-800'}`}>
                                     <div className="flex items-center space-x-2">
                                         <input
                                             ref={runner.inputRef}
                                             onKeyDown={e => e.key === 'Enter' && (runner.submitInput(e.target.value), e.target.value = '')}
-                                            className="flex-1 bg-gray-700 text-white px-3 py-2 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className={`flex-1 px-3 py-2 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${'bg-gray-700 text-white'}`}
                                             placeholder="Enter input..."
                                         />
                                         <button

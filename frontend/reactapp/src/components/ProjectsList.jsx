@@ -16,14 +16,14 @@ const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
 
   return (
     <li
-      className="h-[140px] w-full bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-2 border-gray-600/30 
-                 hover:border-gray-500/50 hover:from-gray-700/60 hover:to-gray-800/60 rounded-xl p-4 
+      className="h-[140px] w-full bg-gray-700/40 border-2 border-gray-600/30 
+                 hover:border-gray-500/50 hover:bg-gray-700/60 rounded-xl p-4 
                  transition-all duration-200 cursor-pointer group animate-fadeIn shadow-lg hover:shadow-xl 
                  relative flex flex-col justify-between overflow-hidden"
       onClick={() => onOpen(project)}
     >
       <div className="flex gap-3 items-start min-w-0">
-        <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex-shrink-0 mt-0.5">
+        <div className="flex items-center justify-center h-8 w-8 bg-blue-600 rounded-lg flex-shrink-0 mt-0.5">
           <Folder className="h-4 w-4 text-white" />
         </div>
 
@@ -186,7 +186,7 @@ export const ProjectsList = ({
 
               <div className="space-y-4">
                 {lastSession && (
-                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative">
+                  <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 shadow-2xl backdrop-blur-sm relative">
                     <button
                       onClick={handleClearSession}
                       className="absolute top-3 right-3 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -208,7 +208,7 @@ export const ProjectsList = ({
 
                     <button
                       onClick={handleContinueSession}
-                      className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
+                      className="w-full group flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
                     >
                       <span>Continue Coding</span>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -269,23 +269,20 @@ export const ProjectsList = ({
   }
 
   return (
-    <div className="flex-1 p-6 flex flex-col bg-gray-900 overflow-hidden relative">
-      {/* Subtle grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f15_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f15_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
-
+    <div className="flex-1 p-6 flex flex-col bg-transparent overflow-hidden relative">
       {/* Header */}
       <div className="mb-6 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
           <button
             onClick={onCreateProject}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-500 hover:to-blue-400 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 font-medium"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 font-medium"
           >
             <FolderPlus className="h-4 w-4" />
             <span className="text-sm">Create Project</span>
           </button>
         </div>
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+        <div className="h-px bg-gray-600"></div>
       </div>
 
       {/* Project list */}

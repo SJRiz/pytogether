@@ -2,7 +2,8 @@ import { FileText, AlertTriangle, Gavel } from 'lucide-react';
 
 const TermsOfService = () => {
   return (
-    <div className="min-h-screen bg-slate-950 text-gray-300 p-8 flex justify-center">
+    <div className={`min-h-screen p-8 flex justify-center ${'bg-slate-950 text-gray-300'}`}>
+      
       <div className="max-w-3xl w-full">
         
         {/* Header */}

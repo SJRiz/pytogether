@@ -69,13 +69,18 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800/70 backdrop-blur-md border border-gray-700/30 rounded-xl shadow-2xl overflow-hidden">
+    <div className={`min-h-screen flex items-center justify-center p-4 ${'bg-gray-900'}`}>
+      {/* Theme Toggle */}
+      
+
+      <div className={`w-full max-w-md backdrop-blur-md border rounded-xl shadow-2xl overflow-hidden ${
+        'bg-gray-800/70 border-gray-700/30'
+      }`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-700/50">
+        <div className={`p-6 border-b ${'border-gray-700/50'}`}>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-400 hover:text-gray-300 transition-colors mb-4"
+            className={`flex items-center transition-colors mb-4 ${'text-gray-400 hover:text-gray-300'}`}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
@@ -85,10 +90,10 @@ export default function Register() {
               <UserPlus className="h-6 w-6 text-blue-400" />
             </div>
           </div>
-          <h1 className="text-2xl font-semibold text-white text-center mt-3">
+          <h1 className={`text-2xl font-semibold text-center mt-3 ${'text-white'}`}>
             Create Account
           </h1>
-          <p className="text-gray-400 text-sm text-center mt-1">
+          <p className={`text-sm text-center mt-1 ${'text-gray-400'}`}>
             Join us to start collaborating
           </p>
         </div>
@@ -103,7 +108,9 @@ export default function Register() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200"
+                className={`w-full px-4 py-3 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 ${
+                  'bg-gray-700/50 border-gray-600/30 text-white'
+                }`}
                 disabled={isLoading}
               />
               {errors.email && (
@@ -119,12 +126,14 @@ export default function Register() {
                   placeholder="Password"
                   value={password1}
                   onChange={(e) => setPassword1(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 pr-10"
+                  className={`w-full px-4 py-3 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 pr-10 ${
+                    'bg-gray-700/50 border-gray-600/30 text-white'
+                  }`}
                   disabled={isLoading}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setShowPassword1(!showPassword1)}
                 >
                   {showPassword1 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -143,12 +152,14 @@ export default function Register() {
                   placeholder="Confirm Password"
                   value={password2}
                   onChange={(e) => setPassword2(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 pr-10"
+                  className={`w-full px-4 py-3 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 pr-10 ${
+                    'bg-gray-700/50 border-gray-600/30 text-white'
+                  }`}
                   disabled={isLoading}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${'text-gray-400 hover:text-gray-300'}`}
                   onClick={() => setShowPassword2(!showPassword2)}
                 >
                   {showPassword2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -177,8 +188,8 @@ export default function Register() {
           </form>
 
           {/* Redirect to login */}
-          <div className="mt-6 pt-4 border-t border-gray-700/50">
-            <p className="text-gray-400 text-sm text-center">
+          <div className={`mt-6 pt-4 border-t ${'border-gray-700/50'}`}>
+            <p className={`text-sm text-center ${'text-gray-400'}`}>
               Already have an account?{" "}
               <button
                 onClick={handleLoginRedirect}
