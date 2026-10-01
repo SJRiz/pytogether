@@ -74,7 +74,7 @@ export default function Login() {
               </div>
             </div>
           </div>
-          <h1 className="text-4xl font-bold mb-3 text-indigo-400">
+          <h1 className="text-4xl font-bold mb-3 text-white">
             PyTogether
           </h1>
           <p className="text-base font-semibold mb-2 text-gray-300">Easy. Quick. Real-time. Free.</p>
@@ -122,15 +122,18 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 disabled:opacity-50"
+              className="group relative w-full bg-white text-black py-3.5 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-white/10 hover:shadow-white/20 disabled:opacity-50 disabled:hover:scale-100 overflow-hidden"
             >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-              ) : (
-                <>
-                  <LogIn className="h-5 w-5 mr-2" /> Sign In
-                </>
-              )}
+              <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+              <div className="relative flex items-center justify-center">
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent"></div>
+                ) : (
+                  <>
+                    <LogIn className="h-5 w-5 mr-2" /> Sign In
+                  </>
+                )}
+              </div>
             </button>
           </form>
 

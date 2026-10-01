@@ -147,33 +147,34 @@ export default function About() {
         <section className="relative z-10 pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
 
           {/* Heading */}
-          <h1 className={`text-5xl md:text-7xl font-bold tracking-tight mb-8 max-w-4xl leading-[1.1] ${"text-white"}`}>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 max-w-4xl leading-[1.1] text-white animate-fade-in-up">
             PyTogether
           </h1>
 
           {/* Logo */}
-          <div ref={heroLogoRef} className="mb-8">
-            <div className="relative p-3.5 sm:p-4 rounded-2xl border bg-gray-800 border-gray-400/50 shadow-2xl inline-block">
+          <div ref={heroLogoRef} className="mb-8 animate-fade-in-up delay-100">
+            <div className="relative p-3.5 sm:p-4 rounded-2xl border bg-gray-800 border-gray-400/50 shadow-2xl inline-block animate-float ">
               <img
                 src="/pytog.png"
                 alt="PyTogether Logo"
-                className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+                className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-lg"
               />
             </div>
           </div>
 
-          <p className={`text-lg md:text-xl max-w-2xl mb-10 leading-relaxed ${'text-slate-400'}`}>
+          <p className="text-lg md:text-xl max-w-2xl mb-10 leading-relaxed text-slate-400 animate-fade-in-up delay-200">
             A free & open-source, zero-setup, real-time collaborative online Python IDE & editor. Built for pair programming, interviews, learning, and teaching.
             Code, communicate, draw, and run Python directly in your browser.
           </p>
 
           {/* CTA Group */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up delay-300">
             <button
               onClick={handleGetStarted}
-              className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02]"
+              className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] overflow-hidden"
             >
-              <div className="flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+              <div className="relative flex items-center justify-center gap-2">
                 Start Coding Now
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -181,18 +182,14 @@ export default function About() {
 
             <button
               onClick={scrollToFeatures}
-              className={`px-8 py-4 border rounded-xl font-semibold transition-all ${
-                'bg-slate-800/50 hover:bg-slate-800 text-slate-200 border-slate-700'
-              }`}
+              className="px-8 py-4 border rounded-xl font-semibold transition-all bg-slate-800/50 hover:bg-slate-800 text-slate-200 border-slate-700 hover:border-slate-500 hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]"
             >
               See How It Works
             </button>
 
             <button
               onClick={scrollToBento}
-              className={`px-8 py-4 bg-transparent border rounded-xl font-semibold transition-all ${
-                'hover:bg-slate-800/30 text-slate-300 border-slate-700/50 hover:border-slate-600'
-              }`}
+              className="px-8 py-4 bg-transparent border rounded-xl font-semibold transition-all hover:bg-slate-800/30 text-slate-300 border-slate-700/50 hover:border-slate-500 hover:text-white"
             >
               Learn More
             </button>
