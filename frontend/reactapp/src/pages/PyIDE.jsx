@@ -440,7 +440,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
          ws.send(JSON.stringify({ type: 'awareness', update_b64: updateB64 }));
       }
     };
-    const throttledAwarenessHandler = throttle(awarenessHandler, 100, { leading: true, trailing: true });
+    const throttledAwarenessHandler = throttle(awarenessHandler, 200, { leading: true, trailing: true });
     awareness.on('update', throttledAwarenessHandler);
 
     // Ping
@@ -784,12 +784,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   const drawingSlot = (
       <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
-          <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
-          <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4"/></button>
-          <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4"/></button>
-          <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4"/></button>
-          <button onClick={() => canvas.setShowDrawings(!canvas.showDrawings)} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
-          <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4"/></button>
+          <div className={`flex items-center space-x-1 ${!canvas.showDrawings ? 'opacity-40 pointer-events-none' : ''}`}>
+            <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
+            <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4"/></button>
+            <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4"/></button>
+            <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4"/></button>
+            <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4"/></button>
+          </div>
+          <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
       </div>
   );
 

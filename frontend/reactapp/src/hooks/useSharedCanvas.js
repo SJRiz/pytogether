@@ -17,6 +17,8 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
   const isDrawingRef = useRef(false);
   const currentPathRef = useRef([]);
   const lastDrawPointRef = useRef(null);
+  const flushIntervalRef = useRef(null);
+  const liveStrokeIdRef = useRef(null);
 
   // Initialize Y.js drawings
   useEffect(() => {
@@ -36,6 +38,13 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
       if (drawingUndoManagerRef.current) drawingUndoManagerRef.current.destroy();
     };
   }, [ydocRef, isConnected]);
+
+  // Clean up live stroke interval on unmount
+  useEffect(() => {
+    return () => {
+      if (flushIntervalRef.current) clearInterval(flushIntervalRef.current);
+    };
+  }, []);
 
   // Redraw logic
   const redrawAll = useCallback(() => {
@@ -71,10 +80,33 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
       ctx.stroke();
       ctx.closePath();
     });
-    
-    // Reset composite operation
+
+    // Reset composite so the local in-progress indicator draws normally
     ctx.globalCompositeOperation = 'source-over';
-  }, [drawings, showDrawings]);
+
+    // Draw the local in-progress stroke so it doesn't disappear during Y.js redraws
+    if (isDrawingRef.current && currentPathRef.current.length >= 2) {
+      // For eraser, only show a short trailing indicator (last 30 points)
+      const points = drawingMode === 'erase'
+        ? currentPathRef.current.slice(-30)
+        : currentPathRef.current;
+
+      if (points.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x - scrollLeft, points[0].y - scrollTop);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x - scrollLeft, points[i].y - scrollTop);
+        }
+        ctx.lineWidth = drawingMode === 'erase' ? 20 : drawingMode === 'highlight' ? 20 : 2;
+        if (drawingMode === 'erase') ctx.strokeStyle = '#000000';
+        else if (drawingMode === 'highlight') ctx.strokeStyle = 'rgba(255, 255, 0, 0.15)';
+        else ctx.strokeStyle = drawColor;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.stroke();
+        ctx.closePath();
+      }
+    }
+  }, [drawings, showDrawings, drawingMode, drawColor]);
 
   useEffect(() => {
   if (!isSynced) return;
@@ -156,14 +188,43 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
     const { x, y, docX, docY } = getCoords(e);
     currentPathRef.current = [{ x: docX, y: docY }];
     lastDrawPointRef.current = { x, y };
+    liveStrokeIdRef.current = `live_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
     const ctx = ctxRef.current;
     if (!ctx) return;
 
     ctx.lineWidth = drawingMode === 'erase' ? 20 : 2;
     if(drawingMode === 'highlight') { ctx.lineWidth = 20; ctx.strokeStyle = 'rgba(255, 255, 0, 0.15)'; }
-    else if(drawingMode !== 'erase') { ctx.strokeStyle = drawColor; }
-    ctx.globalCompositeOperation = drawingMode === 'erase' ? 'destination-out' : 'source-over';
+    else if(drawingMode === 'erase') { ctx.strokeStyle = '#000000'; }
+    else { ctx.strokeStyle = drawColor; }
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Flush partial stroke to Y.js every 300ms so other users see it live
+    flushIntervalRef.current = setInterval(() => {
+      const ydrawings = ydrawingsRef.current;
+      if (currentPathRef.current.length < 2 || !ydrawings) return;
+
+      let width = 2;
+      let color = drawColor;
+      if (drawingMode === 'erase') width = 20;
+      if (drawingMode === 'highlight') { width = 20; color = 'rgba(255, 255, 0, 0.15)'; }
+
+      const partialPath = {
+        type: drawingMode, color, width,
+        points: [...currentPathRef.current],
+        _liveId: liveStrokeIdRef.current
+      };
+
+      ydrawings.doc.transact(() => {
+        for (let i = ydrawings.length - 1; i >= 0; i--) {
+          if (ydrawings.get(i)?._liveId === liveStrokeIdRef.current) {
+            ydrawings.delete(i, 1);
+            break;
+          }
+        }
+        ydrawings.push([partialPath]);
+      }, 'live-stroke'); // Custom origin so undo manager ignores live previews
+    }, 300);
   };
 
   const draw = (e) => {
@@ -184,6 +245,11 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
   const stopDrawing = () => {
     if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
+
+    if (flushIntervalRef.current) {
+      clearInterval(flushIntervalRef.current);
+      flushIntervalRef.current = null;
+    }
     
     let width = 2;
     let color = drawColor;
@@ -191,8 +257,22 @@ export function useSharedCanvas(ydocRef, isConnected, isSynced) {
     if(drawingMode === 'highlight') { width = 20; color = 'rgba(255, 255, 0, 0.15)'; }
 
     const newPath = { type: drawingMode, color, width, points: currentPathRef.current };
-    ydrawingsRef.current?.push([newPath]);
+    const ydrawings = ydrawingsRef.current;
+    if (ydrawings) {
+      // Remove live stroke preview (untracked by undo manager)
+      ydrawings.doc.transact(() => {
+        for (let i = ydrawings.length - 1; i >= 0; i--) {
+          if (ydrawings.get(i)?._liveId === liveStrokeIdRef.current) {
+            ydrawings.delete(i, 1);
+            break;
+          }
+        }
+      }, 'live-stroke');
+      // Push final completed path (tracked by undo manager)
+      ydrawings.push([newPath]);
+    }
     currentPathRef.current = [];
+    liveStrokeIdRef.current = null;
   };
 
   const clearDrawings = () => ydrawingsRef.current?.delete(0, ydrawingsRef.current.length);
