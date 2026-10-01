@@ -25,3 +25,17 @@
   scrollbar-width: thin;
   scrollbar-color: #4b5563 #1f2937; /* thumb, track */
 }
+
+@keyframes gridMoveDiagonal {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 24px 24px;
+  }
+}
+
+.animate-grid-diagonal {
+  animation: gridMoveDiagonal 2.5s linear infinite;
+}
+

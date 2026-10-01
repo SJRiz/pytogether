@@ -55,13 +55,13 @@ export default function Login() {
         <title>PyTogether - Login</title>
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://pytogether.org/login" />
-        <meta name="description" content="Google Docs for Python. Real-time collaborative Python IDE in the browser, completely free" />
+        <meta name="description" content="Real-time collaborative Python IDE in the browser, completely free" />
         <meta property="og:title" content="PyTogether" />
     </Helmet>
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gray-950">
       
-      {/* Subtle grid overlay */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#4f4f4f15_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f15_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      {/* Animated grid overlay */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#4f4f4f30_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f30_1px,transparent_1px)] bg-[size:24px_24px] animate-grid-diagonal"></div>
 
       <div className="w-full max-w-md backdrop-blur-xl border rounded-2xl shadow-2xl overflow-hidden relative z-10 bg-gray-800/60 border-gray-700/50">
         

@@ -1,7 +1,7 @@
 ﻿<p align="center">
   <img src="https://www.pytogether.org/pytog.png" alt="Logo" width="150"><br>
   <strong style="font-size: 24px;">PyTogether</strong><br>
-  <em>Google Docs for Python. A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
+  <em>A fully browser-based collaborative Python IDE with real-time editing, chat, and visualization.</em>
   <br>
   <br>
   <a href="https://pytogether.org"><strong>🚀 Launch PyTogether (Live App)</strong></a>

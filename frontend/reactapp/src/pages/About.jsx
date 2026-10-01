@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   LogIn, Users, Code, Save, Package, ArrowRight, Zap, Terminal, PenTool, Github,
   Linkedin, Coffee, CheckCircle2, AlertTriangle
@@ -12,10 +12,19 @@ import liveDrawing from '../assets/drawinglive.webm';
 export default function About() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [showNavLogo, setShowNavLogo] = useState(false);
+  const heroLogoRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+      if (heroLogoRef.current) {
+        const rect = heroLogoRef.current.getBoundingClientRect();
+        setShowNavLogo(rect.bottom <= 64);
+      }
+    };
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -34,14 +43,14 @@ export default function About() {
         {/* Primary Meta Tags */}
         <title>PyTogether - Free Online Python IDE & Collaborative Editor </title>
         <meta name="title" content="PyTogether | Free Collaborative Python IDE Online for Teachers & Students" />
-        <meta name="description" content="The free 'Google Docs for Python'. A real-time collaborative Python compiler and IDE in the browser. Perfect for pair programming, teaching, and online tutoring." />
-        <meta name="keywords" content="collaborative python ide, python for teachers, pair programming online, google docs for python, online python compiler, multiplayer coding, free python ide, online python ide" />
+        <meta name="description" content="A real-time collaborative Python compiler and IDE in the browser. Perfect for pair programming, teaching, and online tutoring." />
+        <meta name="keywords" content="collaborative python ide, python for teachers, pair programming online, online python compiler, multiplayer coding, free python ide, online python ide" />
         <link rel="canonical" href="https://pytogether.org" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pytogether.org" />
-        <meta property="og:title" content="PyTogether - The Free Google Docs for Python" />
+        <meta property="og:title" content="PyTogether - The Free Collaborative Python IDE" />
         <meta property="og:description" content="Code, draw, and run Python together in real-time. No setup required. The best tool for teaching Python online." />
         <meta property="og:image" content="https://pytogether.org/pytog.png" />
 
@@ -62,14 +71,16 @@ export default function About() {
         } bg-[size:24px_24px]`}></div>
 
         {/* Navbar */}
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 border-b border-slate-800 ${
           scrolled 
-            ? `backdrop-blur-md border-b ${'bg-[#0B0F17]/95 border-slate-800'}` 
-            : `backdrop-blur-sm ${'bg-[#0B0F17]/80'}`
+            ? 'bg-[#0B0F17]/95 backdrop-blur-md' 
+            : 'bg-[#0B0F17]/80 backdrop-blur-sm'
         }`}>
           <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 transition-all duration-300 ${
+              showNavLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+            }`}>
               <div className="relative">
                 <div className={`relative p-1 rounded-lg border ${'bg-gray-800 border-gray-700/50'}`}>
                   <img
@@ -133,15 +144,23 @@ export default function About() {
         </nav>
 
         {/* Hero Section */}
-        <section className="relative z-10 pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <section className="relative z-10 pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
 
           {/* Heading */}
-          <h1 className={`text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl leading-[1.1] ${'text-white'}`}>
-            The "Google Docs"<br />
-            <span className="text-indigo-400">
-              for Python
-            </span>
+          <h1 className={`text-5xl md:text-7xl font-bold tracking-tight mb-8 max-w-4xl leading-[1.1] ${"text-white"}`}>
+            PyTogether
           </h1>
+
+          {/* Logo */}
+          <div ref={heroLogoRef} className="mb-8">
+            <div className="relative p-3.5 sm:p-4 rounded-2xl border bg-gray-800 border-gray-400/50 shadow-2xl inline-block">
+              <img
+                src="/pytog.png"
+                alt="PyTogether Logo"
+                className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+              />
+            </div>
+          </div>
 
           <p className={`text-lg md:text-xl max-w-2xl mb-10 leading-relaxed ${'text-slate-400'}`}>
             A free & open-source, zero-setup, real-time collaborative online Python IDE & editor. Built for pair programming, interviews, learning, and teaching.

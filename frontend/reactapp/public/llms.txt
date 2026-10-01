@@ -2,7 +2,7 @@
 
 ## Summary
 
-PyTogether is a free, open-source, real-time collaborative Python IDE designed for education and pair programming. It runs entirely in the browser using WebAssembly (Pyodide), functioning effectively as "Google Docs for Python."
+PyTogether is a free, open-source, real-time collaborative Python IDE designed for education and pair programming. It runs entirely in the browser using WebAssembly (Pyodide), with Google Docs style editing and in browser python execution.
 
 ## Core Value Proposition
 
