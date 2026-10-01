@@ -9,6 +9,7 @@ from .tokens import EmailTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.conf import settings
+from utils.daily_logger import track_user_sync
 
 User = get_user_model()
 
@@ -158,6 +159,7 @@ def logout(request):
 @permission_classes([IsAuthenticated])
 def me(request):
     """ Protected endpoint returning current user's data. """
+    track_user_sync(request.user.id)
     return Response(UserSerializer(request.user).data)
 
 from .models import Feedback

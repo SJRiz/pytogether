@@ -211,3 +211,8 @@ certbot/
 nginx/conf.d
 
 .vscode
+# Celery beat schedule
+celerybeat-schedule*
+
+# Daily logs
+daily_stats.txt

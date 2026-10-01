@@ -14,6 +14,7 @@ from y_py import YDoc, apply_update
 
 from projects.models import Project
 from utils.redis_helpers import ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, DIRTY_PROJECTS_SET, ASYNC_REDIS
+from utils.daily_logger import track_project_opened_async, track_max_room_async, track_max_active_rooms_async, track_ws_connection_async
 
 User = get_user_model()
 
@@ -50,6 +51,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.room, self.channel_name)
         await self.channel_layer.group_add("global_connection_group", self.channel_name)
         await self.accept()
+        await track_ws_connection_async(True)
 
         # Mark user active with HINCRBY (adds 1 to their tab count)
         current_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), 1)
@@ -71,7 +73,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         # notify others if this is their first tab opening
         if current_connections == 1:
+            await track_project_opened_async()
             await self.channel_layer.group_send(self.room, {"type": "users_changed"})
+            
+        room_users = await ASYNC_REDIS.hlen(active_set_key(self.project_id))
+        await track_max_room_async(room_users)
+        await track_max_active_rooms_async()
 
         # Send Initial YJS Sync
         ydoc_bytes = await self._get_or_create_ydoc_bytes()
@@ -104,6 +111,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         return False
 
     async def disconnect(self, close_code):
+        await track_ws_connection_async(False)
         try:
             if self.user and self.user.is_authenticated:
                 # Always remove from voice room
