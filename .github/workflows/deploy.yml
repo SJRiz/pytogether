@@ -38,3 +38,6 @@ jobs:
 
             # Restart and rebuild only changed containers
             docker compose up -d --build --remove-orphans
+
+            # Run database migrations
+            docker compose exec django python3 manage.py migrate --noinput
