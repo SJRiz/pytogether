@@ -39,5 +39,8 @@ jobs:
             # Restart and rebuild only changed containers
             docker compose up -d --build --remove-orphans
 
+            # Restart Nginx so it clears its IP cache and re-resolves the backend containers
+            docker compose restart nginx
+
             # Run database migrations
             docker compose exec django python3 manage.py migrate --noinput
