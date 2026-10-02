@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Coffee, Github, Mail } from "lucide-react";
+import { LogOut, Coffee, Github, Mail, Search, Folder, ArrowRight, X } from "lucide-react";
 import { MainContent } from "../components/MainContent";
 
 // Modal components
@@ -40,6 +40,11 @@ export default function GroupsAndProjectsPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [loadingGroups, setIsLoadingGroups] = useState(false);
     const [loadingProjects, setIsLoadingProjects] = useState(false);
+
+    const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+    const [globalSearchResults, setGlobalSearchResults] = useState([]);
+    const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     const navigate = useNavigate();
     const { instance } = useMsal();
@@ -126,6 +131,30 @@ export default function GroupsAndProjectsPage() {
             setProjects([]);
         }
     }, [selectedGroup]);
+
+    useEffect(() => {
+        if (!globalSearchQuery.trim()) {
+            setGlobalSearchResults([]);
+            setIsSearchingGlobal(false);
+            setIsSearchOpen(false);
+            return;
+        }
+
+        setIsSearchOpen(true);
+        setIsSearchingGlobal(true);
+        const timeoutId = setTimeout(async () => {
+            try {
+                const res = await api.get(`/groups/projects/search/?q=${encodeURIComponent(globalSearchQuery)}`);
+                setGlobalSearchResults(res.data);
+            } catch (err) {
+                console.error("Global search failed:", err);
+            } finally {
+                setIsSearchingGlobal(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [globalSearchQuery]);
 
     // Group operations
     const createGroup = async () => {
@@ -252,8 +281,16 @@ export default function GroupsAndProjectsPage() {
             {/* Subtle grid overlay */}
             <div className="fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#4f4f4f15_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f15_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
+            {/* Global Search Overlay (Dims background when searching) */}
+            {isSearchOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity cursor-pointer"
+                    onClick={() => setIsSearchOpen(false)}
+                ></div>
+            )}
+
             {/* Header */}
-            <div className="border-b border-gray-800 bg-[#0e1421] px-6 py-2 shadow-lg relative z-10">
+            <div className="border-b border-gray-800 bg-[#0e1421] px-6 py-2 shadow-lg relative z-50">
                 <div className="flex items-center justify-between">
 
                     <div className="flex items-center gap-3">
@@ -283,6 +320,88 @@ export default function GroupsAndProjectsPage() {
                                 <span className="hidden lg:inline">Feedback</span>
                             </button>
                         </div>
+                    </div>
+
+                    {/* Global Search Bar in Header */}
+                    <div className="hidden md:flex flex-1 max-w-md mx-8 relative z-50">
+                        <div className="relative w-full">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search all projects..."
+                                value={globalSearchQuery}
+                                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                                onFocus={() => {
+                                    if (globalSearchQuery.trim()) {
+                                        setIsSearchOpen(true);
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Escape') {
+                                        setIsSearchOpen(false);
+                                    }
+                                }}
+                                className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg pl-9 pr-9 py-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+                            />
+                            {globalSearchQuery && !isSearchingGlobal && (
+                                <button
+                                    onClick={() => {
+                                        setGlobalSearchQuery("");
+                                        setGlobalSearchResults([]);
+                                        setIsSearchOpen(false);
+                                    }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-0.5 rounded-full hover:bg-gray-700"
+                                    title="Clear Search"
+                                >
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                            {isSearchingGlobal && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <div className="animate-spin h-3.5 w-3.5 border-2 border-gray-400 border-t-blue-500 rounded-full"></div>
+                                </div>
+                            )}
+                        </div>
+
+                        {isSearchOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+                                {isSearchingGlobal && globalSearchResults.length === 0 ? (
+                                    <div className="p-3 text-center text-gray-400 text-sm">Searching...</div>
+                                ) : globalSearchResults.length === 0 ? (
+                                    <div className="p-3 text-center text-gray-400 text-sm">No projects found.</div>
+                                ) : (
+                                    <ul className="divide-y divide-gray-700">
+                                        {globalSearchResults.map((proj) => (
+                                            <li
+                                                key={proj.id}
+                                                onClick={() => {
+                                                    setGlobalSearchQuery("");
+                                                    const projectData = {
+                                                        groupId: proj.group_id,
+                                                        projectId: proj.id,
+                                                        projectName: proj.project_name
+                                                    };
+                                                    localStorage.setItem('previousProjectData', JSON.stringify(projectData));
+                                                    navigate(`/groups/${proj.group_id}/projects/${proj.id}`, {
+                                                        state: { projectName: proj.project_name }
+                                                    });
+                                                }}
+                                                className="p-3 hover:bg-gray-700/50 cursor-pointer transition-colors group flex items-center justify-between"
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <Folder className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                                                    <div className="min-w-0 flex flex-col">
+                                                        <span className="text-white text-sm font-medium truncate">{proj.project_name}</span>
+                                                        <span className="text-xs text-gray-400 truncate">{proj.group_name}</span>
+                                                    </div>
+                                                </div>
+                                                <ArrowRight className="h-3.5 w-3.5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0 ml-3" />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-4">

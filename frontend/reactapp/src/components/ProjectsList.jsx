@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users, X } from "lucide-react";
+import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users, X, Search } from "lucide-react";
+import api from "../../axiosConfig";
 
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
   const activeCount = project.active_users || 0;
@@ -99,10 +100,15 @@ export const ProjectsList = ({
   const navigate = useNavigate();
   const [lastSession, setLastSession] = useState(null);
   const [lastGroup, setLastGroup] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const sortedProjects = [...projects].sort((a, b) => {
     return new Date(b.updated_at) - new Date(a.updated_at);
   });
+
+  const filteredProjects = sortedProjects.filter(p =>
+    p.project_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Check local storage on mount
   useEffect(() => {
@@ -175,10 +181,10 @@ export const ProjectsList = ({
           <h2 className="text-xl font-bold text-white tracking-tight"></h2>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full">
 
           {lastSession || lastGroup ? (
-            <div className="w-full max-w-md animate-fadeIn">
+            <div className="w-full max-w-md animate-fadeIn mb-8">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-bold text-white mb-2">Welcome Back!</h3>
                 <p className="text-gray-400">Ready to continue where you left off?</p>
@@ -252,12 +258,12 @@ export const ProjectsList = ({
                 )}
               </div>
 
-              <p className="text-center text-gray-600 text-sm mt-8">
+              <p className="text-center text-gray-600 text-sm mt-8 mb-4">
                 Or select a group from the sidebar to view other projects
               </p>
             </div>
           ) : (
-            <div className="text-gray-500 space-y-4 flex flex-col items-center">
+            <div className="text-gray-500 space-y-4 flex flex-col items-center mb-10">
               <Folder className="h-16 w-16 opacity-50" />
               <p className="text-lg font-medium">Select a group to see projects</p>
             </div>
@@ -272,15 +278,28 @@ export const ProjectsList = ({
     <div className="flex-1 p-6 flex flex-col bg-transparent overflow-hidden relative">
       {/* Header */}
       <div className="mb-6 flex-shrink-0 relative z-10">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
-          <button
-            onClick={onCreateProject}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 font-medium"
-          >
-            <FolderPlus className="h-4 w-4" />
-            <span className="text-sm">Create Project</span>
-          </button>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-800/50 border border-gray-700 text-white rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+              />
+            </div>
+            <button
+              onClick={onCreateProject}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 font-medium whitespace-nowrap w-full sm:w-auto"
+            >
+              <FolderPlus className="h-4 w-4" />
+              <span className="text-sm">Create Project</span>
+            </button>
+          </div>
         </div>
         <div className="h-px bg-gray-600"></div>
       </div>
@@ -294,15 +313,14 @@ export const ProjectsList = ({
               <div className="absolute inset-0 animate-ping border-4 border-blue-500/30 h-12 w-12 rounded-full"></div>
             </div>
           </div>
-        ) : sortedProjects.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <div className="flex flex-1 flex-col justify-center items-center h-full text-gray-500 space-y-4">
-            <FolderPlus className="h-16 w-16 opacity-50" />
-            <p className="text-lg font-medium">No projects yet</p>
-            <p className="text-sm text-gray-600">Create one to get started!</p>
+            <Search className="h-16 w-16 opacity-50" />
+            <p className="text-lg font-medium">No projects found</p>
           </div>
         ) : (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {sortedProjects.map(project => (
+            {filteredProjects.map(project => (
               <ProjectItem
                 key={project.id}
                 project={project}

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core import signing
 from django.conf import settings
+from django.db.models.functions import Coalesce
 from decouple import config
 
 from .models import Project
@@ -260,3 +261,41 @@ def get_snippet_content(request, token):
         })
     except (signing.BadSignature, signing.SignatureExpired, Project.DoesNotExist, Code.DoesNotExist):
         return Response({"error": "Snippet not found or expired"}, status=404)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def global_project_search(request):
+    """
+    Search for projects across all groups the user is a member of.
+    """
+    try:
+        query = request.GET.get('q', '').strip()
+        if not query:
+            return Response([], status=200)
+
+        # Get groups the user belongs to
+        user_groups = Group.objects.filter(group_members=request.user)
+        
+        # Find matching projects
+        projects = Project.objects.filter(
+            group__in=user_groups,
+            project_name__icontains=query
+        ).select_related('group', 'code').annotate(
+            latest_update=Coalesce('code__updated_at', 'created_at')
+        ).order_by('-latest_update')[:20]
+
+        data = []
+        for p in projects:
+            updated = p.code.updated_at if hasattr(p, 'code') and p.code else p.created_at
+            data.append({
+                "id": p.id,
+                "project_name": p.project_name,
+                "group_id": p.group.id,
+                "group_name": p.group.group_name,
+                "updated_at": updated
+            })
+
+        return Response(data, status=200)
+    except Exception as e:
+        print(f"Global search error: {e}")
+        return Response({"error": "An error occurred during search"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

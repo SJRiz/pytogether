@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen, Code, Menu, X } from "lucide-react";
+import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen, Code, Menu, X, Search } from "lucide-react";
 
 export const GroupsList = ({
   groups,
@@ -18,6 +18,11 @@ export const GroupsList = ({
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredGroups = groups.filter(g => 
+    g.group_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     const checkMobile = () => {
@@ -53,6 +58,17 @@ export const GroupsList = ({
           <div className="flex flex-col h-full">
             <div className="p-4 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
+
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search groups..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder-gray-500"
+                />
+              </div>
 
               <div className="flex gap-2 mb-3">
                 <button
@@ -96,20 +112,24 @@ export const GroupsList = ({
                 </div>
               ) : (
                 <ul className="space-y-3">
-                  {groups.map(group => (
-                    <GroupItem
-                      key={group.id}
-                      group={group}
-                      isSelected={selectedGroup?.id === group.id}
-                      showMembers={membersVisible === group.id}
-                      onSelect={() => { onSelectGroup(group); setIsOpen(false); }}
-                      onEdit={() => onEditGroup(group)}
-                      onViewAccessCode={() => onViewAccessCode(group)}
-                      onViewMembers={() => onViewMembers(group)}
-                      onLeave={() => onLeaveGroup(group)}
-                      isMobile={true}
-                    />
-                  ))}
+                  {filteredGroups.length === 0 ? (
+                    <li className="text-sm text-gray-500 text-center py-4">No groups found</li>
+                  ) : (
+                    filteredGroups.map(group => (
+                      <GroupItem
+                        key={group.id}
+                        group={group}
+                        isSelected={selectedGroup?.id === group.id}
+                        showMembers={membersVisible === group.id}
+                        onSelect={() => { onSelectGroup(group); setIsOpen(false); }}
+                        onEdit={() => onEditGroup(group)}
+                        onViewAccessCode={() => onViewAccessCode(group)}
+                        onViewMembers={() => onViewMembers(group)}
+                        onLeave={() => onLeaveGroup(group)}
+                        isMobile={true}
+                      />
+                    ))
+                  )}
                 </ul>
               )}
             </div>
@@ -123,6 +143,17 @@ export const GroupsList = ({
     <div className="w-1/4 bg-[#0e1421]/70 border-r border-gray-800 p-6 flex flex-col">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
+
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search groups..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-gray-900/50 border border-gray-700 text-white rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+          />
+        </div>
 
         <div className="flex gap-3 pb-3 border-b-0 border-gray-700">
           <button
@@ -171,20 +202,24 @@ export const GroupsList = ({
           </div>
         ) : (
           <ul className="space-y-3 min-w-max pr-2">
-            {groups.map(group => (
-              <GroupItem
-                key={group.id}
-                group={group}
-                isSelected={selectedGroup?.id === group.id}
-                showMembers={membersVisible === group.id}
-                onSelect={() => onSelectGroup(group)}
-                onEdit={() => onEditGroup(group)}
-                onViewAccessCode={() => onViewAccessCode(group)}
-                onViewMembers={() => onViewMembers(group)}
-                onLeave={() => onLeaveGroup(group)}
-                isMobile={false}
-              />
-            ))}
+            {filteredGroups.length === 0 ? (
+              <li className="text-sm text-gray-500 text-center py-4">No matching groups found</li>
+            ) : (
+              filteredGroups.map(group => (
+                <GroupItem
+                  key={group.id}
+                  group={group}
+                  isSelected={selectedGroup?.id === group.id}
+                  showMembers={membersVisible === group.id}
+                  onSelect={() => onSelectGroup(group)}
+                  onEdit={() => onEditGroup(group)}
+                  onViewAccessCode={() => onViewAccessCode(group)}
+                  onViewMembers={() => onViewMembers(group)}
+                  onLeave={() => onLeaveGroup(group)}
+                  isMobile={false}
+                />
+              ))
+            )}
           </ul>
         )}
       </div>
