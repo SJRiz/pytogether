@@ -1,4 +1,5 @@
 import requests
+import jwt
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -10,6 +11,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.conf import settings
 from utils.daily_logger import track_user_sync
+from .models import Feedback
+from .serializers import FeedbackSerializer
 
 User = get_user_model()
 
@@ -22,7 +25,11 @@ def google_login(request):
     if not token:
         return Response({"error": "Missing Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
-    google_resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
+    try:
+        google_resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
+    except requests.exceptions.RequestException:
+        return Response({"error": "Could not connect to Google"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
     if google_resp.status_code != 200:
         return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -49,6 +56,46 @@ def google_login(request):
         secure=settings.SESSION_COOKIE_SECURE,
         samesite="Lax",
         max_age=30*24*60*60,  # 30 days
+        path="/"
+    )
+
+    return response
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def microsoft_login(request):
+    """Validate Microsoft ID token and log the user in (mirrors google_login)."""
+    token = request.data.get("access_token")
+    if not token:
+        return Response({"error": "Missing Microsoft token"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        email = decoded.get("preferred_username") or decoded.get("email")
+    except Exception:
+        return Response({"error": "Invalid Microsoft token"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not email:
+        return Response({"error": "Email not available from Microsoft"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        user = User.objects.create_user(email=email)
+
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
+
+    refresh = RefreshToken.for_user(user)
+    response = Response({"access": str(refresh.access_token), "email": user.email})
+
+    response.set_cookie(
+        key="refresh_token",
+        value=str(refresh),
+        httponly=True,
+        secure=settings.SESSION_COOKIE_SECURE,
+        samesite="Lax",
+        max_age=30*24*60*60,
         path="/"
     )
 
@@ -110,7 +157,7 @@ def register(request):
                     key="refresh_token",
                     value=str(refresh),
                     httponly=True,
-                    secure=True,
+                    secure=settings.SESSION_COOKIE_SECURE,
                     samesite='Lax',
                     max_age=30*24*60*60,
                     path="/",
@@ -162,9 +209,6 @@ def me(request):
     track_user_sync(request.user.id)
     return Response(UserSerializer(request.user).data)
 
-from .models import Feedback
-from .serializers import FeedbackSerializer
-
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def feedback(request):
@@ -180,12 +224,16 @@ def feedback(request):
         rating = request.data.get("rating")
         message = request.data.get("message", "")
         
-        if not rating or not (1 <= int(rating) <= 5):
+        try:
+            rating_int = int(rating)
+            if not (1 <= rating_int <= 5):
+                raise ValueError("Rating out of bounds")
+        except (ValueError, TypeError):
             return Response({"error": "Valid rating (1-5) is required"}, status=status.HTTP_400_BAD_REQUEST)
             
         feedback_obj, created = Feedback.objects.update_or_create(
             user=request.user,
-            defaults={"rating": int(rating), "message": message}
+            defaults={"rating": rating_int, "message": message}
         )
         
         return Response(FeedbackSerializer(feedback_obj).data)

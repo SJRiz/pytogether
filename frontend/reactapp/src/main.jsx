@@ -16,10 +16,15 @@ if (apiBaseUrl === "https://api.pytogether.org") {
   document.head.appendChild(script);
 }
 
+import { MsalProvider } from "@azure/msal-react";
+import { msalInstance } from "./msalConfig";
+
 createRoot(document.getElementById("root")).render(
-  <HelmetProvider>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </HelmetProvider>
+  <MsalProvider instance={msalInstance}>
+    <HelmetProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </HelmetProvider>
+  </MsalProvider>
 );

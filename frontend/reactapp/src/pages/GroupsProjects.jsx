@@ -16,6 +16,8 @@ import {
 } from "../components/Modals";
 import FeedbackModal from "../components/FeedbackModal";
 
+import { useMsal } from "@azure/msal-react";
+
 export default function GroupsAndProjectsPage() {
     const [groups, setGroups] = useState([]);
     const [selectedGroup, setSelectedGroup] = useState(null);
@@ -40,16 +42,27 @@ export default function GroupsAndProjectsPage() {
     const [loadingProjects, setIsLoadingProjects] = useState(false);
 
     const navigate = useNavigate();
+    const { instance } = useMsal();
 
     document.title = 'PyTogether';
 
     const handleLogout = async () => {
         try {
             await api.post("/api/auth/logout/", {}, { withCredentials: true });
-            sessionStorage.removeItem("access_token");
-            navigate("/login");
         } catch (err) {
             console.error("Logout failed", err);
+        } finally {
+            sessionStorage.removeItem("access_token");
+            
+            // Check if user is logged in via Microsoft, if so, log them out there too
+            const accounts = instance.getAllAccounts();
+            if (accounts.length > 0) {
+                instance.logoutRedirect({
+                    postLogoutRedirectUri: window.location.origin + "/login"
+                });
+            } else {
+                navigate("/login");
+            }
         }
     };
 

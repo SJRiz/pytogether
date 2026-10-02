@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from "../../axiosConfig";
 import GoogleLoginButton from "../components/GoogleLoginButton";
+import MicrosoftLoginButton from "../components/MicrosoftLoginButton";
 import { Eye, EyeOff, LogIn, UserPlus, Info, Zap } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
@@ -191,6 +192,7 @@ export default function Login() {
           </div>
 
           <GoogleLoginButton disabled={isLoading} />
+          <MicrosoftLoginButton disabled={isLoading} />
 
           <p className={`text-xs mt-6 text-center leading-relaxed ${'text-gray-500'}`}>
             By creating an account or logging in, you agree to our{' '}
