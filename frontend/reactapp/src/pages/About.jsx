@@ -13,6 +13,7 @@ export default function About() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [showNavLogo, setShowNavLogo] = useState(false);
+  const [isSnippetLoaded, setIsSnippetLoaded] = useState(false);
   const heroLogoRef = useRef(null);
 
   useEffect(() => {
@@ -171,7 +172,7 @@ export default function About() {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up delay-300">
             <button
               onClick={handleGetStarted}
-              className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] overflow-hidden"
+              className="group relative px-8 py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-all hover:scale-[1.02] overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
               <div className="relative flex items-center justify-center gap-2">
@@ -268,7 +269,21 @@ export default function About() {
                   pytogether.org/embed/...
                 </div>
               </div>
-              <iframe src="https://pytogether.org/embed/eyJwaWQiOjMsInR5cGUiOiJzbmlwcGV0In0:1w19ES:B27nlyDrROmKl9yhr3NjNv93w47bX_sKIgrqDVUd28A" width="100%" height="500px" frameBorder="0"></iframe>
+              
+              {isSnippetLoaded ? (
+                <iframe src="https://pytogether.org/embed/eyJwaWQiOjMsInR5cGUiOiJzbmlwcGV0In0:1w19ES:B27nlyDrROmKl9yhr3NjNv93w47bX_sKIgrqDVUd28A" width="100%" height="500px" frameBorder="0"></iframe>
+              ) : (
+                <div 
+                  onClick={() => setIsSnippetLoaded(true)}
+                  className="w-full h-[500px] flex flex-col items-center justify-center bg-[#1E1E1E] hover:bg-[#252525] transition-colors cursor-pointer group"
+                >
+                  <div className="p-4 bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 rounded-2xl transition-colors mb-4">
+                    <Code className="w-8 h-8" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-300">Click to load interactive snippet</p>
+                  <p className="mt-2 text-xs text-slate-500 max-w-sm text-center">Initializes a real Python environment in your browser</p>
+                </div>
+              )}
             </div>
             <div className="mt-6 text-center">
               <h3 className={`text-2xl font-bold flex items-center justify-center gap-2 ${'text-white'}`}>
