@@ -34,3 +34,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+class Feedback(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="feedback")
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Feedback from {self.user.email} - {self.rating} stars"

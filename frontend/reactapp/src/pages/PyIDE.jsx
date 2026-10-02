@@ -11,7 +11,7 @@ import Anser from "anser";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { StateField, StateEffect } from "@codemirror/state";
+import { StateField, StateEffect, Transaction, EditorState } from "@codemirror/state";
 import { Decoration, EditorView } from "@codemirror/view";
 
 // Y.js
@@ -70,6 +70,32 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [editorCrashed, setEditorCrashed] = useState(false);
   const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
+  const [pendingDeletion, setPendingDeletion] = useState(null);
+
+  const deletionWarningFilter = EditorState.transactionFilter.of(tr => {
+    const userEvent = tr.annotation(Transaction.userEvent);
+    if (userEvent === "confirmed_large_deletion") return tr;
+
+    const isTriggerEvent = userEvent === "delete.backward" ||
+      userEvent === "delete.forward" ||
+      userEvent === "delete.selection" ||
+      userEvent === "delete.cut" ||
+      userEvent === "input.type" ||
+      userEvent === "input.paste";
+
+    if (!isTriggerEvent) return tr;
+
+    let deletedChars = 0;
+    tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+      deletedChars += (toA - fromA);
+    });
+
+    if (deletedChars > 4000) {
+      setTimeout(() => setPendingDeletion(tr), 0);
+      return [];
+    }
+    return tr;
+  });
 
   // Refs
   const ydocRef = useRef(null);
@@ -404,12 +430,34 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     };
 
     // Outgoing Updates (Client -> Server)
+    // Batch updates over a 200ms window to reduce server lock contention.
+    let pendingUpdates = [];
+    let flushTimer = null;
+
+    const flushUpdates = () => {
+      if (pendingUpdates.length === 0 || ws.readyState !== WebSocket.OPEN) return;
+      const merged = pendingUpdates.length === 1
+        ? pendingUpdates[0]
+        : Y.mergeUpdates(pendingUpdates);
+      const updateB64 = btoa(String.fromCharCode.apply(null, merged));
+      ws.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
+      pendingUpdates = [];
+    };
+
     const updateHandler = (update, origin) => {
       // Don't send updates that came from the server
-      if (origin !== 'server' && ws.readyState === WebSocket.OPEN) {
-        if (origin !== 'remote') runner.errorLine && runner.setErrorLine(null); // Clear error on typing
-        const updateB64 = btoa(String.fromCharCode.apply(null, update));
-        ws.send(JSON.stringify({ type: 'update', update_b64: updateB64 }));
+      if (origin === 'server') return;
+
+      if (origin !== 'remote') runner.errorLine && runner.setErrorLine(null); // Clear error on typing
+
+      if (ws.readyState === WebSocket.OPEN) {
+        pendingUpdates.push(update);
+        if (!flushTimer) {
+          flushTimer = setTimeout(() => {
+            flushTimer = null;
+            flushUpdates();
+          }, 200);
+        }
       }
     };
     ydoc.on('update', updateHandler);
@@ -423,7 +471,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         ws.send(JSON.stringify({ type: 'awareness', update_b64: updateB64 }));
       }
     };
-    const throttledAwarenessHandler = throttle(awarenessHandler, 100, { leading: true, trailing: true });
+    const throttledAwarenessHandler = throttle(awarenessHandler, 200, { leading: true, trailing: true });
     awareness.on('update', throttledAwarenessHandler);
 
     // Ping
@@ -439,6 +487,9 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
       ydoc.off('update', updateHandler);
       awareness.off('update', throttledAwarenessHandler);
       throttledAwarenessHandler.cancel();
+      // Flush any pending batched updates before closing
+      if (flushTimer) clearTimeout(flushTimer);
+      flushUpdates();
       ydoc.destroy();
       ws.close();
       clearInterval(pinger);
@@ -608,7 +659,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
             extensions={[
               python(),
               yCollab(ytextRef.current, awarenessRef.current, { undoManager: codeUndoManagerRef.current }),
-              errorLineField
+              errorLineField,
+              deletionWarningFilter
             ]}
             onChange={(value) => {
               if (!ytextRef.current && !isConnected) setCode(value);
@@ -765,12 +817,14 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
 
   const drawingSlot = (
     <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
-      <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
-      <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4" /></button>
-      <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4" /></button>
-      <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4" /></button>
-      <button onClick={() => canvas.setShowDrawings(!canvas.showDrawings)} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
-      <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4" /></button>
+      <div className={`flex items-center space-x-1 ${!canvas.showDrawings ? 'opacity-40 pointer-events-none' : ''}`}>
+        <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
+        <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4" /></button>
+        <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4" /></button>
+      </div>
+      <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
     </div>
   );
 
@@ -835,6 +889,42 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         project={{ id: projectId }}
         group={{ id: groupId }}
       />
+
+      {pendingDeletion && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-sm w-full border border-gray-700 shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2">Large Deletion Detected</h3>
+            <p className="text-gray-300 mb-2 text-sm">
+              You are about to delete a large amount of code. Are you sure you want to proceed?
+            </p>
+            <p className="text-gray-400 mb-4 text-xs italic">
+              Note: You can still press Ctrl+Z to undo this, but exiting the page means you won't be able to undo this anymore.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setPendingDeletion(null)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (editorViewRef.current) {
+                    editorViewRef.current.dispatch({
+                      changes: pendingDeletion.changes,
+                      annotations: Transaction.userEvent.of("confirmed_large_deletion")
+                    });
+                  }
+                  setPendingDeletion(null);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors font-medium"
+              >
+                Delete Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

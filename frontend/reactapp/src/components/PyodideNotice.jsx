@@ -20,12 +20,12 @@ export default function PyodideModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full border border-gray-700 relative overflow-hidden">
+      <div className="bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-lg w-full border border-gray-700 relative overflow-hidden">
         {/* Accent glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-10 rounded-full blur-3xl -mr-32 -mt-32"></div>
         
         <div className="relative">
-          <h2 className="text-3xl font-bold mb-3 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-3 text-center text-blue-400">
             Exciting Update!
           </h2>
           
@@ -62,7 +62,7 @@ export default function PyodideModal() {
 
           <button
             onClick={handleClose}
-            className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             cool i dont care
           </button>

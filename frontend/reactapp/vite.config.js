@@ -19,6 +19,7 @@ export default defineConfig({
       scope: '/',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,tar}'],
+        maximumFileSizeToCacheInBytes: 5242880,
       },
     }),
   ],

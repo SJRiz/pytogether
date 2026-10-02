@@ -1,5 +1,6 @@
 from celery import shared_task
 from utils.redis_helpers import persist_ydoc_to_db, active_set_key, SYNC_REDIS, DIRTY_PROJECTS_SET, ACTIVE_PROJECTS_SET
+from utils.daily_logger import get_and_log_daily_stats, get_today, record_system_resources_sync
 
 @shared_task
 def snapshot_dirty_projects():
@@ -82,3 +83,15 @@ def cleanup_ghost_projects():
                     pass
                     
     return {"cleaned_ghosts": cleaned_ghosts}
+
+@shared_task
+def log_daily_stats_task():
+    """Generates the daily stats log and clears the temporary redis keys"""
+    get_and_log_daily_stats()
+    return {"status": "success", "date": get_today()}
+
+@shared_task
+def record_system_resources_task():
+    """Periodically captures CPU and RAM usage to calculate daily averages"""
+    record_system_resources_sync()
+    return {"status": "success"}

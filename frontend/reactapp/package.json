@@ -13,6 +13,8 @@
     "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
+    "@azure/msal-browser": "^5.23.0",
+    "@azure/msal-react": "^5.7.1",
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.2",
