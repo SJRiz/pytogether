@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderPlus, Edit2, Trash2, Code2, Folder, ArrowRight, History, Users, X, Search } from "lucide-react";
 import api from "../../axiosConfig";
+import SearchBar from "./SearchBar";
 
 const ProjectItem = ({ project, onEdit, onDelete, onOpen }) => {
   const activeCount = project.active_users || 0;
@@ -282,14 +283,13 @@ export const ProjectsList = ({
           <h2 className="text-xl font-bold text-white tracking-tight">Projects</h2>
           
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search projects..."
+            <div className="w-full sm:w-64">
+              <SearchBar
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-800/50 border border-gray-700 text-white rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+                onChange={setSearchQuery}
+                placeholder="Search projects..."
+                inputClassName="bg-gray-800/50 rounded-xl pr-3 py-2 text-sm focus:border-blue-500"
+                onEscape={() => setSearchQuery("")}
               />
             </div>
             <button

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Edit2, Key, ChevronDown, ChevronUp, User, DoorOpen, Code, Menu, X, Search } from "lucide-react";
+import SearchBar from "./SearchBar";
 
 export const GroupsList = ({
   groups,
@@ -59,14 +60,13 @@ export const GroupsList = ({
             <div className="p-4 border-b border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
 
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search groups..."
+              <div className="mb-3">
+                <SearchBar
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors placeholder-gray-500"
+                  onChange={setSearchQuery}
+                  placeholder="Search groups..."
+                  inputClassName="bg-gray-800 pr-3 py-2 text-sm focus:border-blue-500 transition-colors"
+                  onEscape={() => setSearchQuery("")}
                 />
               </div>
 
@@ -144,14 +144,13 @@ export const GroupsList = ({
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white mb-4 tracking-tight">Groups</h2>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search groups..."
+        <div className="mb-4">
+          <SearchBar
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-900/50 border border-gray-700 text-white rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
+            onChange={setSearchQuery}
+            placeholder="Search groups..."
+            inputClassName="bg-gray-900/50 rounded-xl pr-3 py-2.5 text-sm focus:border-blue-500"
+            onEscape={() => setSearchQuery("")}
           />
         </div>
 

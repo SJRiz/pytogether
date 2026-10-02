@@ -15,6 +15,7 @@ import {
     ConfirmModal
 } from "../components/Modals";
 import FeedbackModal from "../components/FeedbackModal";
+import SearchBar from "../components/SearchBar";
 
 import { useMsal } from "@azure/msal-react";
 
@@ -324,44 +325,23 @@ export default function GroupsAndProjectsPage() {
 
                     {/* Global Search Bar in Header */}
                     <div className="hidden md:flex flex-1 max-w-md mx-8 relative z-50">
-                        <div className="relative w-full">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search all projects..."
-                                value={globalSearchQuery}
-                                onChange={(e) => setGlobalSearchQuery(e.target.value)}
-                                onFocus={() => {
-                                    if (globalSearchQuery.trim()) {
-                                        setIsSearchOpen(true);
-                                    }
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Escape') {
-                                        setIsSearchOpen(false);
-                                    }
-                                }}
-                                className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg pl-9 pr-9 py-1.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
-                            />
-                            {globalSearchQuery && !isSearchingGlobal && (
-                                <button
-                                    onClick={() => {
-                                        setGlobalSearchQuery("");
-                                        setGlobalSearchResults([]);
-                                        setIsSearchOpen(false);
-                                    }}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-0.5 rounded-full hover:bg-gray-700"
-                                    title="Clear Search"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                            {isSearchingGlobal && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <div className="animate-spin h-3.5 w-3.5 border-2 border-gray-400 border-t-blue-500 rounded-full"></div>
-                                </div>
-                            )}
-                        </div>
+                        <SearchBar
+                            value={globalSearchQuery}
+                            onChange={setGlobalSearchQuery}
+                            placeholder="Search all projects..."
+                            isLoading={isSearchingGlobal}
+                            onFocus={() => {
+                                if (globalSearchQuery.trim()) {
+                                    setIsSearchOpen(true);
+                                }
+                            }}
+                            onEscape={() => setIsSearchOpen(false)}
+                            onClear={() => {
+                                setGlobalSearchResults([]);
+                                setIsSearchOpen(false);
+                            }}
+                            inputClassName="text-sm"
+                        />
 
                         {isSearchOpen && (
                             <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
