@@ -70,8 +70,8 @@ export default function Login() {
         <div className="p-8 text-center border-b border-gray-700/50 bg-gray-800/50">
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="relative p-4 rounded-2xl border-2 bg-gray-800 border-gray-700/50">
-                <img src="/pytog.png" alt="PyTogether Logo" className="h-16 w-16" />
+              <div className="relative rounded-2xl border-2 border-gray-400/50 overflow-hidden shadow-lg">
+                <img src="/pytog.png" alt="PyTogether Logo" className="h-20 w-20 object-cover" />
               </div>
             </div>
           </div>
