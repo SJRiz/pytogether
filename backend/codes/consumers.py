@@ -14,7 +14,7 @@ from y_py import YDoc, apply_update
 
 from projects.models import Project
 from utils.redis_helpers import ydoc_key, active_set_key, voice_room_key, user_profile_key, ACTIVE_PROJECTS_SET, DIRTY_PROJECTS_SET, ASYNC_REDIS
-from utils.daily_logger import track_project_opened_async, track_max_room_async, track_max_active_rooms_async, track_ws_connection_async
+from utils.daily_logger import track_project_opened_async, track_max_room_async, track_max_active_rooms_async, track_ws_connection_async, track_user_async
 
 User = get_user_model()
 
@@ -51,7 +51,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.room, self.channel_name)
         await self.channel_layer.group_add("global_connection_group", self.channel_name)
         await self.accept()
-        await track_ws_connection_async(True)
+        await track_user_async(self.user.pk)
 
         # Mark user active with HINCRBY (adds 1 to their tab count)
         current_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), 1)
@@ -73,8 +73,8 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
 
         # notify others if this is their first tab opening
         if current_connections == 1:
-            await track_project_opened_async()
             await self.channel_layer.group_send(self.room, {"type": "users_changed"})
+            await track_ws_connection_async(True)
             
         room_users = await ASYNC_REDIS.hlen(active_set_key(self.project_id))
         await track_max_room_async(room_users)
@@ -111,7 +111,6 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         return False
 
     async def disconnect(self, close_code):
-        await track_ws_connection_async(False)
         try:
             if self.user and self.user.is_authenticated:
                 # Always remove from voice room
@@ -120,6 +119,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Subtract 1 from their tab count
                 remaining_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), -1)
+                await track_ws_connection_async(False)
                 
                 # broadcast disconnect if their last tab closed
                 if remaining_connections <= 0:
@@ -408,5 +408,7 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
         
         # Save to Redis immediately so it is permanently synchronized
         await ASYNC_REDIS.set(ydoc_key(self.project_id), new_bytes)
-        
+
+        await track_project_opened_async()   # tracking first opening
+
         return new_bytes
