@@ -154,12 +154,20 @@ export default function About() {
 
           {/* Logo */}
           <div ref={heroLogoRef} className="mb-8 animate-fade-in-up delay-100">
-            <div className="relative rounded-2xl border-2 border-gray-100/30 shadow-2xl inline-block animate-float overflow-hidden">
-              <img
-                src="/pytog.png"
-                alt="PyTogether Logo"
-                className="h-20 w-20 sm:h-24 sm:w-24 object-cover"
-              />
+            <div className="relative rounded-2xl inline-flex animate-float p-[2px] overflow-hidden group">
+              {/* Spinning glowing trails */}
+              <div className="absolute inset-[-100%] animate-spin [animation-duration:2s] bg-[conic-gradient(from_0deg,transparent_0%,rgba(255,255,255,1)_50%,transparent_50%,rgba(255,255,255,1)_100%)]" />
+              
+              {/* Inner wrapper */}
+              <div className="relative rounded-[14px] overflow-hidden bg-[#0B0F17] flex items-center justify-center">
+                <img
+                  src="/pytog.png"
+                  alt="PyTogether Logo"
+                  className="h-20 w-20 sm:h-24 sm:w-24 object-cover"
+                />
+                {/* Subtle inner border to frame the logo nicely */}
+                <div className="absolute inset-0 border border-white/40 rounded-[14px] pointer-events-none" />
+              </div>
             </div>
           </div>
 
