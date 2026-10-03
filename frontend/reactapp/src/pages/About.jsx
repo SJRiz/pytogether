@@ -83,11 +83,11 @@ export default function About() {
               showNavLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
             }`}>
               <div className="relative">
-                <div className={`relative p-1 rounded-lg border ${'bg-gray-800 border-gray-700/50'}`}>
+                <div className={`relative rounded-lg border ${'border-gray-400/50 overflow-hidden'}`}>
                   <img
                     src="/pytog.png"
                     alt="PyTogether"
-                    className="h-6 w-6 sm:h-7 sm:w-7"
+                    className="h-7 w-7 sm:h-8 sm:w-8 object-cover"
                   />
                 </div>
               </div>
@@ -154,11 +154,11 @@ export default function About() {
 
           {/* Logo */}
           <div ref={heroLogoRef} className="mb-8 animate-fade-in-up delay-100">
-            <div className="relative p-3.5 sm:p-4 rounded-2xl border bg-gray-800 border-gray-400/50 shadow-2xl inline-block animate-float ">
+            <div className="relative rounded-2xl border-2 border-gray-100/30 shadow-2xl inline-block animate-float overflow-hidden">
               <img
                 src="/pytog.png"
                 alt="PyTogether Logo"
-                className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-lg"
+                className="h-20 w-20 sm:h-24 sm:w-24 object-cover"
               />
             </div>
           </div>
@@ -520,7 +520,7 @@ export default function About() {
         {/* Footer */}
         <footer className={`border-t py-12 text-center relative z-10 ${'border-slate-800 bg-[#05080F]'}`}>
           <div className="flex items-center justify-center gap-2 mb-4 opacity-50 hover:opacity-100 transition-opacity">
-            <img src="/pytog.png" alt="PyTogether Logo" className="h-6 w-6 grayscale" onError={(e) => e.target.style.display = 'none'} />
+            <img src="/pytog.png" alt="PyTogether Logo" className="h-6 w-6 object-cover rounded-md" onError={(e) => e.target.style.display = 'none'} />
             <span className={`font-bold ${'text-slate-300'}`}>PyTogether</span>
           </div>
           <p className={`text-sm mb-4 ${'text-slate-500'}`}>

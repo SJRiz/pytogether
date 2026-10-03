@@ -55,13 +55,18 @@ async def track_ws_connection_async(is_connect):
         date = get_today()
         if is_connect:
             current = await ASYNC_REDIS.incr(f"current_ws_connections")
+            if current < 1:
+                await ASYNC_REDIS.set(f"current_ws_connections", 1)
+                current = 1
             key = f"stats_max_ws:{date}"
             val = await ASYNC_REDIS.get(key)
             max_so_far = int(val) if val else 0
             if current > max_so_far:
                 await ASYNC_REDIS.set(key, current, ex=86400*2)
         else:
-            await ASYNC_REDIS.decr(f"current_ws_connections")
+            current = await ASYNC_REDIS.decr(f"current_ws_connections")
+            if current < 0:
+                await ASYNC_REDIS.set(f"current_ws_connections", 0)
     except Exception as e:
         logger.error(f"Error tracking ws connection async: {e}")
 

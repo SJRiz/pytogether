@@ -206,11 +206,11 @@ export default function CodeLayout({
             <button onClick={onBack} className="p-1.5 md:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300">
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </button>
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="relative bg-gray-800 p-1.5 md:p-2 rounded-xl border border-gray-700/50">
-                <img src="/pytog.png" alt="Icon" className="h-6 w-6 md:h-8 md:w-8" />
+            <div className="flex items-center gap-2">
+              <div className="relative rounded-xl border border-gray-400/50 overflow-hidden">
+                <img src="/pytog.png" alt="Icon" className="h-8 w-8 md:h-10 md:w-10 object-cover" />
               </div>
-              <h1 className="text-lg md:text-2xl font-bold pl-1 md:pl-2 bg-clip-text hidden sm:block">PyTogether</h1>
+              <h1 className="text-lg md:text-2xl font-bold bg-clip-text hidden sm:block">PyTogether</h1>
             </div>
             <div className="hidden sm:flex items-center space-x-2 pl-2">
               {isConnected ? (

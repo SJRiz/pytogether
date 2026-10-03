@@ -294,19 +294,18 @@ export default function GroupsAndProjectsPage() {
             <div className="border-b border-gray-800 bg-[#0e1421] px-6 py-2 shadow-lg relative z-50">
                 <div className="flex items-center justify-between">
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <div className="relative">
-                            <div className="absolute inset-0 bg-blue-500 rounded-xl blur-md opacity-15"></div>
-                            <div className="relative bg-gray-800 p-1 rounded-xl border border-gray-700/50">
+                            <div className="relative rounded-xl border border-gray-400/50 overflow-hidden">
                                 <img
                                     src="/pytog.png"
                                     alt="Code Icon"
-                                    className="h-8 w-8"
+                                    className="h-9 w-9 object-cover"
                                 />
                             </div>
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold pl-2 bg-clip-text">
+                            <h1 className="text-2xl font-bold bg-clip-text">
                                 PyTogether
                             </h1>
                         </div>

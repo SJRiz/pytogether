@@ -196,9 +196,9 @@ export default function EmbedPlayground() {
                 <div className="flex items-center justify-between px-3 py-2 gap-2">
 
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <div className={`relative p-1.5 rounded-xl border ${'bg-gray-800 border-gray-700/50'}`}>
-                                <img src="/pytog.png" alt="Icon" className="h-5 w-5 md:h-6 md:w-6" />
+                        <div className="flex items-center gap-2">
+                            <div className={`relative rounded-lg border ${'border-gray-400/50 overflow-hidden'}`}>
+                                <img src="/pytog.png" alt="Icon" className="h-7 w-7 md:h-8 md:w-8 object-cover" />
                             </div>
                             <h1 className="text-base md:text-lg font-bold bg-clip-text hidden sm:block">PyTogether</h1>
                         </div>
