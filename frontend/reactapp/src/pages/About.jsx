@@ -207,6 +207,56 @@ export default function About() {
 
         </section>
 
+        {/* Testimonials */}
+        <section className={`relative z-10 py-24 border-t border-b ${'bg-[#0B0F17] border-slate-800'}`}>
+          <div className="max-w-7xl mx-auto px-6">
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Testimonial 1 */}
+              <div className="p-8 rounded-3xl border bg-slate-900/50 border-slate-800 hover:border-blue-500/30 transition-all relative overflow-hidden group flex flex-col">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <svg className="w-24 h-24 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
+                </div>
+                <div className="relative z-10 flex flex-col flex-1">
+                  <p className="text-lg text-slate-300 leading-relaxed mb-8 italic">
+                    "I really enjoy PyTogether. I'm currently using it to help mentor university students."
+                  </p>
+                  <div className="flex items-center gap-4 mt-auto">
+                    <div className="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center border border-blue-500/30 shrink-0">
+                      <span className="text-blue-400 font-bold text-lg">JW</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold">Jack W.</h4>
+                      <p className="text-sm text-slate-400">Software Engineer @ Atlassian</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Testimonial 2 */}
+              <div className="p-8 rounded-3xl border bg-slate-900/50 border-slate-800 hover:border-green-500/30 transition-all relative overflow-hidden group flex flex-col">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <svg className="w-24 h-24 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
+                </div>
+                <div className="relative z-10 flex flex-col flex-1">
+                  <p className="text-lg text-slate-300 leading-relaxed mb-8 italic">
+                    "The greatest multicollab Python IDE. This tool has made teaching Python through modules much more manageable for me. It'd be a nightmare without having this tool by my side."
+                  </p>
+                  <div className="flex items-center gap-4 mt-auto">
+                    <div className="w-12 h-12 bg-green-600/20 rounded-full flex items-center justify-center border border-green-500/30 shrink-0">
+                      <span className="text-green-400 font-bold text-lg">SD</span>
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold">Santosh D.</h4>
+                      <p className="text-sm text-slate-400">Graduate Student @ University of Michigan</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Main Demo/Showcase */}
         <section id="features-section" className="relative z-10 max-w-7xl mx-auto px-6 pb-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -306,7 +356,7 @@ export default function About() {
         </section>
 
         {/* Bento Grid Features */}
-        <section id="bento-section" className={`relative z-10 py-24 border-t ${'bg-[#0F141F] border-slate-800'}`}>
+        <section id="bento-section" className={`relative z-10 py-24 border-t border-b ${'bg-[#0F141F] border-slate-800'}`}>
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${'text-white'}`}>Everything you need to learn or teach Python</h2>
