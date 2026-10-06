@@ -26,7 +26,11 @@ def google_login(request):
         return Response({"error": "Missing Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        google_resp = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10)
+        google_resp = requests.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": token},
+            timeout=10,
+        )
     except requests.exceptions.RequestException:
         return Response({"error": "Could not connect to Google"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -34,6 +38,9 @@ def google_login(request):
         return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
 
     google_data = google_resp.json()
+    if google_data.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        return Response({"error": "Invalid Google token issuer"}, status=status.HTTP_400_BAD_REQUEST)
+
     email = google_data.get("email")
     if not email:
         return Response({"error": "Email not available"}, status=status.HTTP_400_BAD_REQUEST)
