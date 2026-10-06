@@ -75,7 +75,7 @@ services:
   celery:
     image: pytogether-backend:latest
     restart: unless-stopped
-    command: celery -A backend worker --concurrency=1 -l info
+    command: celery -A backend worker --concurrency=1 --max-tasks-per-child=100 -l info
     environment:
       - DJANGO_SETTINGS_MODULE=backend.settings
     env_file:

@@ -26,7 +26,7 @@ services:
 
   celery:
     image: pytogether-backend:latest
-    command: celery -A backend worker --concurrency=1 -l info   # we only need one processor since we autosave every minute (and the task does not take longer than a minute yet)
+    command: celery -A backend worker --concurrency=1 --max-tasks-per-child=100 -l info
     restart: unless-stopped
     env_file:
       - ./backend/.env

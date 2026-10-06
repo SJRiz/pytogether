@@ -119,13 +119,12 @@ class YjsCodeConsumer(AsyncJsonWebsocketConsumer):
                 
                 # Subtract 1 from their tab count
                 remaining_connections = await ASYNC_REDIS.hincrby(active_set_key(self.project_id), str(self.user.pk), -1)
-                await track_ws_connection_async(False)
                 
                 # broadcast disconnect if their last tab closed
                 if remaining_connections <= 0:
                     # Clean them out of the hash entirely
                     await ASYNC_REDIS.hdel(active_set_key(self.project_id), str(self.user.pk))
-                    
+                    await track_ws_connection_async(False)
                     await self.channel_layer.group_send(self.room, {"type": "users_changed"})
                     await self.channel_layer.group_send(
                         self.room,
