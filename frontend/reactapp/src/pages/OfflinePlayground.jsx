@@ -64,6 +64,11 @@ export default function OfflinePlayground() {
     const [tempName, setTempName] = useState(projectName);
     // If token exists, we are in "Snippet Mode" and need to fetch data
     const [isLoadingSnippet, setIsLoadingSnippet] = useState(!!token);
+    const [showTimestamps, setShowTimestamps] = useState(() => localStorage.getItem('consoleShowTimestamps') !== 'false');
+
+    useEffect(() => {
+        localStorage.setItem('consoleShowTimestamps', String(showTimestamps));
+    }, [showTimestamps]);
 
     // Refs
     const editorViewRef = useRef(null);
@@ -258,9 +263,11 @@ export default function OfflinePlayground() {
     ) : (
         runner.consoleOutput.map(e => (
             <div key={e.id} className="flex items-start space-x-2 py-1">
-                <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
-                    {e.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
+                {showTimestamps && (
+                    <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
+                        {e.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                )}
                 <span className="text-xs mt-0.5">
                     {e.type === 'error' ? '❌' : e.type === 'input' ? '▶️' : e.type === 'system' ? '⚙️' : ''}
                 </span>
@@ -320,6 +327,8 @@ export default function OfflinePlayground() {
             // Console
             consoleContent={consoleSlot}
             onClearConsole={runner.clearConsole}
+            showTimestamps={showTimestamps}
+            onToggleTimestamps={() => setShowTimestamps(s => !s)}
             inputContent={inputSlot}
 
             // Plot

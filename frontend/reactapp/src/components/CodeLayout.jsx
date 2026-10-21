@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, GripVertical, Terminal, X, MessageSquare, Eye, Wifi, WifiOff, Play, Download, Trash2 } from "lucide-react";
+import { ArrowLeft, GripVertical, Terminal, X, MessageSquare, Eye, Wifi, WifiOff, Play, Download, Trash2, Clock, ArrowDown } from "lucide-react";
 
 export default function CodeLayout({
   // UI Slots
@@ -22,6 +22,8 @@ export default function CodeLayout({
   onRun,
   onStop,
   onClearConsole,
+  showTimestamps,
+  onToggleTimestamps,
   connectedUsers = [],
   chatMessageCount = 0,
 
@@ -44,6 +46,9 @@ export default function CodeLayout({
 
   const downloadMenuRef = useRef(null);
   const consoleScrollRef = useRef(null);
+  const consoleAtBottomRef = useRef(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const consoleAutoScrollingRef = useRef(false);
   const chatScrollRef = useRef(null);
   const inputContainerRef = useRef(null);
 
@@ -76,9 +81,35 @@ export default function CodeLayout({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const handleConsoleScroll = () => {
+    const el = consoleScrollRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 24;
+    if (consoleAutoScrollingRef.current) {
+      if (atBottom) consoleAutoScrollingRef.current = false;
+      return;
+    }
+    consoleAtBottomRef.current = atBottom;
+    setShowScrollToBottom(!atBottom);
+  };
+
+  const cancelConsoleAutoScroll = () => {
+    consoleAutoScrollingRef.current = false;
+  };
+
+  const scrollConsoleToBottom = () => {
+    const el = consoleScrollRef.current;
+    if (!el) return;
+    consoleAtBottomRef.current = true;
+    consoleAutoScrollingRef.current = true;
+    setShowScrollToBottom(false);
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    if (consoleScrollRef.current) {
-      consoleScrollRef.current.scrollTop = consoleScrollRef.current.scrollHeight;
+    const el = consoleScrollRef.current;
+    if (el && consoleAtBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [consoleContent]);
 
@@ -203,7 +234,7 @@ export default function CodeLayout({
 
           {/* LEFT */}
           <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
-            <button onClick={onBack} className="p-1.5 md:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300">
+            <button onClick={onBack} className="p-1.5 md:p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300" title="Back to Home">
               <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </button>
             <div className="flex items-center gap-2">
@@ -228,7 +259,7 @@ export default function CodeLayout({
 
           {/* DOWNLOAD MENU */}
           <div className="relative flex-shrink-0 mr-2" ref={downloadMenuRef}>
-            <button onClick={() => setShowDownloadMenu(!showDownloadMenu)} className="p-1.5 md:p-2 text-gray-400 hover:text-gray-200 rounded-lg hover:bg-gray-700">
+            <button onClick={() => setShowDownloadMenu(!showDownloadMenu)} className="p-1.5 md:p-2 text-gray-400 hover:text-gray-200 rounded-lg hover:bg-gray-700" title="Download Code">
               <Download className="h-4 w-4" />
             </button>
             {showDownloadMenu && (
@@ -286,11 +317,12 @@ export default function CodeLayout({
                 <span className="text-xs md:text-sm hidden sm:inline">Loading...</span>
               </div>
             ) : isRunning ? (
-              <button onClick={onStop} className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"><X className="h-4 w-4" /><span className="hidden sm:inline">Stop</span></button>
+              <button onClick={onStop} className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base" title="Stop Execution"><X className="h-4 w-4" /><span className="hidden sm:inline">Stop</span></button>
             ) : (
               <button
                 onClick={() => { setShowConsole(true); onRun(); }}
                 className="flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-1.5 md:py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
+                title="Run Code"
               >
                 <Play className="h-4 w-4" />
                 <span className="hidden sm:inline">Run</span>
@@ -347,13 +379,22 @@ export default function CodeLayout({
                 {inputContent && <span className="text-xs text-blue-400 animate-pulse">Waiting...</span>}
               </div>
               <div className="flex items-center">
-                <button onClick={() => { setShowChat(!showChat); if (!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded relative ${showChat ? 'text-blue-400' : 'text-gray-400'}`}>
+                {onToggleTimestamps && (
+                  <button
+                    onClick={onToggleTimestamps}
+                    className={`p-1 hover:bg-gray-700 rounded ${showTimestamps ? 'text-blue-400' : 'text-gray-400'}`}
+                    title={showTimestamps ? 'Hide Timestamps' : 'Show Timestamps'}
+                  >
+                    <Clock className="h-4 w-4" />
+                  </button>
+                )}
+                <button onClick={() => { setShowChat(!showChat); if (!showChat) setShowPlot(false); }} className={`p-1 hover:bg-gray-700 rounded relative ${showChat ? 'text-blue-400' : 'text-gray-400'}`} title={showChat ? 'Hide Chat' : 'Show Chat'}>
                   <MessageSquare className="h-4 w-4" />
                   {hasUnread && !showChat && (
                     <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 border border-gray-800 transform translate-x-1/4 -translate-y-1/4"></span>
                   )}
                 </button>
-                <button onClick={() => { setShowPlot(!showPlot); if (!showPlot) setShowChat(false); }} className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`}>
+                <button onClick={() => { setShowPlot(!showPlot); if (!showPlot) setShowChat(false); }} className={`p-1 hover:bg-gray-700 rounded ${showPlot ? 'text-blue-400' : 'text-gray-400'}`} title={showPlot ? 'Hide Plot' : 'Show Plot'}>
                   <Eye className="h-4 w-4" />
                 </button>
                 <button onClick={onClearConsole} className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-red-400" title="Clear Console">
@@ -362,8 +403,21 @@ export default function CodeLayout({
               </div>
             </div>
 
-            <div ref={consoleScrollRef} className="flex-1 p-3 md:p-4 overflow-y-auto bg-gray-900 font-mono text-xs md:text-sm space-y-1 scrollbar-hide min-h-0" style={{ scrollbarWidth: 'none' }}>
-              {consoleContent}
+            <div className="relative flex-1 min-h-0 flex flex-col">
+              <div ref={consoleScrollRef} onScroll={handleConsoleScroll} onWheel={cancelConsoleAutoScroll} onTouchStart={cancelConsoleAutoScroll} onMouseDown={cancelConsoleAutoScroll} className="flex-1 p-3 md:p-4 overflow-y-auto bg-gray-900 font-mono text-xs md:text-sm space-y-1 scrollbar-hide min-h-0" style={{ scrollbarWidth: 'none' }}>
+                {consoleContent}
+              </div>
+
+              {showScrollToBottom && (
+                <button
+                  onClick={scrollConsoleToBottom}
+                  className="absolute bottom-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-blue-600/90 hover:bg-blue-500 text-white text-xs shadow-lg backdrop-blur-sm transition-colors"
+                  title="Scroll to Bottom"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                  <span>Latest</span>
+                </button>
+              )}
             </div>
 
             <div className="flex-shrink-0" ref={inputContainerRef}>
@@ -380,7 +434,7 @@ export default function CodeLayout({
                 )}
                 <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between">
                   <div className="flex items-center space-x-2"><Eye className="h-4 w-4 text-gray-400" /><h2 className="text-xs md:text-sm font-medium text-gray-300">Plot</h2></div>
-                  <button onClick={() => { setShowPlot(false); if (onClearPlot) onClearPlot(); }} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400" /></button>
+                  <button onClick={() => { setShowPlot(false); if (onClearPlot) onClearPlot(); }} className="p-1 hover:bg-gray-700 rounded" title="Close Plot"><X className="h-4 w-4 text-gray-400" /></button>
                 </div>
                 <div className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 flex items-center justify-center">
                   {plotContent || <div className="text-gray-500 italic text-xs">Plots will appear here...</div>}
@@ -398,7 +452,7 @@ export default function CodeLayout({
                 )}
                 <div className="bg-gray-800 px-3 md:px-4 py-2 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
                   <div className="flex items-center space-x-2"><MessageSquare className="h-4 w-4 text-gray-400" /><h2 className="text-xs md:text-sm font-medium text-gray-300">Chat</h2></div>
-                  <button onClick={() => setShowChat(false)} className="p-1 hover:bg-gray-700 rounded"><X className="h-4 w-4 text-gray-400" /></button>
+                  <button onClick={() => setShowChat(false)} className="p-1 hover:bg-gray-700 rounded" title="Close Chat"><X className="h-4 w-4 text-gray-400" /></button>
                 </div>
                 <div ref={chatScrollRef} className="flex-1 p-2 md:p-3 overflow-y-auto bg-gray-900 text-xs md:text-sm space-y-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
                   {chatContent}

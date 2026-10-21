@@ -71,6 +71,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const [showSizeWarning, setShowSizeWarning] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
   const [pendingDeletion, setPendingDeletion] = useState(null);
+  const [showTimestamps, setShowTimestamps] = useState(() => localStorage.getItem('consoleShowTimestamps') !== 'false');
+
+  useEffect(() => {
+    localStorage.setItem('consoleShowTimestamps', String(showTimestamps));
+  }, [showTimestamps]);
 
   const deletionWarningFilter = EditorState.transactionFilter.of(tr => {
     const userEvent = tr.annotation(Transaction.userEvent);
@@ -611,13 +616,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const headerSlot = isEditingName ? (
     <>
       <input value={tempName} onChange={e => setTempName(e.target.value)} className="bg-gray-700 text-white px-2 py-1 rounded text-center w-full" />
-      <button onClick={handleSaveName} className="p-1 text-green-400"><Check className="h-4 w-4" /></button>
-      <button onClick={() => setIsEditingName(false)} className="p-1 text-red-400"><X className="h-4 w-4" /></button>
+      <button onClick={handleSaveName} className="p-1 text-green-400" title="Save Name"><Check className="h-4 w-4" /></button>
+      <button onClick={() => setIsEditingName(false)} className="p-1 text-red-400" title="Cancel"><X className="h-4 w-4" /></button>
     </>
   ) : (
     <>
       <h2 className="text-lg font-medium text-white truncate">{projectName}</h2>
-      <button onClick={() => { setTempName(projectName); setIsEditingName(true); }} className="p-1 text-gray-400 hover:text-gray-200"><Edit2 className="h-4 w-4" /></button>
+      <button onClick={() => { setTempName(projectName); setIsEditingName(true); }} className="p-1 text-gray-400 hover:text-gray-200" title="Rename Project"><Edit2 className="h-4 w-4" /></button>
       <button
         onClick={() => setShowShareModal(true)}
         className="p-1.5 ml-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-md transition-colors flex items-center gap-1.5"
@@ -643,6 +648,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                title="Refresh Page"
               >
                 Refresh Page
               </button>
@@ -716,9 +722,11 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   ) : (
     runner.consoleOutput.map(e => (
       <div key={e.id} className="flex items-start space-x-2 py-1">
-        <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
-          {e.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-        </span>
+        {showTimestamps && (
+          <span className="text-gray-500 text-xs mt-0.5 min-w-[60px]">
+            {e.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
+        )}
         <span className="text-xs mt-0.5">
           {e.type === 'error' ? '❌' : e.type === 'input' ? '▶️' : e.type === 'system' ? '⚙️' : ''}
         </span>
@@ -746,7 +754,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
           className="flex-1 bg-gray-700 text-white px-3 py-2 rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter input..."
         />
-        <button onClick={() => { if (runner.inputRef.current) runner.submitInput(runner.inputRef.current.value); }} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded"><Send className="h-4 w-4" /></button>
+        <button onClick={() => { if (runner.inputRef.current) runner.submitInput(runner.inputRef.current.value); }} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded" title="Send Input"><Send className="h-4 w-4" /></button>
       </div>
       <div className="text-xs text-gray-400 mt-1">Press Enter to send input</div>
     </div>
@@ -788,7 +796,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
     <div className="border-t border-gray-700 bg-gray-800 p-3 mt-auto">
       <div className="flex items-center space-x-2">
         <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type a message..." maxLength={1000} />
-        <button onClick={sendChat} disabled={!chatInput.trim()} className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors duration-200"><Send className="h-4 w-4" /></button>
+        <button onClick={sendChat} disabled={!chatInput.trim()} className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors duration-200" title="Send Message"><Send className="h-4 w-4" /></button>
       </div>
     </div>
   );
@@ -796,15 +804,15 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const voiceSlot = (
     <div className="flex items-center space-x-2">
       {!voice.inVoiceCall ? (
-        <button onClick={voice.joinCall} className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200">
+        <button onClick={voice.joinCall} className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200" title="Join Voice Chat">
           <Phone className="h-4 w-4 text-white" /> <span className="text-sm text-white">Voice Chat</span>
         </button>
       ) : (
         <div className="flex items-center space-x-2">
-          <button onClick={voice.toggleMute} className={`p-2 rounded-lg transition-colors duration-200 ${voice.isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'}`}>
+          <button onClick={voice.toggleMute} className={`p-2 rounded-lg transition-colors duration-200 ${voice.isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'}`} title={voice.isMuted ? 'Unmute' : 'Mute'}>
             {voice.isMuted ? <MicOff className="h-4 w-4 text-white" /> : <Mic className="h-4 w-4 text-white" />}
           </button>
-          <button onClick={voice.leaveCall} className="flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200">
+          <button onClick={voice.leaveCall} className="flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200" title="Leave Voice Chat">
             <PhoneOff className="h-4 w-4 text-white" /> <span className="text-sm text-white">Leave</span>
           </button>
           {voice.participants.length > 0 && (
@@ -818,13 +826,13 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
   const drawingSlot = (
     <div className="flex items-center space-x-1 p-1 bg-gray-700 rounded-lg">
       <div className={`flex items-center space-x-1 ${!canvas.showDrawings ? 'opacity-40 pointer-events-none' : ''}`}>
-        <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" />
-        <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Pencil className="h-4 w-4" /></button>
-        <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Highlighter className="h-4 w-4" /></button>
-        <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`}><Eraser className="h-4 w-4" /></button>
-        <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400"><Trash2 className="h-4 w-4" /></button>
+        <input type="color" value={canvas.drawColor} onChange={e => canvas.setDrawColor(e.target.value)} className="w-9 h-9 p-1 bg-transparent border-none cursor-pointer hover:bg-gray-600 rounded transition-colors" title="Drawing Color" />
+        <button onClick={() => canvas.setDrawingMode(m => m === 'draw' ? 'none' : 'draw')} className={`p-2 rounded ${canvas.drawingMode === 'draw' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`} title="Draw"><Pencil className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'highlight' ? 'none' : 'highlight')} className={`p-2 rounded ${canvas.drawingMode === 'highlight' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`} title="Highlight"><Highlighter className="h-4 w-4" /></button>
+        <button onClick={() => canvas.setDrawingMode(m => m === 'erase' ? 'none' : 'erase')} className={`p-2 rounded ${canvas.drawingMode === 'erase' ? 'bg-blue-500 text-white' : 'hover:bg-gray-600'}`} title="Erase"><Eraser className="h-4 w-4" /></button>
+        <button onClick={() => window.confirm('Clear all drawings for everyone?') && canvas.clearDrawings()} className="p-2 hover:bg-red-500/50 rounded text-red-400" title="Clear All Drawings"><Trash2 className="h-4 w-4" /></button>
       </div>
-      <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded">{canvas.showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+      <button onClick={() => { if (canvas.showDrawings) canvas.setDrawingMode('none'); canvas.setShowDrawings(!canvas.showDrawings); }} className="p-2 hover:bg-gray-600 rounded" title={canvas.showDrawings ? 'Hide Drawings' : 'Show Drawings'}>{canvas.showDrawings ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
     </div>
   );
 
@@ -859,6 +867,8 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
         editorContent={editorSlot}
         consoleContent={consoleSlot}
         onClearConsole={runner.clearConsole}
+        showTimestamps={showTimestamps}
+        onToggleTimestamps={() => setShowTimestamps(s => !s)}
         chatContent={chatSlot}
         chatMessageCount={chatMessages.length}
         chatInputContent={chatInputSlot}
@@ -904,6 +914,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
               <button
                 onClick={() => setPendingDeletion(null)}
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+                title="Cancel Deletion"
               >
                 Cancel
               </button>
@@ -918,6 +929,7 @@ export default function PyIDE({ groupId: propGroupId, projectId: propProjectId, 
                   setPendingDeletion(null);
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors font-medium"
+                title="Confirm Deletion"
               >
                 Delete Anyway
               </button>
